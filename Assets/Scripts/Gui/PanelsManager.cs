@@ -39,9 +39,6 @@ public class PanelsManager : MonoBehaviour
     [HideInInspector]
     public static bool confirmPanelActive = false;
 
-    [HideInInspector]
-    public bool UIsystemDown = false;
-
     // handlers
     private AsyncOperationHandle<GameObject> savePanelHandler;
 
@@ -61,6 +58,8 @@ public class PanelsManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        
     }
 
 

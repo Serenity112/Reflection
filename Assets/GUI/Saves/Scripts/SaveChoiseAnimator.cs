@@ -55,7 +55,7 @@ public class SaveChoiseAnimator : MonoBehaviour
 
     public void SaveAction(SaveOption option)
     {
-        if (saveFileFields.AllowSaveLoad && !PanelsManager.instance.UIsystemDown && !PanelsManager.confirmPanelActive)
+        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !PanelsManager.confirmPanelActive)
         {
             StartCoroutine(ISaveAction(option));
         }
@@ -121,7 +121,7 @@ public class SaveChoiseAnimator : MonoBehaviour
 
     public void DeleteAction()
     {
-        if (saveFileFields.AllowSaveLoad && !PanelsManager.instance.UIsystemDown && !PanelsManager.confirmPanelActive)
+        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !PanelsManager.confirmPanelActive)
         {
             StartCoroutine(IDelete());
         }
@@ -166,9 +166,11 @@ public class SaveChoiseAnimator : MonoBehaviour
 
     IEnumerator LoadFile()
     {
+        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
+
         StartCoroutine(ConfirmationPanel.ClosePanel());
 
-        yield return StartCoroutine(PanelsManager.instance.ILoadGame(saveNum));
+        yield return StartCoroutine(PanelsManager.instance.ILoadGame(actualSaveNum));
 
         saveFileFields.resetCassettePosition(IconRight);
     }
@@ -188,6 +190,4 @@ public class SaveChoiseAnimator : MonoBehaviour
         saveFileFields.resetCassettePosition(IconRight);
         saveFileFields.OpenOverPanel();
     }
-
-   
 }

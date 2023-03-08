@@ -34,7 +34,8 @@ public struct SaveData
     public SpecialEvents specailEvent;
 }
 
-public enum SpecialEvents {
+public enum SpecialEvents
+{
     none,
     DreamSnow,
     TanyaCG,
@@ -73,6 +74,18 @@ public class UserData : MonoBehaviour
         indexToLoad = -1;
 
         specialEvent = SpecialEvents.none;
+
+        CurrentBlock = null;
+
+        // Сейв, заданный в главном меню
+        if (StaticVariables.StartingLoadIndex == -1)
+        {
+            StartCoroutine(LoadGameFromStart());
+        }
+        else
+        {
+            LoadPlayer(StaticVariables.StartingLoadIndex);
+        }
     }
 
     public void SavePlayer(int SaveNum)
@@ -89,7 +102,7 @@ public class UserData : MonoBehaviour
 
         newSave.specailEvent = instance.specialEvent;
 
-        switch(specialEvent)
+        switch (specialEvent)
         {
             case SpecialEvents.none:
                 break;
@@ -106,19 +119,39 @@ public class UserData : MonoBehaviour
         //newSave.LogBlocks = LogBlocks;
 
     }
+
+    private IEnumerator LoadGameFromStart()
+    {
+        //yield return StartCoroutine(DaysManager.instance.ILoadDay(1));
+        Flowchart flowchart = PanelsManager.instance.flowchart;
+        Block targetBlock = flowchart.FindBlock("Dream");
+        flowchart.ExecuteBlock(targetBlock);
+        yield return null;
+    }
+
     public void LoadPlayer(int SaveNum)
     {
         StartCoroutine(ILoadPlayer(SaveNum));
     }
+
     private IEnumerator ILoadPlayer(int SaveNum)
     {
+        yield return new WaitForSeconds(1f);
+
         SaveData newSave = ES3.Load<SaveData>("SaveFile" + SaveNum, "SaveFiles.es3");
 
         Flowchart flowchart = PanelsManager.instance.flowchart;
 
         // Block
-        Block targetBlock = flowchart.FindBlock(CurrentBlock);
-        targetBlock.Stop();
+        if(CurrentBlock != null)
+        {
+            Block activeBlock = flowchart.FindBlock(CurrentBlock);
+            if (activeBlock != null)
+            {
+                activeBlock.Stop();
+            }             
+        }
+       
         CurrentBlock = newSave.CurrentBlock;
 
         // Index
@@ -178,7 +211,6 @@ public class UserData : MonoBehaviour
 
         DialogMod.denyNextDialog = false;
 
-        flowchart.ExecuteBlock(targetBlock, CurrentCommandIndex, null);
+        flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex, null);
     }
-    
 }

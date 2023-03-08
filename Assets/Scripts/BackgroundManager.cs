@@ -57,7 +57,7 @@ public class BackgroundManager : MonoBehaviour
         BackGrounds = new List<BgData>();
         BackGrounds.Add(new BgData(0, "AssemblyHall"));
         BackGrounds.Add(new BgData(1, "Corridor"));
-        BackGrounds.Add(new BgData(2, "Skver_day"));
+        BackGrounds.Add(new BgData(2, "SkverDay"));
         BackGrounds.Add(new BgData(3, "Robotech"));
         BackGrounds.Add(new BgData(4, "NastyaCG"));
         BackGrounds.Add(new BgData(5, "EvelinaCG"));

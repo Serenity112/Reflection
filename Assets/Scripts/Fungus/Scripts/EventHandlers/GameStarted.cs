@@ -20,7 +20,7 @@ namespace Fungus
 
         protected virtual void Start()
         {
-            StartCoroutine(GameStartCoroutine());
+            //StartCoroutine(GameStartCoroutine());
         }
 
         protected virtual IEnumerator GameStartCoroutine()

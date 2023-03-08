@@ -32,9 +32,9 @@ public class BottomPages : MonoBehaviour
 
     public void loadPageOnClick(int page)
     {
-        if (page != SaveManager.instance.currentPage && !PanelsManager.instance.UIsystemDown)
+        if (page != SaveManager.instance.currentPage && !StaticVariables.UIsystemDown)
         {
-            PanelsManager.instance.UIsystemDown = true;
+            StaticVariables.UIsystemDown = true;
 
             SaveManager.instance.LoadPage(page);
         }

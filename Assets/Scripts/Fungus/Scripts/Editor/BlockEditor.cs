@@ -9,6 +9,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Xml;
+using Fungus;
 
 namespace Fungus.EditorUtils
 {
@@ -324,6 +326,131 @@ namespace Fungus.EditorUtils
             serializedObject.ApplyModifiedProperties();
         }
 
+        public static Type ByName(string name)
+        {
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().Reverse())
+            {
+                var tt = assembly.GetType(name);
+                if (tt != null)
+                {
+                    return tt;
+                }
+            }
+
+            return null;
+        }
+
+        private void LoadBuilderBlock()
+        {
+            /*XmlDocument xDoc = new XmlDocument();
+
+            xDoc.Load(Application.dataPath + "/StreamingAssets/d1builder.xml");
+
+            int i = 0;
+
+            foreach (XmlNode key in xDoc["Keys"].ChildNodes)
+            {
+                switch (key.Attributes["Command"].Value)
+                {
+                    case "SayDialog":
+                        string phrase = key["arg1"].InnerText;
+                        string speaker = key["arg2"].InnerText;
+                        string extend = key["arg3"].InnerText;
+                        break;
+                    case "AppearSprite":
+                        break;
+                    case "SwapSprite":
+                        break;
+                    case "MoveSprite":
+                        break;
+                    case "RemoveSprite":
+                        break;
+                    case "SetBG":
+                        break;
+                    case "MusicStart":
+                        break;
+                    case "MusicEnd":
+                        break;
+                    case "MusicChange":
+                        break;
+                    case "MusicTransition":
+                        break;
+                }
+
+                i++;
+            }*/
+
+
+            Type commandType = ByName("Fungus.FNewDay");
+           
+            AddCommand(commandType);
+        }
+
+        int counter = 0;
+        private void AddCommand(Type commandType)
+        {
+            var block = target as Block;
+            if (block == null || commandType == null)
+            {
+                return;
+            }
+
+            var flowchart = (Flowchart)block.GetFlowchart();
+
+            // Use index of last selected command in list, or end of list if nothing selected.
+            int index = -1;
+            foreach (var command in flowchart.SelectedCommands)
+            {
+                if (command.CommandIndex + 1 > index)
+                {
+                    index = command.CommandIndex + 1;
+                }
+            }
+            if (index == -1)
+            {
+                index = block.CommandList.Count;
+            }
+
+            var newCommand = Undo.AddComponent(block.gameObject, commandType) as Command;
+            block.GetFlowchart().AddSelectedCommand(newCommand);
+            newCommand.ParentBlock = block;
+            newCommand.ItemId = flowchart.NextItemId();
+
+            
+            // Init
+
+            var fields = commandType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+
+            foreach (var field in fields)
+            {
+                if (field.Name == "dayIndex")
+                {
+                    field.SetValue(newCommand, counter);
+                    counter++;
+                }
+
+            }
+
+
+            // Let command know it has just been added to the block
+            newCommand.OnCommandAdded(block);
+
+            Undo.RecordObject(block, "Set command type");
+            if (index < block.CommandList.Count - 1)
+            {
+                block.CommandList.Insert(index, newCommand);
+            }
+            else
+            {
+                block.CommandList.Add(newCommand);
+            }
+
+            // Because this is an async call, we need to force prefab instances to record changes
+            PrefabUtility.RecordPrefabInstancePropertyModifications(block);
+
+            flowchart.ClearSelectedCommands();
+        }
+
         public virtual void DrawButtonToolbar()
         {
             GUILayout.BeginHorizontal();
@@ -338,7 +465,7 @@ namespace Fungus.EditorUtils
             }
             // Next Command
             if ((Event.current.type == EventType.KeyDown) && (Event.current.keyCode == KeyCode.PageDown))
-            {
+            {              
                 SelectNext();
                 GUI.FocusControl("dummycontrol");
                 Event.current.Use();
@@ -352,7 +479,9 @@ namespace Fungus.EditorUtils
             // Down Button
             if (GUILayout.Button(downIcon))
             {
-                SelectNext();
+                Debug.Log("Loading builder block");
+                LoadBuilderBlock();
+                //SelectNext();
             }
 
             GUILayout.FlexibleSpace();
@@ -369,6 +498,7 @@ namespace Fungus.EditorUtils
             // Add Button
             if (GUILayout.Button(addIcon))
             {
+                Debug.Log("Add");
                 //this may be less reliable for HDPI scaling but previous method using editor window height is now returning 
                 //  null in 2019.2 suspect ongoing ui changes, so default to screen.height and then attempt to get the better result
                 int h = Screen.height;
@@ -383,9 +513,7 @@ namespace Fungus.EditorUtils
             // Duplicate Button
             if (GUILayout.Button(duplicateIcon))
             {
-                //Debug.Log("15");
                 Copy();
-                //for(int i = 864; i >= 816; i--)
                 Paste();
             }
 
@@ -664,12 +792,14 @@ namespace Fungus.EditorUtils
 
         protected void Cut()
         {
+            Debug.Log("Cut");
             Copy();
             Delete();
         }
 
         protected void Copy()
         {
+            Debug.Log("Copying");
             var block = target as Block;
             var flowchart = (Flowchart)block.GetFlowchart();
 
@@ -688,7 +818,12 @@ namespace Fungus.EditorUtils
                 if (flowchart.SelectedCommands.Contains(command))
                 {
                     var type = command.GetType();
+                    Debug.Log(type.Name);
+
                     Command newCommand = Undo.AddComponent(commandCopyBuffer.gameObject, type) as Command;
+                    //
+
+
                     var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
                     foreach (var field in fields)
                     {
@@ -704,6 +839,7 @@ namespace Fungus.EditorUtils
 
                         if (copy)
                         {
+                            Debug.Log("field.SetValue: newCommand: " + newCommand + " field.GetValue(command): " + field.GetValue(command) + " field: " + field.Name);
                             field.SetValue(newCommand, field.GetValue(command));
                         }
                     }
@@ -713,6 +849,7 @@ namespace Fungus.EditorUtils
 
         protected void Paste()
         {
+            Debug.Log("Paste");
             var block = target as Block;
             var flowchart = (Flowchart)block.GetFlowchart();
 
@@ -731,6 +868,8 @@ namespace Fungus.EditorUtils
                 for (int i = 0; i < flowchart.SelectedBlock.CommandList.Count; ++i)
                 {
                     Command command = flowchart.SelectedBlock.CommandList[i];
+
+
 
                     foreach (Command selectedCommand in flowchart.SelectedCommands)
                     {
@@ -878,6 +1017,7 @@ namespace Fungus.EditorUtils
 
         protected void PlayCommand()
         {
+            Debug.Log("PlayCommand");
             var targetBlock = target as Block;
             var flowchart = (Flowchart)targetBlock.GetFlowchart();
             Command command = flowchart.SelectedCommands[0];
@@ -898,6 +1038,7 @@ namespace Fungus.EditorUtils
 
         protected void StopAllPlayCommand()
         {
+            Debug.Log("StopAllPlayCommand");
             var targetBlock = target as Block;
             var flowchart = (Flowchart)targetBlock.GetFlowchart();
             Command command = flowchart.SelectedCommands[0];
@@ -909,12 +1050,14 @@ namespace Fungus.EditorUtils
 
         protected IEnumerator RunBlock(Flowchart flowchart, Block targetBlock, int commandIndex, float delay)
         {
+            Debug.Log("RunBlock");
             yield return new WaitForSeconds(delay);
             flowchart.ExecuteBlock(targetBlock, commandIndex);
         }
 
         protected void SelectPrevious()
         {
+            Debug.Log("SelectPrevious");
             var block = target as Block;
             var flowchart = (Flowchart)block.GetFlowchart();
 
@@ -955,6 +1098,7 @@ namespace Fungus.EditorUtils
 
         protected void SelectNext()
         {
+            Debug.Log("SelectNext");
             var block = target as Block;
             var flowchart = (Flowchart)block.GetFlowchart();
 

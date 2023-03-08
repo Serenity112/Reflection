@@ -60,7 +60,7 @@ public class DaysManager : MonoBehaviour
         }
 
 
-        int i =0;
+        int i = 1;
 
         foreach (XmlNode key in xDoc["Keys"].ChildNodes)
         {
@@ -68,6 +68,8 @@ public class DaysManager : MonoBehaviour
 
             if (i > 100) break;
 
+            if(key.Attributes["Phrase"] == null)
+                continue;
 
             string Phrase = key.Attributes["Phrase"].Value;
             sentenceData.phrase = Phrase;

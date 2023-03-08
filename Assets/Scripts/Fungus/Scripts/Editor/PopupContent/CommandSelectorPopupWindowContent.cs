@@ -65,17 +65,19 @@ namespace Fungus.EditorUtils
 
         static public void ShowCommandMenu(Rect position, string currentHandlerName, Block block, int width, int height)
         {
+            Debug.Log("ShowCommandMenu");
             curBlock = block;
 
 
             if (!FungusEditorPreferences.useLegacyMenus)
             {
-                var win = new CommandSelectorPopupWindowContent(currentHandlerName,
-                    width, (int)(height - EditorGUIUtility.singleLineHeight * 3));
+                Debug.Log("1");
+                var win = new CommandSelectorPopupWindowContent(currentHandlerName, width, (int)(height - EditorGUIUtility.singleLineHeight * 3));
                 PopupWindow.Show(position, win);
             }
             else
             {
+                Debug.Log("2");
                 //need to ensure we have filtered data 
                 filteredAttributes = GetFilteredSupportedCommands(curBlock.GetFlowchart());
             }
@@ -129,10 +131,9 @@ namespace Fungus.EditorUtils
                 AddCommandCallback(command);
             }
         }
-
-
+    
         static protected void AddCommandCallback(Type commandType)
-        {
+        {           
             var block = curBlock;
             if (block == null || commandType == null)
             {

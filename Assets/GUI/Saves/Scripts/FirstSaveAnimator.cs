@@ -55,7 +55,7 @@ public class FirstSaveAnimator : MonoBehaviour
 
     public void FirstSaveIconClick()
     {
-        if (!PanelsManager.instance.UIsystemDown)
+        if (!StaticVariables.UIsystemDown)
         {
             StartCoroutine(IFirstSaveIconClick());
         }          
@@ -63,7 +63,7 @@ public class FirstSaveAnimator : MonoBehaviour
 
     IEnumerator IFirstSaveIconClick()
     {
-        PanelsManager.instance.UIsystemDown = true;
+        StaticVariables.UIsystemDown = true;
         ButtonUnsaved.interactable = false;
         saveFileFields.AllowOverPanel = false;
         saveFileFields.AllowSaveLoad = false;

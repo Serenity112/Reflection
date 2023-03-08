@@ -52,6 +52,8 @@ namespace Fungus
         // Публичный параметр для понимания, идтёт ли сейчас пропуск
         public static bool skipping { get; set; }
 
+        public SkipButton skipButton;
+
         public static bool denyNextDialog { get; set;}
 
         public static bool wasCurrentDialogRead { get; set; }
@@ -111,16 +113,13 @@ namespace Fungus
 
             if (writer != null && writer.IsWriting)
             {
-                //if (Input.GetButtonDown(currentStandaloneInputModule.submitButton) ||
-                //    (cancelEnabled && Input.GetButton(currentStandaloneInputModule.cancelButton)))
-                //{
-                //    SetNextLineFlag();
-                //}
-
                 if ((Input.GetKey(KeyCode.Tab) || autoSkip) && (SettingsConfig.skipEverything || wasCurrentDialogRead) && !denyNextDialog)
                 {
-                    skipping = true;
-
+                    if(!skipping)
+                    {
+                        skipping = true;
+                    }
+                    
                     SetNextLineFlag();
                 }
                 else

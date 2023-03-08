@@ -161,8 +161,6 @@ namespace Fungus
             }
 
             sayDialog.Stop();
-
-
         }
     }
 }
