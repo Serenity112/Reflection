@@ -55,7 +55,7 @@ public class PauseButton : MonoBehaviour
         gameObject.GetComponent<Button>().interactable = false;
   
         animator.Play("pauseanim");
-        ButtonsManager.unlinePauseButtons();
+        ButtonsManager.instance.unlinePauseButtons();
 
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, false, speed));
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed * 0.5f));
@@ -75,7 +75,7 @@ public class PauseButton : MonoBehaviour
 
     private IEnumerator IContinue()
     {
-        ButtonsManager.unlinePauseButtons();
+        ButtonsManager.instance.unlinePauseButtons();
 
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, true, speed));
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed * 0.5f));

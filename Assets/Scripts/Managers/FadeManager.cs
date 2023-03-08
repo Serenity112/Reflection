@@ -1,27 +1,14 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 public class FadeManager : MonoBehaviour
 {
     public static FadeManager instance = null;
-    void Start()
-    {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
-    }
 
     public static IEnumerator FadeObject(GameObject obj, bool fadein, float speed)
     {
         obj.SetActive(true);
         float color = obj.GetComponent<CanvasGroup>().alpha;
-        //Debug.Log("color=" + color);
 
         if (fadein)
         {
@@ -33,13 +20,11 @@ public class FadeManager : MonoBehaviour
         }
         else
         {
-            //obj.GetComponent<CanvasGroup>().alpha = 1;
             for (float i = color; i >= 0 - 0.05; i -= speed * Time.deltaTime)
             {
                 obj.GetComponent<CanvasGroup>().alpha = i;
                 yield return null;
             }
-            //obj.GetComponent<CanvasGroup>().alpha = 0;
             obj.SetActive(false);
         }
     }
@@ -67,6 +52,7 @@ public class FadeManager : MonoBehaviour
 
         }
     }
+
     public static void FadeObject(GameObject obj, bool fadein)
     {   
         if (fadein)
@@ -128,6 +114,7 @@ public class FadeManager : MonoBehaviour
             }
         }
     }
+
     public static IEnumerator ColorFadeObject(GameObject obj, bool fadein)
     {
         obj.SetActive(true);

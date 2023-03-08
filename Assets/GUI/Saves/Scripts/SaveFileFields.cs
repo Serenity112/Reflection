@@ -47,14 +47,11 @@ public class SaveFileFields : MonoBehaviour
 
     public void CloseOverPanel()
     {
-        if (!PanelsManager.confirmPanelActive)
-        {
-            overPanelOut = FadeManager.FadeObject(overPanel, false, SaveManager.instance.optionsGradientSpeed);
-            StartCoroutine(overPanelOut);
+        overPanelOut = FadeManager.FadeObject(overPanel, false, SaveManager.instance.optionsGradientSpeed);
+        StartCoroutine(overPanelOut);
 
-            if (overPanelIn != null)
-                StopCoroutine(overPanelIn);
-        }
+        if (overPanelIn != null)
+            StopCoroutine(overPanelIn);
     }
 
     public void resetCassettePosition(GameObject cassette)

@@ -1,21 +1,21 @@
 using UnityEngine;
 
-public class PauseOptionButton : MonoBehaviour
+public class MMOptionButton : MonoBehaviour
 {
     [SerializeField]
     private float speed;
 
-    public GameObject spacing;    
+    public GameObject spacing;
     void Start()
     {
         spacing = transform.GetChild(0).gameObject;
 
-        ButtonsManager.instance.underlinedPauseButtons.Add(gameObject);
+        MMButtonsManager.instance.underlinedButtons.Add(gameObject);
     }
 
     private void OnMouseEnter()
     {
-        StopAllCoroutines();        
+        StopAllCoroutines();
         StartCoroutine(FadeManager.FadeObject(spacing, true, speed));
     }
 

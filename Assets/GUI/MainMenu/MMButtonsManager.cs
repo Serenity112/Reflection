@@ -2,26 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ButtonsManager : MonoBehaviour
+public class MMButtonsManager : MonoBehaviour
 {
-    public static ButtonsManager instance = null;
+    public static MMButtonsManager instance = null;
 
-    public List<GameObject> underlinedPauseButtons = new List<GameObject>();
+    public List<GameObject> underlinedButtons = new List<GameObject>();
 
-    public void unlinePauseButtons()
+    public void unlineButtons()
     {
-        foreach(GameObject button in underlinedPauseButtons)
+        foreach (GameObject button in underlinedButtons)
         {
-            PauseOptionButton underlineButton = button.GetComponent<PauseOptionButton>();
+            MMOptionButton underlineButton = button.GetComponent<MMOptionButton>();
             underlineButton.StopAllCoroutines();
             GameObject spacing = underlineButton.spacing;
             spacing.GetComponent<CanvasGroup>().alpha = 0f;
         }
     }
-    void Start()
+    void Awake()
     {
-        Debug.Log("underlinedPauseButtons.Count = " + underlinedPauseButtons.Count);
-
         if (instance == null)
         {
             instance = this;

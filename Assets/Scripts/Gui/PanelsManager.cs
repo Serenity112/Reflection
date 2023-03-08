@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PanelsManager : MonoBehaviour
@@ -76,7 +77,7 @@ public class PanelsManager : MonoBehaviour
         SaveManager.instance.ClearCurrent();
         Addressables.ReleaseInstance(savePanelHandler);
 
-        ButtonsManager.unlinePauseButtons();
+        ButtonsManager.instance.unlinePauseButtons();
         PanelsCamera.enabled = false;
 
         Resources.UnloadUnusedAssets();
@@ -129,7 +130,7 @@ public class PanelsManager : MonoBehaviour
         SaveManager.instance.ClearCurrent();
         Addressables.ReleaseInstance(savePanelHandler);
 
-        ButtonsManager.unlinePauseButtons();
+        ButtonsManager.instance.unlinePauseButtons();
         FadeManager.FadeObject(pausePanel, true);
         gameGuiPanel.GetComponent<CanvasGroup>().alpha = 0f;
         GameButtons.GetComponent<CanvasGroup>().alpha = 0f;
@@ -141,5 +142,23 @@ public class PanelsManager : MonoBehaviour
         Resources.UnloadUnusedAssets();
     }
 
+    // Выход в главное меню
+    public void QuitToMainMenu()
+    {
+        StartCoroutine(IQuitToMainMenu());
+    }
 
+    private IEnumerator IQuitToMainMenu()
+    {
+        yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, true, 5f));
+
+        StaticVariables.ifInMainMenu = true;
+
+        var asyncLoadLevel = SceneManager.LoadSceneAsync("MainMenu", LoadSceneMode.Single);
+
+        while (!asyncLoadLevel.isDone)
+        {
+            yield return null;
+        }
+    }
 }

@@ -140,10 +140,12 @@ public class SaveChoiseAnimator : MonoBehaviour
         yield return StartCoroutine(ConfirmationPanel.CreatePanel("Удалить сохранение?", IDeleteSave(), ICancelDelete()));
     }
     IEnumerator IDeleteSave()
-    {
+    {      
+        StartCoroutine(FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed));
         StartCoroutine(FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed));
         FadeManager.FadeObject(SavedPanel, false);
         FadeManager.FadeObject(UnSavedPanel, true);
+        saveFileFields.CloseOverPanel();
 
         yield return StartCoroutine(ConfirmationPanel.ClosePanel());
 
@@ -157,8 +159,11 @@ public class SaveChoiseAnimator : MonoBehaviour
 
             // Если после УДАЛЕНИЯ не осталось true сейвов, значит удалён последний => триггер 0
             if (!SaveManager.instance.savesTaken.Contains(true))
+            {
+                ES3.Save<int>("ContinueTrigger", 0, "SaveFiles.es3");
                 StaticVariables.MainMenuContinueButtonAnimationTrigger = 0;
-
+            }
+                
             ES3.DeleteKey("SaveFile" + actualSaveNum, "SaveFiles.es3");
 
             // Добавить удаление спешл ивентов!

@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -35,18 +36,33 @@ public class MMPanelsManager : MonoBehaviour
             Destroy(gameObject);
         }
 
+        UpdateButtonsState();
+    }
+
+
+    // Кнопки меню
+    private void UpdateButtonsState()
+    {
+        if (ES3.FileExists("SaveFiles.es3") && ES3.KeyExists("ContinueTrigger", "SaveFiles.es3"))
+        {
+            StaticVariables.MainMenuContinueButtonAnimationTrigger = ES3.Load<int>("ContinueTrigger", "SaveFiles.es3");
+        }
+
         switch (StaticVariables.MainMenuContinueButtonAnimationTrigger)
         {
             case -1:
-                RemoveContinueButton(); 
+                RemoveContinueButton();
                 break;
             case 0:
+                AddContinueButton(); // Так как в сцене изначально кнопки нет
                 StartCoroutine(IRemoveContinueButton());
                 StaticVariables.MainMenuContinueButtonAnimationTrigger = -1;
+                ES3.Save<int>("ContinueTrigger", -1, "SaveFiles.es3");
                 break;
             case 1:
                 StartCoroutine(IAddContinueButton());
                 StaticVariables.MainMenuContinueButtonAnimationTrigger = 2;
+                ES3.Save<int>("ContinueTrigger", 2, "SaveFiles.es3");
                 break;
             case 2:
                 AddContinueButton();
@@ -54,43 +70,33 @@ public class MMPanelsManager : MonoBehaviour
         }
     }
 
-    // Кнопки меню
     private void AddContinueButton()
     {
-        GameObject ContinueButto = Buttons.transform.GetChild(0).gameObject;
-        ContinueButto.SetActive(true);
-        ContinueButto.GetComponent<CanvasGroup>().alpha = 1;
-
-        GameObject StaticButtons = Buttons.transform.GetChild(1).gameObject;
-        StaticButtons.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -53);
+        Buttons.GetComponent<Animator>().Play("ConstantAppear");
     }
 
     private void RemoveContinueButton()
     {
-        GameObject ContinueButton = Buttons.transform.GetChild(0).gameObject;
-        ContinueButton.SetActive(false);
-        ContinueButton.GetComponent<CanvasGroup>().alpha = 0;
-
-        GameObject StaticButtons = Buttons.transform.GetChild(1).gameObject;
-        StaticButtons.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 0);
+        Buttons.GetComponent<Animator>().Play("ConstantRemove");
     }
 
     private IEnumerator IAddContinueButton()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.33f);
         Buttons.GetComponent<Animator>().Play("ContinueButtonAppear");
     }
 
     private IEnumerator IRemoveContinueButton()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.33f);
         Buttons.GetComponent<Animator>().Play("ContinueButtonRemove");
     }
 
     // Новая игра
     public void StartNewGame()
     {
-
+        StaticVariables.StartingLoadSaveFile = -1;
+        StartCoroutine(ILoadGame(-1));
     }
 
     // Сейвы
@@ -109,6 +115,8 @@ public class MMPanelsManager : MonoBehaviour
         StaticVariables.ifInMainMenu = true;
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
+        MMButtonsManager.instance.unlineButtons();
+        Buttons.SetActive(false);
 
         savesPanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return savesPanelHandler;
@@ -131,16 +139,25 @@ public class MMPanelsManager : MonoBehaviour
 
         Addressables.ReleaseInstance(savesPanelHandler);
 
+        Buttons.SetActive(true);
+
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, fadingSpeed));
 
         Resources.UnloadUnusedAssets();
+
+        UpdateButtonsState();
     }
 
     public IEnumerator ILoadGame(int saveNum)
     {
-        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
 
-        StaticVariables.StartingLoadSaveFile = actualSaveNum;
+        if (saveNum != -1)
+        {
+            int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
+
+            StaticVariables.StartingLoadSaveFile = actualSaveNum;
+        }
 
         StaticVariables.ifInMainMenu = false;
 

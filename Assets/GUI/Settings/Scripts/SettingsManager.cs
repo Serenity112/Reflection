@@ -67,7 +67,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     }
     public void CloseSettings()
     {
-        ButtonsManager.unlinePauseButtons();
+        ButtonsManager.instance.unlinePauseButtons();
 
         StartCoroutine(ICloseSettings());
     }

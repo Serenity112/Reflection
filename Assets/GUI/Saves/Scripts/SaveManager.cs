@@ -386,8 +386,11 @@ public class SaveManager : MonoBehaviour
 
         // SetScreenshot вызывается только во время 1го сейва. Если до 1го сейва не было сейвов => триггер 1
         if (!savesTaken.Contains(true))
+        {
             StaticVariables.MainMenuContinueButtonAnimationTrigger = 1;
-
+            ES3.Save<int>("ContinueTrigger", 1, "SaveFiles.es3");
+        }
+            
         savesTaken[currentPage * savesPerPage + saveNum] = true;
         ES3.Save<bool[]>("saveTaken", savesTaken, "screenshots.es3");
 
