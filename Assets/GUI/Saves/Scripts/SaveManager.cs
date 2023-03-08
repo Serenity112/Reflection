@@ -1,12 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using System;
-using UnityEngine.Experimental.Rendering;
-using UnityEngine.Rendering;
-using System.Threading.Tasks;
-using Unity.VisualScripting;
 
 public enum SavePageScroll
 {
@@ -276,7 +271,6 @@ public class SaveManager : MonoBehaviour
                 FadeManager.FadeObject(unsavedPanel, false);
 
                 StartCoroutine(FadeManager.FadeObject(saveFileFields.overPanel, true, pagesScrollSpeed)); // Overpanel
-                //saveFileFields.overPanel.GetComponent<CanvasGroup>().alpha = 1f; 
                 saveFileFields.AllowSaveLoad = true;
                 saveFileFields.AllowOverPanel = true;
             }
@@ -389,6 +383,10 @@ public class SaveManager : MonoBehaviour
         currentTextures[saveNum] = texture;
 
         ES3.SaveImage(texture, "screenshots/screenshot" + actualSaveNum + ".png");
+
+        // SetScreenshot вызывается только во время 1го сейва. Если до 1го сейва не было сейвов => триггер 1
+        if (!savesTaken.Contains(true))
+            StaticVariables.MainMenuContinueButtonAnimationTrigger = 1;
 
         savesTaken[currentPage * savesPerPage + saveNum] = true;
         ES3.Save<bool[]>("saveTaken", savesTaken, "screenshots.es3");

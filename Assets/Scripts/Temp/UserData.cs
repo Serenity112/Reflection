@@ -78,13 +78,13 @@ public class UserData : MonoBehaviour
         CurrentBlock = null;
 
         // Сейв, заданный в главном меню
-        if (StaticVariables.StartingLoadIndex == -1)
+        if (StaticVariables.StartingLoadSaveFile == -1)
         {
             StartCoroutine(LoadGameFromStart());
         }
         else
         {
-            LoadPlayer(StaticVariables.StartingLoadIndex);
+            LoadPlayer(StaticVariables.StartingLoadSaveFile);
         }
     }
 

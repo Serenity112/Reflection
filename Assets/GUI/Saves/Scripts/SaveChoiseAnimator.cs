@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Linq;
+
 public enum Side
 {
     Left,
@@ -152,6 +154,10 @@ public class SaveChoiseAnimator : MonoBehaviour
             ES3.DeleteFile("screenshots/screenshot" + actualSaveNum + ".png");
             SaveManager.instance.savesTaken[actualSaveNum] = false;
             ES3.Save<bool[]>("saveTaken", SaveManager.instance.savesTaken, "screenshots.es3");
+
+            // Если после УДАЛЕНИЯ не осталось true сейвов, значит удалён последний => триггер 0
+            if (!SaveManager.instance.savesTaken.Contains(true))
+                StaticVariables.MainMenuContinueButtonAnimationTrigger = 0;
 
             ES3.DeleteKey("SaveFile" + actualSaveNum, "SaveFiles.es3");
 
