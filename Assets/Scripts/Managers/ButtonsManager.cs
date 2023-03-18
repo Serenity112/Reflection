@@ -20,8 +20,6 @@ public class ButtonsManager : MonoBehaviour
     }
     void Start()
     {
-        Debug.Log("underlinedPauseButtons.Count = " + underlinedPauseButtons.Count);
-
         if (instance == null)
         {
             instance = this;

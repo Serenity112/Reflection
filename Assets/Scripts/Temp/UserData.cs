@@ -185,21 +185,6 @@ public class UserData : MonoBehaviour
             StartCoroutine(BackgroundManager.instance.ISwapBackground(CurrentBG));
         }
 
-        // Music
-        CurrentMusic = newSave.CurrentMusic;
-        CurrentAmbient = newSave.CurrentAmbient;
-        MusicSourceVolume = newSave.MusicSourceVolume;
-        AmbientSourceVolume = newSave.AmbientSourceVolume;
-        if (CurrentMusic != null)
-        {
-            AudioManager.instance.MusicStart(CurrentMusic, 3f, MusicSourceVolume);
-        }
-        if (CurrentAmbient != null)
-        {
-            AudioManager.instance.AmbientStart(CurrentAmbient, 3f, AmbientSourceVolume);
-        }
-
-
         // Special Events
         // Отгрузка
         switch (specialEvent)
@@ -234,6 +219,24 @@ public class UserData : MonoBehaviour
 
         //GameObject.Find("ChatLog").GetComponent<LogManager>().DelLog();
         //LogBlocks = newSave.LogBlocks;
+
+
+        // Music
+        // Отгрузка
+        yield return AudioManager.instance.UnloadCurrent();
+        // Загрузка
+        CurrentMusic = newSave.CurrentMusic;
+        CurrentAmbient = newSave.CurrentAmbient;
+        MusicSourceVolume = newSave.MusicSourceVolume;
+        AmbientSourceVolume = newSave.AmbientSourceVolume;
+        if (CurrentMusic != null)
+        {
+            AudioManager.instance.MusicStart(CurrentMusic, 3f, MusicSourceVolume);
+        }
+        if (CurrentAmbient != null)
+        {
+            AudioManager.instance.AmbientStart(CurrentAmbient, 3f, AmbientSourceVolume);
+        }
 
         DialogMod.denyNextDialog = false;
 

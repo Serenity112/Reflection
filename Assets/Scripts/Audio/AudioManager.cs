@@ -1,8 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
 using UnityEngine;
+using Fungus;
+using System.Numerics;
 
 public class AudioManager : MonoBehaviour
 {
@@ -41,6 +42,9 @@ public class AudioManager : MonoBehaviour
     }
     public SoundArr[] SoundData;
 
+    // int для накопительного эффекта, bool не подойдёт
+    public int _isFading = 0;
+
     void Awake()
     {
         AudioListener.volume = 1f;
@@ -75,6 +79,54 @@ public class AudioManager : MonoBehaviour
     }
 
     // Music
+    public IEnumerator UnloadCurrent()
+    {
+        StartCoroutine(StartFade(musicSource, 0.4f, 0));
+        StartCoroutine(StartFade(musicBuffSource, 0.4f, 0));
+        StartCoroutine(StartFade(ambientSource, 0.4f, 0));
+        yield return StartCoroutine(StartFade(soundSource, 0.4f, 0));
+
+        musicSource.clip = null;
+        musicBuffSource.clip = null;
+        ambientSource.clip = null;
+        soundSource.clip = null;
+        yield return null;
+    }
+
+    // Метод для быстрого закликивания, который ставит источники в актуальное положение. Если нет заклика, ничего не делает
+    // НЕ ДОРАБОТАНО
+    private void LoadCurrent()
+    {
+        return;
+
+        if (_isFading != 0)
+        {
+            AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
+
+            string currMusic = UserData.instance.CurrentMusic;
+            if (currMusic != null)
+            {
+                musicSource.Stop();
+                musicBuffSource.Stop();
+
+                activeSource.volume = UserData.instance.MusicSourceVolume;
+                musicSource.clip = Music[currMusic];
+                activeSource.Play();
+            }
+
+            string currAmbient = UserData.instance.CurrentAmbient;
+            if (currAmbient != null)
+            {
+                ambientSource.Stop();
+
+                ambientSource.volume = UserData.instance.AmbientSourceVolume;
+                ambientSource.clip = Ambient[currAmbient];
+
+                ambientSource.Play();
+            }
+        }
+    }
+
 
     // Включает музыку с 0й громкости до громкости настроек
     public void MusicStart(string name, float duration, float targetVol = 1)
@@ -82,11 +134,13 @@ public class AudioManager : MonoBehaviour
         UserData.instance.CurrentMusic = name;
         UserData.instance.MusicSourceVolume = targetVol;
 
+        LoadCurrent();
+
         musicSource.volume = 0;
         musicSource.clip = Music[name];
         musicSource.Play();
 
-        if (duration == 0)
+        if (duration == 0 || DialogMod.skipping)
         {
             musicSource.volume = targetVol;
         }
@@ -106,30 +160,19 @@ public class AudioManager : MonoBehaviour
         UserData.instance.CurrentMusic = null;
         UserData.instance.MusicSourceVolume = 0;
 
-        if (musicSource.isPlaying)
-        {
-            if (duration == 0)
-            {
-                musicSource.volume = 0;
-                musicSource.Stop();
-                yield break;
-            }
+        LoadCurrent();
 
-            yield return StartCoroutine(StartFade(musicSource, duration, 0));
-            musicSource.Stop();
-        }
-        else if (musicBuffSource.isPlaying)
-        {
-            if (duration == 0)
-            {
-                musicBuffSource.volume = 0;
-                musicBuffSource.Stop();
-                yield break;
-            }
+        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
 
-            yield return StartCoroutine(StartFade(musicBuffSource, duration, 0));
-            musicBuffSource.Stop();
+        if (duration == 0 || DialogMod.skipping)
+        {
+            activeSource.volume = 0;
+            activeSource.Stop();
+            yield break;
         }
+
+        yield return StartCoroutine(StartFade(activeSource, duration, 0));
+        activeSource.Stop();
     }
 
     // Переход трека в трек
@@ -142,32 +185,28 @@ public class AudioManager : MonoBehaviour
     {
         UserData.instance.CurrentMusic = name;
 
-        if (musicSource.isPlaying)
+        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
+        AudioSource newSource = musicSource.isPlaying ? musicBuffSource : musicSource;
+
+        float curr_vol = UserData.instance.MusicSourceVolume;
+
+        LoadCurrent();
+
+        newSource.volume = 0;
+        newSource.clip = Music[name];
+        newSource.Play();
+
+        if (duration == 0 || DialogMod.skipping)
         {
-            float curr_vol = musicSource.volume;
-            UserData.instance.MusicSourceVolume = curr_vol;
-
-            musicBuffSource.volume = 0;
-            musicBuffSource.clip = Music[name];
-            musicBuffSource.Play();
-            StartCoroutine(StartFade(musicBuffSource, duration, curr_vol));
-
-            yield return StartCoroutine(StartFade(musicSource, duration, 0));
-            musicSource.Stop();
+            newSource.volume = curr_vol;
+            activeSource.volume = 0;
+            activeSource.Stop();
+            yield break;
         }
-        else if (musicBuffSource.isPlaying)
-        {
-            float curr_vol = musicBuffSource.volume;
-            UserData.instance.MusicSourceVolume = curr_vol;
 
-            musicSource.volume = 0;
-            musicSource.clip = Music[name];
-            musicSource.Play();
-            StartCoroutine(StartFade(musicSource, duration, curr_vol));
-
-            yield return StartCoroutine(StartFade(musicBuffSource, duration, 0));
-            musicBuffSource.Stop();
-        }
+        StartCoroutine(StartFade(newSource, duration, curr_vol));
+        yield return StartCoroutine(StartFade(activeSource, duration, 0));
+        activeSource.Stop();
     }
 
     // Трек -> тишина -> трек
@@ -177,22 +216,27 @@ public class AudioManager : MonoBehaviour
     }
 
     private IEnumerator IMusicChange(string name, float duration)
-    {
+    {      
         UserData.instance.CurrentMusic = name;
-        float curr_vol = 1; // Заглушка
 
-        if (musicSource.isPlaying)
+        LoadCurrent();
+
+        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
+
+        float curr_vol = activeSource.volume;
+
+        if (duration == 0 || DialogMod.skipping)
         {
-            curr_vol = musicSource.volume;
-            yield return StartCoroutine(StartFade(musicSource, duration, 0));
-            musicSource.Stop();
+            activeSource.volume = 0;
+            activeSource.Stop();
+            musicSource.clip = Music[name];
+            musicSource.volume = curr_vol;
+            musicSource.Play();
+            yield break;
         }
-        else
-        {
-            curr_vol = musicSource.volume;
-            yield return StartCoroutine(StartFade(musicBuffSource, duration, 0));
-            musicBuffSource.Stop();
-        }
+
+        yield return StartCoroutine(StartFade(activeSource, duration, 0));
+        musicSource.Stop();
 
         yield return new WaitForSeconds(1f); // Задержка между треками
 
@@ -200,20 +244,24 @@ public class AudioManager : MonoBehaviour
         musicSource.clip = Music[name];
         musicSource.Play();
 
-        StartCoroutine(StartFade(musicSource, duration, curr_vol));
+        yield return StartCoroutine(StartFade(musicSource, duration, curr_vol));
     }
 
     public void MusicVolChange(float duration, float factor) // 0 to 1
     {
         UserData.instance.MusicSourceVolume = factor;
 
-        if (musicSource.isPlaying)
+        LoadCurrent();
+
+        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
+
+        if (duration == 0 || DialogMod.skipping)
         {
-            StartCoroutine(StartFade(musicSource, duration, factor));
+            activeSource.volume = factor;
         }
         else
         {
-            StartCoroutine(StartFade(musicBuffSource, duration, factor));
+            StartCoroutine(StartFade(activeSource, duration, factor));
         }
     }
 
@@ -221,13 +269,17 @@ public class AudioManager : MonoBehaviour
     {
         UserData.instance.MusicSourceVolume = 1;
 
-        if (musicSource.isPlaying)
+        LoadCurrent();
+
+        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
+
+        if (duration == 0 || DialogMod.skipping)
         {
-            StartCoroutine(StartFade(musicSource, duration, 1));
+            activeSource.volume = 1;
         }
         else
         {
-            StartCoroutine(StartFade(musicBuffSource, duration, 1));
+            StartCoroutine(StartFade(activeSource, duration, 1));
         }
     }
 
@@ -237,11 +289,13 @@ public class AudioManager : MonoBehaviour
         UserData.instance.CurrentAmbient = name;
         UserData.instance.AmbientSourceVolume = targetVol;
 
+        LoadCurrent();
+
         ambientSource.volume = 0;
         ambientSource.clip = Ambient[name];
         ambientSource.Play();
 
-        if (duration == 0)
+        if (duration == 0 || DialogMod.skipping)
         {
             ambientSource.volume = targetVol;
         }
@@ -261,8 +315,11 @@ public class AudioManager : MonoBehaviour
         UserData.instance.CurrentAmbient = null;
         UserData.instance.AmbientSourceVolume = 0;
 
-        if (duration == 0)
+        LoadCurrent();
+
+        if (duration == 0 || DialogMod.skipping)
         {
+            ambientSource.volume = 0;
             ambientSource.Stop();
             yield break;
         }
@@ -280,7 +337,17 @@ public class AudioManager : MonoBehaviour
     {
         UserData.instance.CurrentAmbient = name;
 
+        LoadCurrent();
+
         float curr_vol = ambientSource.volume;
+
+        if (duration == 0 || DialogMod.skipping)
+        {
+            ambientSource.clip = Ambient[name];
+            ambientSource.Play();
+            yield break;
+        }
+
         yield return StartCoroutine(StartFade(ambientSource, duration, 0));
         ambientSource.Stop();
 
@@ -295,13 +362,33 @@ public class AudioManager : MonoBehaviour
     public void AmbientVolChange(float duration, float factor) // 0 to 1
     {
         UserData.instance.AmbientSourceVolume = factor;
-        StartCoroutine(StartFade(ambientSource, duration, factor));
+
+        LoadCurrent();
+
+        if (duration == 0 || DialogMod.skipping)
+        {
+            ambientSource.volume = factor;
+        }
+        else
+        {
+            StartCoroutine(StartFade(ambientSource, duration, factor));
+        }
     }
 
     public void AmbientVolDefault(float duration)
-    {
+    {       
         UserData.instance.AmbientSourceVolume = 1;
-        StartCoroutine(StartFade(ambientSource, duration, 1));
+
+        LoadCurrent();
+
+        if (duration == 0 || DialogMod.skipping)
+        {
+            ambientSource.volume = 1;
+        }
+        else
+        {
+            StartCoroutine(StartFade(ambientSource, duration, 1));
+        }
     }
 
     // Sound
@@ -313,22 +400,18 @@ public class AudioManager : MonoBehaviour
 
     public IEnumerator StartFade(AudioSource source, float duration, float targetVolume_linear)
     {
-        if (duration == 0)
+        _isFading++;
+
+        float currentTime = 0;
+        float currentVolume_linear = source.volume;
+        while (currentTime < duration)
         {
-            source.volume = targetVolume_linear;
-            yield break;
+            currentTime += Time.deltaTime;
+            source.volume = Mathf.Lerp(currentVolume_linear, targetVolume_linear, currentTime / duration);
+            yield return null;
         }
-        else
-        {
-            float currentTime = 0;
-            float currentVolume_linear = source.volume;
-            while (currentTime < duration)
-            {
-                currentTime += Time.deltaTime;
-                source.volume = Mathf.Lerp(currentVolume_linear, targetVolume_linear, currentTime / duration);
-                yield return null;
-            }
-            yield break;
-        }
+
+        _isFading--;
+        yield break;
     }
 }
