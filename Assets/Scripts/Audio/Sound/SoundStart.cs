@@ -3,25 +3,27 @@ using UnityEngine;
 namespace Fungus
 {
     [CommandInfo("Ref",
-                 "FConnectPackage",
-                 "FConnectPackage")]
-    public class FConnectPackage : Command
+                 "SoundStart",
+                 "SoundStart")]
+    public class SoundStart : Command
     {
         [SerializeField]
-        private string packageName;
+        private string ost;
+
+        [SerializeField]
+        private float duration;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            PackageConntector.instance.ConnectPackage(packageName);
-
+            AudioManager.instance.SoundStart(ost, duration);
             Continue();
         }
 
         public override Color GetButtonColor()
         {
-            return new Color32(110, 110, 200, 255);
+            return new Color32(96, 63, 97, 255);
         }
     }
 }

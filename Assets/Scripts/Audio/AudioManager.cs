@@ -392,10 +392,20 @@ public class AudioManager : MonoBehaviour
     }
 
     // Sound
-    public void SoundStart(string name)
+    public void SoundStart(string name, float duration)
     {
+        soundSource.volume = 0;
         soundSource.clip = Sound[name];
         soundSource.Play();
+
+        if (duration == 0 || DialogMod.skipping)
+        {
+            soundSource.volume = 1;
+        }
+        else
+        {
+            StartCoroutine(StartFade(ambientSource, duration, 1));
+        }
     }
 
     public IEnumerator StartFade(AudioSource source, float duration, float targetVolume_linear)

@@ -102,7 +102,7 @@ public class DreamSnow : MonoBehaviour
         Resources.UnloadUnusedAssets();
     }
 
-    public IEnumerator IEndDreamSnow(int new_bg, float speed)
+    public IEnumerator IEndDreamSnow(string new_bg, float speed)
     {
         UserData.instance.CurrentBG = new_bg;
         UserData.instance.specialEvent = SpecialEvents.none;

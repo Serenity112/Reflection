@@ -13,7 +13,7 @@ using System.Xml;
 
 namespace Fungus.EditorUtils
 {
-    
+
     [CustomEditor(typeof(Block))]
     public class BlockEditor : Editor
     {
@@ -378,12 +378,14 @@ namespace Fungus.EditorUtils
                 Debug.Log("Added");
                 switch (key.Attributes["Command"].Value)
                 {
+                    // Dialog
                     case "SayDialog":
                         AddCommand("Fungus.FungusSayDialog", new FieldArg[] {
                             new FieldArg("storyText", GetInnerText(key, "arg1")), // Phrase
                             new FieldArg("speaker", GetInnerText(key, "arg2")), // Speaker
                             new FieldArg("extendPrevious", GetInnerText(key, "arg4") == "y")}); // Extend
                         break;
+                    // Sprites
                     case "AppearSprite":
                         AddCommand("Fungus.FungusNewSpriteAppear", new FieldArg[] {
                             new FieldArg("characterName", GetInnerText(key, "arg1")), // Name
@@ -392,8 +394,11 @@ namespace Fungus.EditorUtils
                             new FieldArg("Position", GetInnerText(key, "arg4") == null ? null : new Vector3(
                                 float.Parse(GetInnerText(key, "arg4")),
                                 float.Parse(GetInnerText(key, "arg5")), 0)), // PosX, PosY. PosZ = 0
-                            new FieldArg("appearSpeed", GetInnerText(key, "arg6") == null ? null : 
+                            new FieldArg("appearSpeed", GetInnerText(key, "arg6") == null ? null :
                                 float.Parse(GetInnerText(key, "arg6")))}); // Speed
+
+                        AddCommand("Fungus.FConnectPackage", new FieldArg[] {
+                            new FieldArg("packageName", GetInnerText(key, "arg1"))}, 5); // Name
                         break;
                     case "SwapSprite":
                         AddCommand("Fungus.FungusSwapSprites", new FieldArg[] {
@@ -421,29 +426,67 @@ namespace Fungus.EditorUtils
                             new FieldArg("speed", GetInnerText(key, "arg2") == null ? null :
                                 float.Parse(GetInnerText(key, "arg2")))}); // Speed
                         break;
+                    // Background
                     case "SetBG":
                         AddCommand("Fungus.FungusSetBG", new FieldArg[] {
-                            new FieldArg("characterName", key["arg1"].InnerText), // Name
-                            new FieldArg("speed", GetInnerText(key, "arg2") == null ? null :
-                                float.Parse(GetInnerText(key, "arg2")))}); // Speed
+                            new FieldArg("backgroundName", GetInnerText(key, "arg1")),
+                            new FieldArg("speed", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2")))});
                         break;
+                    // Music
                     case "MusicStart":
+                        AddCommand("Fungus.MusicStart", new FieldArg[] {
+                            new FieldArg("ost", GetInnerText(key, "arg1")),
+                            new FieldArg("duration", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2"))),
+                            new FieldArg("targetVol", GetInnerText(key, "arg3") == null ? null : float.Parse(GetInnerText(key, "arg3")))});
                         break;
                     case "MusicEnd":
+                        AddCommand("Fungus.MusicEnd", new FieldArg[] {
+                            new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))});
                         break;
+                    case "MusicTransition":
+                        AddCommand("Fungus.MusicTransition", new FieldArg[] {
+                            new FieldArg("ost", GetInnerText(key, "arg1")),
+                            new FieldArg("duration", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2")))});
+                        break;
+                    case "MusicDefaultVol":
+                        AddCommand("Fungus.MusicDefaultVol", new FieldArg[] {
+                            new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))});
+                        break;
+                    case "MusicVolDown":
+                        AddCommand("Fungus.MusicVolDown", new FieldArg[] {
+                            new FieldArg("duration", GetInnerText(key, "arg1")),
+                            new FieldArg("factor", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2")))});
+                        break;
+                    // Ambient
                     case "AmbientStart":
+                        AddCommand("Fungus.AmbientStart", new FieldArg[] {
+                            new FieldArg("ost", GetInnerText(key, "arg1")),
+                            new FieldArg("duration", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2"))),
+                            new FieldArg("targetVol", GetInnerText(key, "arg3") == null ? null : float.Parse(GetInnerText(key, "arg3")))});
                         break;
                     case "AmbientEnd":
+                        AddCommand("Fungus.AmbientEnd", new FieldArg[] {
+                            new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))});
                         break;
                     case "AmbientVolDown":
+                        AddCommand("Fungus.MusicVolDown", new FieldArg[] {
+                            new FieldArg("duration", GetInnerText(key, "arg1")),
+                            new FieldArg("factor", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2")))});
                         break;
                     case "AmbientDefaultVol":
+                        AddCommand("Fungus.AmbientDefaultVol", new FieldArg[] {
+                            new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))});
+                        break;
+                    // Sound
+                    case "SoundStart":
+                        AddCommand("Fungus.SoundStart", new FieldArg[] {
+                            new FieldArg("ost", GetInnerText(key, "arg1")),
+                            new FieldArg("duration", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2")))});
                         break;
                     case "DreamSnow":
                         AddCommand("Fungus.FDreamSnow", new FieldArg[] {                           
                             // Add DreamSnowState 
-                            new FieldArg("speed", GetInnerText(key, "arg2") == null ? null :
-                                float.Parse(GetInnerText(key, "arg2")))}); // Speed
+                            new FieldArg("speed", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2")))}); // Speed
                         break;
                     default:
                         break;
@@ -451,7 +494,7 @@ namespace Fungus.EditorUtils
             }
         }
 
-        private void AddCommand(string commandName, FieldArg[] args)
+        private void AddCommand(string commandName, FieldArg[] args, int indexSubstract = 0)
         {
             Type commandType = ByName(commandName);
 
@@ -503,7 +546,7 @@ namespace Fungus.EditorUtils
             Undo.RecordObject(block, "Set command type");
             if (index < block.CommandList.Count - 1)
             {
-                block.CommandList.Insert(index, newCommand);
+                block.CommandList.Insert(index - indexSubstract, newCommand);
             }
             else
             {

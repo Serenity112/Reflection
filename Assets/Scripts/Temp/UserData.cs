@@ -9,7 +9,7 @@ public struct SaveData
     {
         this.saveNum = saveNum;
         SpriteData = new SpriteData[4];
-        Background = -1;
+        Background = null;
 
         CurrentCommandIndex = 0;
 
@@ -28,7 +28,7 @@ public struct SaveData
     int saveNum;
 
     public SpriteData[] SpriteData;
-    public int Background;
+    public string Background;
     public int CurrentCommandIndex;
     public string CurrentBlock;
 
@@ -60,7 +60,7 @@ public class UserData : MonoBehaviour
     public string CurrentBlock { get; set; }
 
     // Bg
-    public int CurrentBG { get; set; }
+    public string CurrentBG { get; set; }
 
     // Music
     public string CurrentMusic { get; set; }
@@ -85,7 +85,7 @@ public class UserData : MonoBehaviour
             Destroy(gameObject);
         }
 
-        CurrentBG = -1;
+        CurrentBG = null;
 
         specialEvent = SpecialEvents.none;
 
@@ -180,7 +180,7 @@ public class UserData : MonoBehaviour
         yield return StartCoroutine(BackgroundManager.instance.IReleaseBackground());
 
         CurrentBG = newSave.Background;
-        if (CurrentBG != -1)
+        if (CurrentBG != null)
         {
             StartCoroutine(BackgroundManager.instance.ISwapBackground(CurrentBG));
         }

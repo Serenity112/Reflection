@@ -40,7 +40,6 @@ public class BackgroundManager : MonoBehaviour
 
     private AsyncOperationHandle<GameObject> bg_handler;
 
-    private List<BgData> BackGrounds;
 
     void Start()
     {
@@ -52,32 +51,6 @@ public class BackgroundManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-
-        BackGrounds = new List<BgData>
-        {
-            new BgData(0, "AssemblyHall"),
-            new BgData(1, "Corridor"),
-            new BgData(2, "SkverDay"),
-            new BgData(3, "Robotech"),
-            new BgData(4, "NastyaCG"),
-            new BgData(5, "EvelinaCG"),
-            new BgData(6, "Statue"),
-            new BgData(7, "Museum"),
-            new BgData(8, "Dream"),
-            new BgData(9, "DreamLaunch"),
-            new BgData(10, "Corridor"),
-            new BgData(11, "Classroom"),
-            new BgData(12, "StationFocused"),
-            new BgData(13, "AssemblyHallCG"),
-            new BgData(14, "HallwayMuseum"),
-            new BgData(15, "Plan"),
-            new BgData(16, "RoomNight1"),
-            new BgData(17, "RoomNight2"),
-            new BgData(18, "Lectornaya"),
-            new BgData(19, "Hall"),
-            new BgData(20, "Street"),
-            new BgData(21, "Monorels")
-        };
     }
 
     public IEnumerator IReleaseBackground()
@@ -88,24 +61,24 @@ public class BackgroundManager : MonoBehaviour
         }
     }
 
-    public IEnumerator ISwap(bgSwapType type, int num, float speed)
+    public IEnumerator ISwap(string bg_adress, bgSwapType type, float speed)
     {
         switch (type)
         {
             case bgSwapType.BlackFade:
-                yield return IBlackFadeBackground(num, speed);
+                yield return IBlackFadeBackground(bg_adress, speed);
                 break;
             case bgSwapType.Instant:
-                yield return ISwapBackground(num);
+                yield return ISwapBackground(bg_adress);
                 break;
             case bgSwapType.Overlay:
-                yield return IOverlayBackground(num, speed);
+                yield return IOverlayBackground(bg_adress, speed);
                 break;
         }
     }
 
     // Фон -> чёрный экран -> фон
-    public IEnumerator IBlackFadeBackground(int Bg_num, float speed)
+    public IEnumerator IBlackFadeBackground(string bg_adress, float speed)
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
         storytext.GetComponent<Text>().text = "";
@@ -115,8 +88,6 @@ public class BackgroundManager : MonoBehaviour
         {
             Addressables.ReleaseInstance(bg_handler);
         }
-
-        string bg_adress = BackGrounds[Bg_num].name;
 
         bg_handler = Addressables.InstantiateAsync(bg_adress, backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
@@ -130,10 +101,8 @@ public class BackgroundManager : MonoBehaviour
     }
 
     // Фон -> резкая смена -> фон
-    public IEnumerator ISwapBackground(int Bg_num)
+    public IEnumerator ISwapBackground(string bg_adress)
     {
-        string bg_adress = BackGrounds[Bg_num].name;
-
         AsyncOperationHandle<GameObject> old_handler = bg_handler;
 
         bg_handler = Addressables.InstantiateAsync(bg_adress, backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
@@ -153,10 +122,8 @@ public class BackgroundManager : MonoBehaviour
     }
 
     // Фон поверх старого фона
-    public IEnumerator IOverlayBackground(int Bg_num, float speed)
+    public IEnumerator IOverlayBackground(string bg_adress, float speed)
     {
-        string bg_adress = BackGrounds[Bg_num].name;
-
         AsyncOperationHandle<GameObject> old_handler = bg_handler;
 
         bg_handler = Addressables.InstantiateAsync(bg_adress, backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);

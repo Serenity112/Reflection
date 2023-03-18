@@ -16,7 +16,7 @@ namespace Fungus
         private float speed;
 
         [SerializeField]
-        private int new_bg = -1;
+        private string new_bg;
 
         public override void OnEnter()
         {
