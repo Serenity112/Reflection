@@ -74,8 +74,8 @@ namespace Fungus
         {
             optionsHistory[currentChoise] = numberChosen;
 
-            Player.CurrentBlock = BlockName;
-            Player.CurrentCommandIndex = 0;
+            UserData.instance.CurrentBlock = BlockName;
+            UserData.instance.CurrentCommandIndex = 0;
             StoryText.GetComponent<CanvasGroup>().alpha = 1;
 
             //Player.AllowSkip();
@@ -87,14 +87,14 @@ namespace Fungus
 
         void LoadBlock(string CurrentBlock, int CurrentIndex)
         {
-            Block targetBlock = Player.targetFlowchart.FindBlock(CurrentBlock);
+            /*Block targetBlock = Player.targetFlowchart.FindBlock(CurrentBlock);
 
             if (targetBlock != null)
             {
                 targetBlock.Stop();
 
                 Player.targetFlowchart.ExecuteBlock(targetBlock, CurrentIndex, null);
-            }
+            }*/
         }
 
         public void DeleteOptions()

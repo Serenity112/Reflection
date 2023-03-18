@@ -15,11 +15,11 @@ namespace Fungus
 
         public void Load(int index)
         {
-            scrollbar.value = 0;
+            /*scrollbar.value = 0;
 
             UnityEngine.Debug.Log("Начало загрузки");
 
-            List<string> LogBlocks = Player.LogBlocks;
+            List<string> LogBlocks = UserData.LogBlocks;
             UnityEngine.Debug.Log("LogBlocks.Count: " + LogBlocks.Count);
 
             for (int i = 0; i < LogBlocks.Count; i++)
@@ -45,7 +45,7 @@ namespace Fungus
                         
                     }
                 } 
-            }
+            }*/
         }
     } 
 }

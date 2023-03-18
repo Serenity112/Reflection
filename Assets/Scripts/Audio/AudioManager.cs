@@ -1,34 +1,14 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Audio;
-using UnityEngine.UI;
 
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager instance = null;
 
-    public Slider sliderMain;
-    public Slider sliderMusic;
-    public Slider sliderAmbient;
-    public Slider sliderSound;
-   
-
-    private float mainVol = 0f;
-    private float musicVol = 0f;
-    private float ambientVol = 0f;
-    private float soundVol = 0f;
-
-    public AudioMixer audioMixer;
-
     public AudioSource musicSource;
     public AudioSource musicBuffSource;
-    public AudioSource ambientSource;        
+    public AudioSource ambientSource;
     public AudioSource soundSource;
-   
-
-   
-
-
 
     public int currentMusic;
     public int currentSound;
@@ -40,7 +20,7 @@ public class AudioManager : MonoBehaviour
 
     void Start()
     {
-        AudioListener.volume = 0.33f;
+        AudioListener.volume = 1f;
 
         if (instance == null)
         {
@@ -52,176 +32,51 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    public void LoadSliders()
+    public void ApplySourceVolume(Settings setting, float data)
     {
-        //if (ES3.KeyExists("musicVol"))
-        //{
-        //  musicVol = ES3.Load<float>("musicVol");
-        //    sliderMusic.value = musicVol;
-        //}
-
-        //if (ES3.KeyExists("SoundVolume"))
-        //{
-        //    SoundVolume = ES3.Load<float>("SoundVolume");
-        //    sliderSound.value = SoundVolume;
-        //}
-    }
-
-    public void SetLevelMain()
-    {
-        mainVol = sliderMain.value;
-        audioMixer.SetFloat("MainVol", sliderMain.value);
-
-        ES3.Save<float>("MainVol", sliderMain.value);
-        if (sliderMain.value == -40)
+        switch (setting)
         {
-            audioMixer.SetFloat("MainVol", -80);
+            case Settings.sourceMusicVolume:
+                musicSource.volume = data;
+                break;
+            case Settings.sourceMusicBufferVolume:
+                musicBuffSource.volume = data;
+                break;
+            case Settings.sourceSoundVolume:
+                soundSource.volume = data;
+                break;
+            case Settings.sourceAmbientVolume:
+                ambientSource.volume = data;
+                break;
         }
-    }
-    public void SetLevelMusic()
-    {
-        musicVol = sliderMusic.value;
-        audioMixer.SetFloat("MusicVol", sliderMusic.value);
-
-        ES3.Save<float>("MusicVol", sliderMusic.value);
-
-        if (sliderMusic.value == -40)
-        {
-            audioMixer.SetFloat("AudioVol", -180);
-        }
-    }
-   
-    public void SetLevelAmbient()
-    {
-        audioMixer.SetFloat("AmbientVol", sliderAmbient.value);
-        ambientVol = sliderAmbient.value;
-
-        ES3.Save<float>("AmbientVol", sliderAmbient.value);
-
-        if (sliderAmbient.value == -40)
-        {
-            audioMixer.SetFloat("AmbientVol", -100);
-        }
-    }
-
-    public void SetLevelSound()
-    {
-        audioMixer.SetFloat("SoundVol", sliderSound.value);
-        soundVol = sliderSound.value;
-
-        ES3.Save<float>("SoundVol", sliderSound.value);
-
-        if (sliderSound.value == -40)
-        {
-            audioMixer.SetFloat("SoundVol", -100);
-        }
-    }
-
-    //AUIDIO FUNCTONS
-
-    //public void DecreaseVolume(float LowPercent, float duration, bool DownVol)
-    //{
-
-
-    //    if(DownVol)
-    //    {
-    //        StartCoroutine(StartFade("MasterVol", duration, NewVol));
-    //    } else
-    //    {
-    //        StartCoroutine(StartFade("MasterVol", duration, 0f));
-    //    }
-
-    //}
-
-    //AMBIENT
-    public void AmbientStart(int num, float duration)
-    {
-        currentAmbient = num;
-        audioMixer.SetFloat("AmbientVol", -80);
-        ambientSource.clip = Ambient[num];
-        ambientSource.Play();
-
-        if (duration == 0)
-        {
-            audioMixer.SetFloat("AmbientVol", ambientVol);
-        }
-        else
-        {
-            StartCoroutine(StartFade("AmbientVol", duration, ambientVol));
-        }
-    }
-    public void AmbientEnd(float duration)
-    {
-        StartCoroutine(IAmbientEnd(duration));
-    }
-    public void AmbientChange(int ambient, float durationOut, float durationWait, float durationIn)
-    {
-        StartCoroutine(IAmbientChange(ambient, durationOut, durationWait, durationIn));
-    }
-    public IEnumerator IAmbientEnd(float duration)
-    {
-        if (ambientSource.isPlaying)
-        {
-            if (duration == 0)
-            {
-                ambientSource.Stop();
-                yield break;
-            }
-
-            yield return StartCoroutine(StartFade("AmbientVol", duration, -80f));
-            ambientSource.Stop();
-        }
-    }
-    public IEnumerator IAmbientChange(int ambient, float durationOut, float durationWait, float durationIn)
-    {
-        yield return StartCoroutine(StartFade("AmbientVol", durationOut, -80f));
-        ambientSource.Stop();
-
-        yield return new WaitForSeconds(durationWait);
-
-        audioMixer.SetFloat("AmbientVol", -80);
-        ambientSource.clip = Ambient[ambient];
-        ambientSource.Play();
-
-        StartCoroutine(StartFade("AmbientVol", durationIn, musicVol));
-    }
-    //SOUND
-    public void SoundStart(int sound)
-    {
-        soundSource.clip = Sound[sound];
-        soundSource.Play();
     }
 
     // Music
-    public void MusicStart(int num, float duration)
+
+    // Включает музыку с 0й громкости до громкости настроек
+    public void MusicStart(int num, float duration, float targetVol = 1)
     {
         currentMusic = num;
-        audioMixer.SetFloat("MusicVol", -80);
+        musicSource.volume = 0;
         musicSource.clip = Music[num];
         musicSource.Play();
 
         if (duration == 0)
         {
-            audioMixer.SetFloat("MusicVol", musicVol);
+            musicSource.volume = targetVol;
         }
         else
         {
-            StartCoroutine(StartFade("MusicVol", duration, musicVol));
+            StartCoroutine(StartFade(musicSource, duration, targetVol));
         }
     }
+
     public void MusicEnd(float duration)
     {
         StartCoroutine(IMusicEnd(duration));
     }
-    public void MusicTransition(int num, float duration)
-    {
-        StartCoroutine(IMusicTransition(num, duration));
-    }
-    public void MusicStartNew(int num, float durationOut, float durationWait, float durationIn)
-    {
-        StartCoroutine(IMusicChange(num, durationOut, durationWait, durationIn));
-    }
-    public IEnumerator IMusicEnd(float duration)
+
+    private IEnumerator IMusicEnd(float duration)
     {
         if (musicSource.isPlaying)
         {
@@ -231,7 +86,7 @@ public class AudioManager : MonoBehaviour
                 yield break;
             }
 
-            yield return StartCoroutine(StartFade("AudioVol", duration, -80f));
+            yield return StartCoroutine(StartFade(musicSource, duration, 0));
             musicSource.Stop();
         }
         else if (musicBuffSource.isPlaying)
@@ -242,71 +97,181 @@ public class AudioManager : MonoBehaviour
                 yield break;
             }
 
-            yield return StartCoroutine(StartFade("AudioVol2", duration, -80f));
+            yield return StartCoroutine(StartFade(musicBuffSource, duration, 0));
             musicBuffSource.Stop();
         }
     }
-    public IEnumerator IMusicTransition(int num, float duration)
+
+    // Переход трека в трек
+    public void MusicTransition(int num, float duration)
     {
+        StartCoroutine(IMusicTransition(num, duration));
+    }
+
+    private IEnumerator IMusicTransition(int num, float duration)
+    {
+        currentMusic = num;
+
         if (musicSource.isPlaying)
         {
-            audioMixer.SetFloat("BufferMusicVol", -80);
+            float curr_vol = musicSource.volume;
+
+            musicBuffSource.volume = 0;
             musicBuffSource.clip = Music[num];
             musicBuffSource.Play();
+            StartCoroutine(StartFade(musicBuffSource, duration, curr_vol));
 
-            yield return StartCoroutine(StartFade("BufferMusicVol", duration, musicVol));
-            yield return StartCoroutine(StartFade("MusicVol", duration, -80f));
+            yield return StartCoroutine(StartFade(musicSource, duration, 0));
             musicSource.Stop();
         }
         else if (musicBuffSource.isPlaying)
         {
-            audioMixer.SetFloat("MusicVol", -80);
+            float curr_vol = musicBuffSource.volume;
+
+            musicSource.volume = 0;
             musicSource.clip = Music[num];
             musicSource.Play();
+            StartCoroutine(StartFade(musicSource, duration, curr_vol));
 
-            yield return StartCoroutine(StartFade("MusicVol", duration, musicVol));
-            yield return StartCoroutine(StartFade("BufferMusicVol", duration , -80f));
+            yield return StartCoroutine(StartFade(musicBuffSource, duration, 0));
             musicBuffSource.Stop();
         }
     }
-    public IEnumerator IMusicChange(int num, float durationOut, float durationWait, float durationIn)
+
+    // Трек -> тишина -> трек
+    public void MusicChange(int num, float duration)
     {
+        StartCoroutine(IMusicChange(num, duration));
+    }
+
+    private IEnumerator IMusicChange(int num, float duration)
+    {
+        currentMusic = num;
+        float curr_vol = 1;
+
         if (musicSource.isPlaying)
         {
-            yield return StartCoroutine(StartFade("MusicVol", durationOut, -80f));
+            curr_vol = musicSource.volume;
+            yield return StartCoroutine(StartFade(musicSource, duration, 0));
             musicSource.Stop();
         }
         else
         {
-            yield return StartCoroutine(StartFade("BufferMusicVol", durationOut, -80f));
+            curr_vol = musicSource.volume;
+            yield return StartCoroutine(StartFade(musicBuffSource, duration, 0));
             musicBuffSource.Stop();
         }
 
-        yield return new WaitForSeconds(durationWait);
+        yield return new WaitForSeconds(1f); // Задержка между треками
 
-        audioMixer.SetFloat("MusicVol", -80);
+        musicSource.volume = 0;
         musicSource.clip = Music[num];
         musicSource.Play();
 
-        StartCoroutine(StartFade("MusicVol", durationIn, musicVol));
+        StartCoroutine(StartFade(musicSource, duration, curr_vol));
     }
 
-    //IENUMERATORS
+    public void MusicVolChange(float duration, float factor) // 0 to 1
+    {
+        if (musicSource.isPlaying)
+        {
+            StartCoroutine(StartFade(musicSource, duration, factor));
+            musicSource.Stop();
+        }
+        else
+        {
+            StartCoroutine(StartFade(musicBuffSource, duration, factor));
+            musicBuffSource.Stop();
+        }
+    }
 
+    public void MusicVolDefault(float duration)
+    {
+        if (musicSource.isPlaying)
+        {
+            StartCoroutine(StartFade(musicSource, duration, 1));
+            musicSource.Stop();
+        }
+        else
+        {
+            StartCoroutine(StartFade(musicBuffSource, duration, 1));
+            musicBuffSource.Stop();
+        }
+    }
 
-    public IEnumerator StartFade(string exposedParam, float duration, float targetVolume)
+    // Ambient
+    public void AmbientStart(int num, float duration, float targetVol = 1)
+    {
+        currentAmbient = num;
+        ambientSource.volume = 0;
+        ambientSource.clip = Ambient[num];
+        ambientSource.Play();
+
+        if (duration == 0)
+        {
+            ambientSource.volume = targetVol;
+        }
+        else
+        {
+            StartCoroutine(StartFade(ambientSource, duration, targetVol));
+        }
+    }
+
+    public void AmbientEnd(float duration)
+    {
+        StartCoroutine(IAmbientEnd(duration));
+    }
+
+    private IEnumerator IAmbientEnd(float duration)
+    {
+        if (duration == 0)
+        {
+            ambientSource.Stop();
+            yield break;
+        }
+
+        yield return StartCoroutine(StartFade(ambientSource, duration, 0));
+        ambientSource.Stop();
+    }
+
+    public void AmbientChange(int num, float duration)
+    {
+        StartCoroutine(IAmbientChange(num, duration));
+    }
+    
+    private IEnumerator IAmbientChange(int num, float duration)
+    {
+        currentAmbient = num;
+
+        float curr_vol = ambientSource.volume;
+        yield return StartCoroutine(StartFade(ambientSource, duration, 0));
+        ambientSource.Stop();
+
+        yield return new WaitForSeconds(1f); // Задержка между треками
+
+        ambientSource.clip = Ambient[num];
+        ambientSource.Play();
+
+        StartCoroutine(StartFade(ambientSource, duration, curr_vol));
+    }
+
+    // Sound
+    public void SoundStart(int sound)
+    {
+        soundSource.clip = Sound[sound];
+        soundSource.Play();
+    }
+
+    public IEnumerator StartFade(AudioSource source, float duration, float targetVolume_linear)
     {
         float currentTime = 0;
-        float currentVol;
-        audioMixer.GetFloat(exposedParam, out currentVol);
+        float currentVolume_linear = source.volume;
         while (currentTime < duration)
         {
             currentTime += Time.deltaTime;
-            float newVol = Mathf.Lerp(currentVol, targetVolume, currentTime / duration);
-            audioMixer.SetFloat(exposedParam, newVol);
+            source.volume = Mathf.Lerp(currentVolume_linear, targetVolume_linear, currentTime / duration);
             yield return null;
         }
         yield break;
     }
-
 }

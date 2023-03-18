@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml;
 using Fungus;
+using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 namespace Fungus.EditorUtils
 {
@@ -340,30 +341,66 @@ namespace Fungus.EditorUtils
             return null;
         }
 
+        private struct FieldArg
+        {
+            public string field;
+            public string value;
+
+            public FieldArg(string field, string value)
+            {
+                this.field = field;
+                this.value = value;
+            }
+        }
+
         private void LoadBuilderBlock()
         {
-            /*XmlDocument xDoc = new XmlDocument();
+            XmlDocument xDoc = new XmlDocument();
 
-            xDoc.Load(Application.dataPath + "/StreamingAssets/d1builder.xml");
+            xDoc.Load(Application.dataPath + "/StreamingAssets/d1builder1.xml");
 
-            int i = 0;
+            AddCommand(ByName("Fungus.FungusSaveBlock"), new FieldArg[] {
+                            new FieldArg("blockName", (target as Block).BlockName)}); // Extend
 
             foreach (XmlNode key in xDoc["Keys"].ChildNodes)
             {
                 switch (key.Attributes["Command"].Value)
                 {
-                    case "SayDialog":
-                        string phrase = key["arg1"].InnerText;
-                        string speaker = key["arg2"].InnerText;
-                        string extend = key["arg3"].InnerText;
+                    case "SayDialog":                 
+                        AddCommand(ByName("Fungus.FungusSayDialog"), new FieldArg[] {
+                            new FieldArg("storyText", key["arg1"].InnerText), // Phrase
+                            new FieldArg("speaker", key["arg2"] == null ? null : key["arg2"].InnerText), // Speaker
+                            new FieldArg("extendPrevious", key["arg4"] == null ? null : key["arg4"].InnerText)}); // Extend
                         break;
                     case "AppearSprite":
+                        /*AddCommand(ByName("Fungus.FungusNewSpriteAppear"), new FieldArg[] {
+                            new FieldArg("characterName", key["arg1"].InnerText), // Name
+                            new FieldArg("Pose", key["arg2"].InnerText), // Pose
+                            new FieldArg("Emotion", key["arg3"].InnerText), // Emotion
+                            new FieldArg("PosX", key["arg4"].InnerText), // PosX
+                            new FieldArg("PosY", key["arg5"].InnerText), // PosY
+                            new FieldArg("appearSpeed", key["arg6"].InnerText)}); // Speed*/
                         break;
                     case "SwapSprite":
+                        /*AddCommand(ByName("Fungus.FungusSwapSprites"), new FieldArg[] {
+                            new FieldArg("characterName", key["arg1"].InnerText), // Name
+                            new FieldArg("Pose", key["arg2"].InnerText), // Pose
+                            new FieldArg("Emotion", key["arg3"].InnerText), // Emotion
+                            new FieldArg("PosX", key["arg4"].InnerText), // PosX
+                            new FieldArg("PosY", key["arg5"].InnerText), // PosY
+                            new FieldArg("Speed", key["arg6"].InnerText)}); // Speed*/
                         break;
                     case "MoveSprite":
+                        /*AddCommand(ByName("Fungus.FungusSpriteMove"), new FieldArg[] {
+                            new FieldArg("dayIndex", key["arg1"].InnerText), // Name
+                            new FieldArg("dayIndex", key["arg2"].InnerText), // PosX
+                            new FieldArg("dayIndex", key["arg3"].InnerText), // PosY
+                            new FieldArg("dayIndex", key["arg4"].InnerText)}); // Time*/
                         break;
                     case "RemoveSprite":
+                        /*AddCommand(ByName("Fungus.FungusRemoveMove"), new FieldArg[] {
+                            new FieldArg("dayIndex", key["arg1"].InnerText), // Name
+                            new FieldArg("dayIndex", key["arg2"].InnerText)}); // Speed*/
                         break;
                     case "SetBG":
                         break;
@@ -375,21 +412,17 @@ namespace Fungus.EditorUtils
                         break;
                     case "MusicTransition":
                         break;
+                    default:
+                        break;
                 }
-
-                i++;
-            }*/
-
-
-            Type commandType = ByName("Fungus.FNewDay");
-           
-            AddCommand(commandType);
+            }
         }
 
-        int counter = 0;
-        private void AddCommand(Type commandType)
+        private void AddCommand(Type commandType, FieldArg[] args)
         {
             var block = target as Block;
+
+
             if (block == null || commandType == null)
             {
                 return;
@@ -415,20 +448,28 @@ namespace Fungus.EditorUtils
             block.GetFlowchart().AddSelectedCommand(newCommand);
             newCommand.ParentBlock = block;
             newCommand.ItemId = flowchart.NextItemId();
-
-            
+         
             // Init
-
             var fields = commandType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+
+
 
             foreach (var field in fields)
             {
-                if (field.Name == "dayIndex")
+                foreach(FieldArg arg in args)
                 {
-                    field.SetValue(newCommand, counter);
-                    counter++;
+                    if (arg.field == field.Name && arg.value != null)
+                    {
+                        if(arg.field == "extendPrevious")
+                        {
+                            field.SetValue(newCommand, true);
+                        } else
+                        {
+                            field.SetValue(newCommand, arg.value);
+                        }
+                        
+                    }
                 }
-
             }
 
 

@@ -85,7 +85,7 @@ namespace Fungus
                 SpriteExpand.instance.StopPrev();
                 SpriteExpand.instance.SetExpanding(speaker, DialogMod.skipping);
 
-                //LogManager.instance.NewMessage(storyText, speaker);
+                LogManager.instance.NewMessage(storyText, speaker);
 
                 //nameChanger.SetName(speaker);
 

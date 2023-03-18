@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
-using System.Collections;
 using Fungus;
+
 public enum Settings
 {
     FullScreenMode,
@@ -16,6 +16,11 @@ public enum Settings
     musicVolume,
     ambientVolume,
     soundVolume,
+
+    sourceMusicVolume,
+    sourceMusicBufferVolume,
+    sourceAmbientVolume,
+    sourceSoundVolume,
 
     textSpeed,
 }
@@ -94,16 +99,26 @@ public class SettingsConfig
     private static void LoadDefaultSettings()
     {
         chosenOptions.Clear();
+
+        //Общие
         chosenOptions.Add(Settings.FullScreenMode, new SettingsOptionsData(SettingsOptions.FullScreen, 0));
         chosenOptions.Add(Settings.BlackFramesMode, new SettingsOptionsData(SettingsOptions.BlackLines, 0));
         chosenOptions.Add(Settings.DialogSkipMode, new SettingsOptionsData(SettingsOptions.SkipEveryting, 0));
         chosenOptions.Add(Settings.Resolution, new SettingsOptionsData(SettingsOptions.rAutomatic, 0));
 
+        // Миксер - глобальные параметры (0 - 100) Изменяются вручную из настроек игры
         chosenOptions.Add(Settings.masterVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
         chosenOptions.Add(Settings.musicVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
         chosenOptions.Add(Settings.soundVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
         chosenOptions.Add(Settings.ambientVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
 
+        // Источники в менеджере (0 - 1) Не изменяютя вручную из настроек игры, только в скриптах для регулирования звуков
+        chosenOptions.Add(Settings.sourceMusicVolume, new SettingsOptionsData(SettingsOptions.Volume, 1));
+        chosenOptions.Add(Settings.sourceMusicBufferVolume, new SettingsOptionsData(SettingsOptions.Volume, 1));
+        chosenOptions.Add(Settings.sourceSoundVolume, new SettingsOptionsData(SettingsOptions.Volume, 1));
+        chosenOptions.Add(Settings.sourceAmbientVolume, new SettingsOptionsData(SettingsOptions.Volume, 1));
+
+        // Скорость текста
         chosenOptions.Add(Settings.textSpeed, new SettingsOptionsData(SettingsOptions.Speed, 50));
     }
 
@@ -120,12 +135,11 @@ public class SettingsConfig
         }
     }
 
-
-
     public static void SaveOption(Settings setting, SettingsOptions value)
     {
         SaveOption(setting, value, 0);
     }
+
     public static void SaveOption(Settings setting, SettingsOptions value, float data)
     {
         ES3.Save<SettingsOptionsData>(setting.ToString(), new SettingsOptionsData(value, data), "PlayerSettings.es3");
@@ -136,11 +150,7 @@ public class SettingsConfig
         }
     }
 
-    public static void ApplySetting(Settings setting, SettingsOptions value)
-    {
-        ApplySetting(setting, value, 0);
-    }
-    public static void ApplySetting(Settings setting, SettingsOptions value, float data)
+    public static void ApplySetting(Settings setting, SettingsOptions value, float data = 0)
     {
         if (setting == Settings.FullScreenMode)
         {
@@ -172,6 +182,7 @@ public class SettingsConfig
     {
         options.Add(option);
     }
+
     public static void unSubscribeAllOptions()
     {
         options.Clear();
@@ -185,8 +196,7 @@ public class SettingsConfig
         }
     }
 
-
-    // Применение настроек
+    // Универсальное применение настроек из разных менеджеров
     public static void ChangeFullscreeenMode(SettingsOptions value)
     {
         switch (value)
@@ -264,11 +274,15 @@ public class SettingsConfig
         }
     }
 
-    // Volune
+    // Принимает громкость от 0 до 1, ставит громоксть миксера в децибельной шкале
     public static void SetVolume(AudioMixer mixer, string exposedparam, float slider_vol)
     {
-        float db_vol = (1 - slider_vol / 100) * (-80);
-        mixer.SetFloat(exposedparam, db_vol);
+        float dbVolume = Mathf.Log10(slider_vol) * 20;
+        if (slider_vol == 0.0f)
+        {
+            dbVolume = -80.0f;
+        }
+        mixer.SetFloat(exposedparam, dbVolume);
     }
 
     public static void changeTextSpeed(Writer writer, float speed)

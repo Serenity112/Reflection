@@ -84,7 +84,8 @@ public class MainMenuLoad : MonoBehaviour
         StartCoroutine(FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed));
         StartCoroutine(ConfirmationPanel.ClosePanel());
 
-        yield return StartCoroutine(MMPanelsManager.instance.ILoadGame(saveNum));
+        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
+        yield return StartCoroutine(MMPanelsManager.instance.ILoadGame(actualSaveNum));
 
         cassetteAnimator.SetTrigger("StopLoad");
     }

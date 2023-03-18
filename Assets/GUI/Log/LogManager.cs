@@ -5,8 +5,6 @@ using UnityEngine.UI;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-using TMPro;
-
 public class LogManager : MonoBehaviour
 {
     public static LogManager instance = null;
@@ -14,7 +12,6 @@ public class LogManager : MonoBehaviour
     [SerializeField] AssetReference messagePrefab;
     [SerializeField] AssetReference namePrefab;
     [SerializeField] AssetReference spacePrefab;
-
 
     [SerializeField] GameObject messagePrefab2;
     [SerializeField] GameObject namePrefab2;
@@ -31,8 +28,8 @@ public class LogManager : MonoBehaviour
     public List<AsyncOperationHandle<GameObject>> handles;
     public List<GameObject> handles2;
 
-
     private string currName;
+
     private void Start()
     {
         if (instance == null)
@@ -49,21 +46,25 @@ public class LogManager : MonoBehaviour
         handles = new List<AsyncOperationHandle<GameObject>>();
         handles2 = new List<GameObject>();
 
-        NamesColors = new Dictionary<string, string>();
-        NamesColors.Add("pas", "#D35400"); //orange
-        NamesColors.Add("kat", "#E74C3C"); //red
-        NamesColors.Add("nas", "#2ECC71"); //green
-        NamesColors.Add("eve", "#7D3C98"); //magenta
-        NamesColors.Add("tan", "#2980B9"); //blue
-        NamesColors.Add("ser", "#7D3C98"); //blue
+        NamesColors = new Dictionary<string, string>
+        {
+            { "pas", "#D35400" }, //orange
+            { "kat", "#E74C3C" }, //red
+            { "nas", "#2ECC71" }, //green
+            { "eve", "#7D3C98" }, //magenta
+            { "tan", "#2980B9" }, //blue
+            { "ser", "#7D3C98" } //blue
+        };
 
-        ShortNames = new Dictionary<string, string>();
-        ShortNames.Add("pas", "Паша");
-        ShortNames.Add("kat", "Катя");
-        ShortNames.Add("nas", "Настя");
-        ShortNames.Add("eve", "Эвелина");
-        ShortNames.Add("tan", "Таня");
-        ShortNames.Add("ser", "Сергей");
+        ShortNames = new Dictionary<string, string>
+        {
+            { "Pasha", "Паша" },
+            { "Katya", "Катя" },
+            { "Nastya", "Настя" },
+            { "Evelina", "Эвелина" },
+            { "Tanua", "Таня" },
+            { "Sergey", "Сергей" }
+        };
     }
 
     public void NewMessage(string MyMessage, string speakerName)
@@ -78,7 +79,7 @@ public class LogManager : MonoBehaviour
                 CreateName(speakerName);
             }
 
-           CreateMessage(MyMessage);
+            CreateMessage(MyMessage);
 
             currName = speakerName;
         }
@@ -93,9 +94,8 @@ public class LogManager : MonoBehaviour
 
             CreateMessage(MyMessage);
         }
-
-
     }
+
     void setResultToScroll(GameObject result)
     {
         result.transform.SetParent(messageParent);
@@ -104,6 +104,7 @@ public class LogManager : MonoBehaviour
 
         result.GetComponent<RectTransform>().localPosition = new Vector3(result.transform.localPosition.x, result.transform.localPosition.y, 0);
     }
+
     void CreateName(string name)
     {
         var result = Instantiate(namePrefab2, new Vector3(0, 0, 0), Quaternion.identity);
@@ -112,21 +113,20 @@ public class LogManager : MonoBehaviour
         setResultToScroll(result);
 
         string nameBack = $"{ShortNames[name]}: ";
-        //string NameFront = $"{ShortNames[name]}: ";
 
         GameObject textBack = result.transform.GetChild(0).gameObject;
-        //GameObject textFront = textBack.transform.GetChild(0).gameObject;
 
         textBack.GetComponent<Text>().text = nameBack;
-        //textFront.GetComponent<Text>().text = NameFront;
     }
-    void CreateSpace() 
+
+    void CreateSpace()
     {
         var result = Instantiate(spacePrefab2, new Vector3(0, 0, 0), Quaternion.identity);
         handles2.Add(result);
 
         setResultToScroll(result);
     }
+
     void CreateMessage(string message)
     {
         var result = Instantiate(messagePrefab2, new Vector3(0, 0, 0), Quaternion.identity);
@@ -136,24 +136,19 @@ public class LogManager : MonoBehaviour
 
         result.transform.GetChild(0).GetComponent<Text>().text = message;
     }
+
     public void OpenLog()
     {
         gameObject.transform.GetChild(0).gameObject.GetComponent<CanvasGroup>().alpha = 1; //ScrollView
         gameObject.transform.GetChild(0).gameObject.GetComponent<CanvasGroup>().blocksRaycasts = true;
-
-        //gameObject.transform.GetChild(1).gameObject.SetActive(true);
-        //gameObject.transform.GetChild(2).gameObject.SetActive(false);
-
     }
+
     public void CloseLog()
     {
         gameObject.transform.GetChild(0).gameObject.GetComponent<CanvasGroup>().alpha = 0; //ScrollView
         gameObject.transform.GetChild(0).gameObject.GetComponent<CanvasGroup>().blocksRaycasts = false;
-
-
-       // gameObject.transform.GetChild(1).gameObject.SetActive(false);
-       // gameObject.transform.GetChild(2).gameObject.SetActive(true);
     }
+
     public void DelLog()
     {
         foreach (Transform child in messageParent)
@@ -164,10 +159,9 @@ public class LogManager : MonoBehaviour
         handles2 = new List<GameObject>();
 
         Resources.UnloadUnusedAssets();
-
     }
 
-    // using Ienumerator______________________________________________________________________________________________________________
+    // Не используется, старый метод
     public void NewMessage2(string MyMessage, string speakerName)
     {
         counter++;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Audio;
@@ -103,13 +102,13 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
                 SettingsConfig.ChangeResoulution(value);
                 break;
             case Settings.masterVolume:
-                SettingsConfig.SetVolume(audioMixer, "MasterVol", data);
+                SettingsConfig.SetVolume(audioMixer, "MasterVol", data / 100); // ƒеление на 100 т.к. метод принимает числа от 0 до 1
                 break;
             case Settings.musicVolume:
-                SettingsConfig.SetVolume(audioMixer, "MusicVol", data);
+                SettingsConfig.SetVolume(audioMixer, "MusicVol", data / 100);
                 break;
             case Settings.soundVolume:
-                SettingsConfig.SetVolume(audioMixer, "SoundVol", data);
+                SettingsConfig.SetVolume(audioMixer, "SoundVol", data / 100);
                 break;
         }
     }
@@ -124,9 +123,9 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
 
             if (setting == Settings.masterVolume)
             {
-                SettingsConfig.SetVolume(audioMixer, "MasterVol", 0);
-                float db_vol = (1 - data / 100) * (-80);
-                StartCoroutine(FadeVolume(audioMixer, "MasterVol", introMusicFadeSpeed, db_vol));
+                audioMixer.SetFloat("MasterVol", 0);
+                float targetVolume_db = Mathf.Log10(data / 100) * 20;
+                StartCoroutine(FadeVolume(audioMixer, "MasterVol", 3f, targetVolume_db));
             }
             else
             {

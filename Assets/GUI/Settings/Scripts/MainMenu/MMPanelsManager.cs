@@ -19,6 +19,9 @@ public class MMPanelsManager : MonoBehaviour
     private GameObject Buttons;
 
     [SerializeField]
+    private GameObject AboutUs;
+
+    [SerializeField]
     private float fadingSpeed = 5f;
 
     private AsyncOperationHandle<GameObject> savesPanelHandler;
@@ -37,8 +40,18 @@ public class MMPanelsManager : MonoBehaviour
         }
 
         UpdateButtonsState();
+
+        UpdateLastUsedSave();
     }
 
+    // Последнйи активный сейв
+    private void UpdateLastUsedSave()
+    {
+        if (ES3.FileExists("SaveFiles.es3") && ES3.KeyExists("LastUsedSave", "SaveFiles.es3"))
+        {
+            lastUsedSave = ES3.Load<int>("LastUsedSave", "SaveFiles.es3");
+        }
+    }
 
     // Кнопки меню
     private void UpdateButtonsState()
@@ -92,10 +105,15 @@ public class MMPanelsManager : MonoBehaviour
         Buttons.GetComponent<Animator>().Play("ContinueButtonRemove");
     }
 
+    // Продолжить игру
+    public void ContinueGame()
+    {
+        StartCoroutine(ILoadGame(lastUsedSave));
+    }
+
     // Новая игра
     public void StartNewGame()
     {
-        StaticVariables.StartingLoadSaveFile = -1;
         StartCoroutine(ILoadGame(-1));
     }
 
@@ -152,12 +170,7 @@ public class MMPanelsManager : MonoBehaviour
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
 
-        if (saveNum != -1)
-        {
-            int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
-
-            StaticVariables.StartingLoadSaveFile = actualSaveNum;
-        }
+        StaticVariables.StartingLoadSaveFile = saveNum;
 
         StaticVariables.ifInMainMenu = false;
 
@@ -172,12 +185,12 @@ public class MMPanelsManager : MonoBehaviour
     // Меню "О нас"
     public void OpenInfoMenu()
     {
-
+        StartCoroutine(FadeManager.FadeObject(AboutUs, true, fadingSpeed));
     }
 
     public void CloseInfoMenu()
     {
-
+        StartCoroutine(FadeManager.FadeObject(AboutUs, false, fadingSpeed));
     }
 
     // Выход из игры

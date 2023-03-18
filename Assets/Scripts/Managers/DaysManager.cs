@@ -66,7 +66,7 @@ public class DaysManager : MonoBehaviour
         {
             var sentenceData = new SentenceData(i);
 
-            if (i > 100) break;
+            if (i > 200) break;
 
             if(key.Attributes["Phrase"] == null)
                 continue;

@@ -54,29 +54,31 @@ public class BackgroundManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        BackGrounds = new List<BgData>();
-        BackGrounds.Add(new BgData(0, "AssemblyHall"));
-        BackGrounds.Add(new BgData(1, "Corridor"));
-        BackGrounds.Add(new BgData(2, "SkverDay"));
-        BackGrounds.Add(new BgData(3, "Robotech"));
-        BackGrounds.Add(new BgData(4, "NastyaCG"));
-        BackGrounds.Add(new BgData(5, "EvelinaCG"));
-        BackGrounds.Add(new BgData(6, "Statue"));
-        BackGrounds.Add(new BgData(7, "Museum"));
-        BackGrounds.Add(new BgData(8, "Dream"));
-        BackGrounds.Add(new BgData(9, "DreamLaunch"));
-        BackGrounds.Add(new BgData(10, "Corridor"));
-        BackGrounds.Add(new BgData(11, "Classroom"));
-        BackGrounds.Add(new BgData(12, "StationFocused"));
-        BackGrounds.Add(new BgData(13, "AssemblyHallCG"));
-        BackGrounds.Add(new BgData(14, "HallwayMuseum"));
-        BackGrounds.Add(new BgData(15, "Plan"));
-        BackGrounds.Add(new BgData(16, "RoomNight1"));
-        BackGrounds.Add(new BgData(17, "RoomNight2"));
-        BackGrounds.Add(new BgData(18, "Lectornaya"));
-        BackGrounds.Add(new BgData(19, "Hall"));
-        BackGrounds.Add(new BgData(20, "Street"));
-        BackGrounds.Add(new BgData(21, "Monorels"));
+        BackGrounds = new List<BgData>
+        {
+            new BgData(0, "AssemblyHall"),
+            new BgData(1, "Corridor"),
+            new BgData(2, "SkverDay"),
+            new BgData(3, "Robotech"),
+            new BgData(4, "NastyaCG"),
+            new BgData(5, "EvelinaCG"),
+            new BgData(6, "Statue"),
+            new BgData(7, "Museum"),
+            new BgData(8, "Dream"),
+            new BgData(9, "DreamLaunch"),
+            new BgData(10, "Corridor"),
+            new BgData(11, "Classroom"),
+            new BgData(12, "StationFocused"),
+            new BgData(13, "AssemblyHallCG"),
+            new BgData(14, "HallwayMuseum"),
+            new BgData(15, "Plan"),
+            new BgData(16, "RoomNight1"),
+            new BgData(17, "RoomNight2"),
+            new BgData(18, "Lectornaya"),
+            new BgData(19, "Hall"),
+            new BgData(20, "Street"),
+            new BgData(21, "Monorels")
+        };
     }
 
     public IEnumerator IReleaseBackground()
