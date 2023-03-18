@@ -8,7 +8,7 @@ namespace Fungus
     public class SoundStart : Command
     {
         [SerializeField]
-        private int ost;
+        private string ost;
 
         public override void OnEnter()
         {

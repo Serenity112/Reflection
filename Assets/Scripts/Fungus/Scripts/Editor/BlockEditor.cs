@@ -10,11 +10,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
-using Fungus;
-using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 namespace Fungus.EditorUtils
 {
+    
     [CustomEditor(typeof(Block))]
     public class BlockEditor : Editor
     {
@@ -27,7 +26,7 @@ namespace Fungus.EditorUtils
         protected Texture2D addIcon;
         protected Texture2D duplicateIcon;
         protected Texture2D deleteIcon;
-        
+
 
         private CommandListAdaptor commandListAdaptor;
         private SerializedProperty commandListProperty;
@@ -37,7 +36,7 @@ namespace Fungus.EditorUtils
         private string callersString;
         private bool callersFoldout;
 
-    
+
         protected virtual void OnEnable()
         {
             //this appears to happen when leaving playmode
@@ -96,7 +95,7 @@ namespace Fungus.EditorUtils
             EditorGUILayout.PrefixLabel(new GUIContent("Block Name"), EditorStyles.largeLabel);
             EditorGUI.BeginChangeCheck();
             blockNameProperty.stringValue = EditorGUILayout.TextField(blockNameProperty.stringValue);
-            if(EditorGUI.EndChangeCheck())
+            if (EditorGUI.EndChangeCheck())
             {
                 // Ensure block name is unique for this Flowchart
                 var block = target as Block;
@@ -116,7 +115,7 @@ namespace Fungus.EditorUtils
         {
             serializedObject.Update();
 
-            
+
 
             var block = target as Block;
 
@@ -161,7 +160,7 @@ namespace Fungus.EditorUtils
 
                 SerializedProperty suppressProp = serializedObject.FindProperty("suppressAllAutoSelections");
                 EditorGUILayout.PropertyField(suppressProp);
-                
+
                 EditorGUI.indentLevel++;
                 if (callersFoldout = EditorGUILayout.Foldout(callersFoldout, "Callers"))
                 {
@@ -171,9 +170,9 @@ namespace Fungus.EditorUtils
                     GUI.enabled = true;
                 }
                 EditorGUI.indentLevel--;
-                
+
                 EditorGUILayout.Space();
-                
+
                 DrawEventHandlerGUI(flowchart);
 
                 block.UpdateIndentLevels();
@@ -201,7 +200,7 @@ namespace Fungus.EditorUtils
 
                 if (GUIUtility.keyboardControl == 0) //Only call keyboard shortcuts when not typing in a text field
                 {
-                    
+
                     Event e = Event.current;
 
                     // Copy keyboard shortcut
@@ -209,14 +208,14 @@ namespace Fungus.EditorUtils
                     {
                         if (flowchart.SelectedCommands.Count > 0)
                         {
-                            
+
                             e.Use();
                         }
                     }
 
                     if (e.type == EventType.ExecuteCommand && e.commandName == "Copy")
                     {
-                        
+
                         actionList.Add(Copy);
                         e.Use();
                     }
@@ -224,7 +223,7 @@ namespace Fungus.EditorUtils
                     // Cut keyboard shortcut
                     if (e.type == EventType.ValidateCommand && e.commandName == "Cut")
                     {
-                       
+
                         if (flowchart.SelectedCommands.Count > 0)
                         {
                             e.Use();
@@ -233,7 +232,7 @@ namespace Fungus.EditorUtils
 
                     if (e.type == EventType.ExecuteCommand && e.commandName == "Cut")
                     {
-                       
+
                         actionList.Add(Cut);
                         e.Use();
                     }
@@ -244,14 +243,14 @@ namespace Fungus.EditorUtils
                         CommandCopyBuffer commandCopyBuffer = CommandCopyBuffer.GetInstance();
                         if (commandCopyBuffer.HasCommands())
                         {
-                            
+
                             e.Use();
                         }
                     }
 
                     if (e.type == EventType.ExecuteCommand && e.commandName == "Paste")
                     {
-                        
+
                         actionList.Add(Paste);
                         e.Use();
                     }
@@ -261,14 +260,14 @@ namespace Fungus.EditorUtils
                     {
                         if (flowchart.SelectedCommands.Count > 0)
                         {
-                            
+
                             e.Use();
                         }
                     }
 
                     if (e.type == EventType.ExecuteCommand && e.commandName == "Duplicate")
                     {
-                        
+
                         actionList.Add(Copy);
                         actionList.Add(Paste);
                         e.Use();
@@ -279,14 +278,14 @@ namespace Fungus.EditorUtils
                     {
                         if (flowchart.SelectedCommands.Count > 0)
                         {
-                            
+
                             e.Use();
                         }
                     }
 
                     if (e.type == EventType.ExecuteCommand && e.commandName == "Delete")
                     {
-                        
+
                         actionList.Add(Delete);
                         e.Use();
                     }
@@ -294,13 +293,13 @@ namespace Fungus.EditorUtils
                     // SelectAll keyboard shortcut
                     if (e.type == EventType.ValidateCommand && e.commandName == "SelectAll")
                     {
-                        
+
                         e.Use();
                     }
 
                     if (e.type == EventType.ExecuteCommand && e.commandName == "SelectAll")
                     {
-                       
+
                         actionList.Add(SelectAll);
                         e.Use();
                     }
@@ -343,13 +342,25 @@ namespace Fungus.EditorUtils
 
         private struct FieldArg
         {
-            public string field;
-            public string value;
+            public string fieldName;
+            public object value;
 
-            public FieldArg(string field, string value)
+            public FieldArg(string fieldName, object value)
             {
-                this.field = field;
+                this.fieldName = fieldName;
                 this.value = value;
+            }
+        }
+
+        private string GetInnerText(XmlNode node, string arg)
+        {
+            if (node[arg] == null)
+            {
+                return null;
+            }
+            else
+            {
+                return node[arg].InnerText;
             }
         }
 
@@ -359,58 +370,80 @@ namespace Fungus.EditorUtils
 
             xDoc.Load(Application.dataPath + "/StreamingAssets/d1builder1.xml");
 
-            AddCommand(ByName("Fungus.FungusSaveBlock"), new FieldArg[] {
+            AddCommand("Fungus.FungusSaveBlock", new FieldArg[] {
                             new FieldArg("blockName", (target as Block).BlockName)}); // Extend
 
             foreach (XmlNode key in xDoc["Keys"].ChildNodes)
             {
+                Debug.Log("Added");
                 switch (key.Attributes["Command"].Value)
                 {
-                    case "SayDialog":                 
-                        AddCommand(ByName("Fungus.FungusSayDialog"), new FieldArg[] {
-                            new FieldArg("storyText", key["arg1"].InnerText), // Phrase
-                            new FieldArg("speaker", key["arg2"] == null ? null : key["arg2"].InnerText), // Speaker
-                            new FieldArg("extendPrevious", key["arg4"] == null ? null : key["arg4"].InnerText)}); // Extend
+                    case "SayDialog":
+                        AddCommand("Fungus.FungusSayDialog", new FieldArg[] {
+                            new FieldArg("storyText", GetInnerText(key, "arg1")), // Phrase
+                            new FieldArg("speaker", GetInnerText(key, "arg2")), // Speaker
+                            new FieldArg("extendPrevious", GetInnerText(key, "arg4") == "y")}); // Extend
                         break;
                     case "AppearSprite":
-                        /*AddCommand(ByName("Fungus.FungusNewSpriteAppear"), new FieldArg[] {
-                            new FieldArg("characterName", key["arg1"].InnerText), // Name
-                            new FieldArg("Pose", key["arg2"].InnerText), // Pose
-                            new FieldArg("Emotion", key["arg3"].InnerText), // Emotion
-                            new FieldArg("PosX", key["arg4"].InnerText), // PosX
-                            new FieldArg("PosY", key["arg5"].InnerText), // PosY
-                            new FieldArg("appearSpeed", key["arg6"].InnerText)}); // Speed*/
+                        AddCommand("Fungus.FungusNewSpriteAppear", new FieldArg[] {
+                            new FieldArg("characterName", GetInnerText(key, "arg1")), // Name
+                            new FieldArg("Pose", Int32.Parse(GetInnerText(key, "arg2"))), // Pose
+                            new FieldArg("Emotion", Int32.Parse(GetInnerText(key, "arg3"))), // Emotion
+                            new FieldArg("Position", GetInnerText(key, "arg4") == null ? null : new Vector3(
+                                float.Parse(GetInnerText(key, "arg4")),
+                                float.Parse(GetInnerText(key, "arg5")), 0)), // PosX, PosY. PosZ = 0
+                            new FieldArg("appearSpeed", GetInnerText(key, "arg6") == null ? null : 
+                                float.Parse(GetInnerText(key, "arg6")))}); // Speed
                         break;
                     case "SwapSprite":
-                        /*AddCommand(ByName("Fungus.FungusSwapSprites"), new FieldArg[] {
-                            new FieldArg("characterName", key["arg1"].InnerText), // Name
-                            new FieldArg("Pose", key["arg2"].InnerText), // Pose
-                            new FieldArg("Emotion", key["arg3"].InnerText), // Emotion
-                            new FieldArg("PosX", key["arg4"].InnerText), // PosX
-                            new FieldArg("PosY", key["arg5"].InnerText), // PosY
-                            new FieldArg("Speed", key["arg6"].InnerText)}); // Speed*/
+                        AddCommand("Fungus.FungusSwapSprites", new FieldArg[] {
+                            new FieldArg("characterName", GetInnerText(key, "arg1")), // Name
+                            new FieldArg("Pose", Int32.Parse(GetInnerText(key, "arg2"))), // Pose
+                            new FieldArg("Emotion", Int32.Parse(GetInnerText(key, "arg3"))), // Emotion
+                            new FieldArg("newPosition", GetInnerText(key, "arg4") == null ? null : new Vector3(
+                                float.Parse(GetInnerText(key, "arg4")),
+                                float.Parse(GetInnerText(key, "arg5")), 0)), // PosX, PosY. PosZ = 0
+                            new FieldArg("appearSpeed", GetInnerText(key, "arg6") == null ? null :
+                                float.Parse(GetInnerText(key, "arg6")))}); // Speed
                         break;
                     case "MoveSprite":
-                        /*AddCommand(ByName("Fungus.FungusSpriteMove"), new FieldArg[] {
-                            new FieldArg("dayIndex", key["arg1"].InnerText), // Name
-                            new FieldArg("dayIndex", key["arg2"].InnerText), // PosX
-                            new FieldArg("dayIndex", key["arg3"].InnerText), // PosY
-                            new FieldArg("dayIndex", key["arg4"].InnerText)}); // Time*/
+                        AddCommand("Fungus.FungusSpriteMove", new FieldArg[] {
+                            new FieldArg("characterName", GetInnerText(key, "arg1")), // Name
+                            new FieldArg("position", GetInnerText(key, "arg2") == null ? null : new Vector3(
+                                float.Parse(GetInnerText(key, "arg2")),
+                                float.Parse(GetInnerText(key, "arg3")), 0)), // PosX, PosY. PosZ = 0
+                            new FieldArg("time", GetInnerText(key, "arg4") == null ? null :
+                                float.Parse(GetInnerText(key, "arg4")))}); // Speed
                         break;
                     case "RemoveSprite":
-                        /*AddCommand(ByName("Fungus.FungusRemoveMove"), new FieldArg[] {
-                            new FieldArg("dayIndex", key["arg1"].InnerText), // Name
-                            new FieldArg("dayIndex", key["arg2"].InnerText)}); // Speed*/
+                        AddCommand("Fungus.FungusRemoveMove", new FieldArg[] {
+                            new FieldArg("characterName", key["arg1"].InnerText), // Name
+                            new FieldArg("speed", GetInnerText(key, "arg2") == null ? null :
+                                float.Parse(GetInnerText(key, "arg2")))}); // Speed
                         break;
                     case "SetBG":
+                        AddCommand("Fungus.FungusSetBG", new FieldArg[] {
+                            new FieldArg("characterName", key["arg1"].InnerText), // Name
+                            new FieldArg("speed", GetInnerText(key, "arg2") == null ? null :
+                                float.Parse(GetInnerText(key, "arg2")))}); // Speed
                         break;
                     case "MusicStart":
                         break;
                     case "MusicEnd":
                         break;
-                    case "MusicChange":
+                    case "AmbientStart":
                         break;
-                    case "MusicTransition":
+                    case "AmbientEnd":
+                        break;
+                    case "AmbientVolDown":
+                        break;
+                    case "AmbientDefaultVol":
+                        break;
+                    case "DreamSnow":
+                        AddCommand("Fungus.FDreamSnow", new FieldArg[] {                           
+                            // Add DreamSnowState 
+                            new FieldArg("speed", GetInnerText(key, "arg2") == null ? null :
+                                float.Parse(GetInnerText(key, "arg2")))}); // Speed
                         break;
                     default:
                         break;
@@ -418,10 +451,11 @@ namespace Fungus.EditorUtils
             }
         }
 
-        private void AddCommand(Type commandType, FieldArg[] args)
+        private void AddCommand(string commandName, FieldArg[] args)
         {
-            var block = target as Block;
+            Type commandType = ByName(commandName);
 
+            var block = target as Block;
 
             if (block == null || commandType == null)
             {
@@ -448,30 +482,20 @@ namespace Fungus.EditorUtils
             block.GetFlowchart().AddSelectedCommand(newCommand);
             newCommand.ParentBlock = block;
             newCommand.ItemId = flowchart.NextItemId();
-         
+
             // Init
             var fields = commandType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
 
-
-
             foreach (var field in fields)
             {
-                foreach(FieldArg arg in args)
+                foreach (FieldArg arg in args)
                 {
-                    if (arg.field == field.Name && arg.value != null)
+                    if (arg.fieldName == field.Name && arg.value != null)
                     {
-                        if(arg.field == "extendPrevious")
-                        {
-                            field.SetValue(newCommand, true);
-                        } else
-                        {
-                            field.SetValue(newCommand, arg.value);
-                        }
-                        
+                        field.SetValue(newCommand, arg.value);
                     }
                 }
             }
-
 
             // Let command know it has just been added to the block
             newCommand.OnCommandAdded(block);
@@ -506,7 +530,7 @@ namespace Fungus.EditorUtils
             }
             // Next Command
             if ((Event.current.type == EventType.KeyDown) && (Event.current.keyCode == KeyCode.PageDown))
-            {              
+            {
                 SelectNext();
                 GUI.FocusControl("dummycontrol");
                 Event.current.Use();
@@ -568,7 +592,7 @@ namespace Fungus.EditorUtils
 
         }
 
-        
+
 
         protected virtual void DrawEventHandlerGUI(Flowchart flowchart)
         {
@@ -614,7 +638,7 @@ namespace Fungus.EditorUtils
                     EditorGUI.BeginChangeCheck();
                     eventHandlerEditor.DrawInspectorGUI();
 
-                    if(EditorGUI.EndChangeCheck())
+                    if (EditorGUI.EndChangeCheck())
                     {
                         SelectedBlockDataStale = true;
                     }
@@ -684,7 +708,7 @@ namespace Fungus.EditorUtils
 
             for (int i = 0; i < blocks.Length; ++i)
             {
-				blockNames.Add(new GUIContent(blocks[i].BlockName));
+                blockNames.Add(new GUIContent(blocks[i].BlockName));
 
                 if (block == blocks[i])
                 {

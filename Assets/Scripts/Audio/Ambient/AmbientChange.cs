@@ -8,7 +8,7 @@ namespace Fungus
     public class AmbientChange : Command
     {
         [SerializeField]
-        private int ost;
+        private string ost;
 
         [SerializeField]
         private float duration;

@@ -17,11 +17,6 @@ public enum Settings
     ambientVolume,
     soundVolume,
 
-    sourceMusicVolume,
-    sourceMusicBufferVolume,
-    sourceAmbientVolume,
-    sourceSoundVolume,
-
     textSpeed,
 }
 
@@ -112,12 +107,6 @@ public class SettingsConfig
         chosenOptions.Add(Settings.soundVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
         chosenOptions.Add(Settings.ambientVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
 
-        // Источники в менеджере (0 - 1) Не изменяютя вручную из настроек игры, только в скриптах для регулирования звуков
-        chosenOptions.Add(Settings.sourceMusicVolume, new SettingsOptionsData(SettingsOptions.Volume, 1));
-        chosenOptions.Add(Settings.sourceMusicBufferVolume, new SettingsOptionsData(SettingsOptions.Volume, 1));
-        chosenOptions.Add(Settings.sourceSoundVolume, new SettingsOptionsData(SettingsOptions.Volume, 1));
-        chosenOptions.Add(Settings.sourceAmbientVolume, new SettingsOptionsData(SettingsOptions.Volume, 1));
-
         // Скорость текста
         chosenOptions.Add(Settings.textSpeed, new SettingsOptionsData(SettingsOptions.Speed, 50));
     }
@@ -171,7 +160,6 @@ public class SettingsConfig
 
         currentManager.ApplySetting(setting, value, data);
     }
-
 
     public static bool isOptionEnabled(Settings setting, SettingsOptions option)
     {

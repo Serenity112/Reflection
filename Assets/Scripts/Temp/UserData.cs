@@ -12,10 +12,14 @@ public struct SaveData
         Background = -1;
 
         CurrentCommandIndex = 0;
-        CurrentDialogIndex = 0;
 
         CurrentBlock = null;
-        CurrentOst = 0;
+
+        CurrentMusic = null;
+        CurrentAmbient = null;
+        MusicSourceVolume = 1;
+        AmbientSourceVolume = 1;
+
         LogBlocks = new List<string>();
 
         specailEvent = SpecialEvents.none;
@@ -26,9 +30,14 @@ public struct SaveData
     public SpriteData[] SpriteData;
     public int Background;
     public int CurrentCommandIndex;
-    public int CurrentDialogIndex;
     public string CurrentBlock;
-    public int CurrentOst;
+
+    // Music
+    public string CurrentMusic;
+    public string CurrentAmbient;
+    public float MusicSourceVolume;
+    public float AmbientSourceVolume;
+
     public List<string> LogBlocks;
 
     public SpecialEvents specailEvent;
@@ -39,23 +48,30 @@ public enum SpecialEvents
     none,
     DreamSnow,
     TanyaCG,
-
 }
 
 public class UserData : MonoBehaviour
 {
     public static UserData instance = null;
 
+    // Indexes
     public int CurrentCommandIndex { get; set; }
-
-    public int CurrentDialogIndex { get; set; }
 
     public string CurrentBlock { get; set; }
 
+    // Bg
     public int CurrentBG { get; set; }
 
-    public int indexToLoad { get; set; }
+    // Music
+    public string CurrentMusic { get; set; }
 
+    public string CurrentAmbient { get; set; }
+
+    public float MusicSourceVolume { get; set; }
+
+    public float AmbientSourceVolume { get; set; }
+
+    // Events
     public SpecialEvents specialEvent { get; set; }
 
     private void Start()
@@ -70,8 +86,6 @@ public class UserData : MonoBehaviour
         }
 
         CurrentBG = -1;
-
-        indexToLoad = -1;
 
         specialEvent = SpecialEvents.none;
 
@@ -96,9 +110,13 @@ public class UserData : MonoBehaviour
         newSave.CurrentBlock = instance.CurrentBlock;
 
         newSave.CurrentCommandIndex = instance.CurrentCommandIndex;
-        newSave.CurrentDialogIndex = instance.CurrentDialogIndex;
 
         newSave.SpriteData = SpriteController.instance.GameSpriteData;
+
+        newSave.CurrentMusic = instance.CurrentMusic;
+        newSave.CurrentAmbient = instance.CurrentAmbient;
+        newSave.MusicSourceVolume = instance.MusicSourceVolume;
+        newSave.AmbientSourceVolume = instance.AmbientSourceVolume;
 
         newSave.specailEvent = instance.specialEvent;
 
@@ -143,23 +161,20 @@ public class UserData : MonoBehaviour
         Flowchart flowchart = PanelsManager.instance.flowchart;
 
         // Block
-        if(CurrentBlock != null)
+        if (CurrentBlock != null)
         {
             Block activeBlock = flowchart.FindBlock(CurrentBlock);
             if (activeBlock != null)
             {
                 activeBlock.Stop();
-            }             
+            }
         }
-       
+
         CurrentBlock = newSave.CurrentBlock;
 
         // Index
         CurrentCommandIndex = newSave.CurrentCommandIndex;
         CurrentCommandIndex--;
-
-        CurrentDialogIndex = newSave.CurrentDialogIndex;
-        indexToLoad = CurrentDialogIndex;
 
         // Background
         yield return StartCoroutine(BackgroundManager.instance.IReleaseBackground());
@@ -169,6 +184,21 @@ public class UserData : MonoBehaviour
         {
             StartCoroutine(BackgroundManager.instance.ISwapBackground(CurrentBG));
         }
+
+        // Music
+        CurrentMusic = newSave.CurrentMusic;
+        CurrentAmbient = newSave.CurrentAmbient;
+        MusicSourceVolume = newSave.MusicSourceVolume;
+        AmbientSourceVolume = newSave.AmbientSourceVolume;
+        if (CurrentMusic != null)
+        {
+            AudioManager.instance.MusicStart(CurrentMusic, 3f, MusicSourceVolume);
+        }
+        if (CurrentAmbient != null)
+        {
+            AudioManager.instance.AmbientStart(CurrentAmbient, 3f, AmbientSourceVolume);
+        }
+
 
         // Special Events
         // Отгрузка
@@ -202,12 +232,8 @@ public class UserData : MonoBehaviour
         SpriteController.instance.AutoConnectPackages();
         SpriteController.instance.LoadSprites();
 
-        //StartCoroutine(LoadAudio(newSave.CurrentOst));
         //GameObject.Find("ChatLog").GetComponent<LogManager>().DelLog();
-        //UnityEngine.Debug.Log("Вызов Load");
         //LogBlocks = newSave.LogBlocks;
-        //GameObject.Find("ChatLog").GetComponent<LoadLog>().Load(CurrentIndex);
-
 
         DialogMod.denyNextDialog = false;
 

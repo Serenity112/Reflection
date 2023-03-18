@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
+
 namespace Fungus
 {
     [CommandInfo("Flow",
@@ -14,7 +14,7 @@ namespace Fungus
         private Vector3 position;
 
         [SerializeField]
-        private float smoothTime;
+        private float time;
 
         [SerializeField]
         private float vExtend;
@@ -28,16 +28,16 @@ namespace Fungus
 
             DialogMod.denyNextDialog = true; // Запрет отключтся в конце выполнения SetMovementSprites
 
-            if (smoothTime == 0f)
+            if (time == 0f)
             {
-                smoothTime = 0.1f;
+                time = 0.1f;
             }
                 
             int spriteNum = SpriteController.instance.GetActivityByName(characterName);
 
             SpriteController.instance.SaveSpriteData(spriteNum, position);
 
-            SpriteMove.instance.SetMovementSprites(spriteNum, position, smoothTime, vExtend, DialogMod.skipping);
+            SpriteMove.instance.SetMovementSprites(spriteNum, position, time, vExtend, DialogMod.skipping);
 
             Continue();
         }

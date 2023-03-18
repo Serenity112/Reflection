@@ -59,7 +59,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            if (UserData.instance.indexToLoad != -1)
+           /* if (UserData.instance.indexToLoad != -1)
             {
                 beg = UserData.instance.indexToLoad;
 
@@ -69,7 +69,7 @@ namespace Fungus
                 }
 
                 UserData.instance.indexToLoad = -1;
-            }
+            }*/
 
             for (int currentDialog = beg; currentDialog <= end; currentDialog++)
             {
@@ -80,7 +80,7 @@ namespace Fungus
                 speaker = sentenceData.speaker;
                 extendPrevious = sentenceData.extend;
 
-                UserData.instance.CurrentDialogIndex = currentDialog;
+                //UserData.instance.CurrentDialogIndex = currentDialog;
 
                 SpriteExpand.instance.StopPrev();
                 SpriteExpand.instance.SetExpanding(speaker, DialogMod.skipping);

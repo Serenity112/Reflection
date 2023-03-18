@@ -18,7 +18,6 @@ namespace Fungus
         [SerializeField]
         private int new_bg = -1;
 
-
         public override void OnEnter()
         {
             StartCoroutine(IOnEnter());

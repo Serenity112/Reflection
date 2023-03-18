@@ -109,19 +109,8 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         foreach (Settings setting in (Settings[])Enum.GetValues(typeof(Settings)))
         {
             SettingsOptions value = SettingsConfig.chosenOptions[setting].settingsOption;
-
             float data = SettingsConfig.chosenOptions[setting].data;
-
-            if (setting == Settings.masterVolume)
-            {             
-                audioMixer.SetFloat("MasterVol", 0);
-                float targetVolume_db = Mathf.Log10(data / 100) * 20;
-                StartCoroutine(FadeVolume(audioMixer, "MasterVol", 3f, targetVolume_db));
-            }
-            else
-            {
-                ApplySetting(setting, value, data);
-            }
+            ApplySetting(setting, value, data);
         }
     }
 
@@ -153,36 +142,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
                 break;
             case Settings.textSpeed:
                 SettingsConfig.changeTextSpeed(PanelsCanvas.GetComponent<Writer>(), data);
-                break;
-            // Источники
-            case Settings.sourceMusicVolume:
-                AudioManager.instance.ApplySourceVolume(Settings.sourceMusicVolume, data);
-                break;
-            case Settings.sourceMusicBufferVolume:
-                AudioManager.instance.ApplySourceVolume(Settings.sourceMusicBufferVolume, data);
-                break;
-            case Settings.sourceSoundVolume:
-                AudioManager.instance.ApplySourceVolume(Settings.sourceSoundVolume, data);
-                break;
-            case Settings.sourceAmbientVolume:
-                AudioManager.instance.ApplySourceVolume(Settings.sourceAmbientVolume, data);
-                break;
+                break; 
         }
-    }
-
-    // Переделать под линейное выцветание
-    private static IEnumerator FadeVolume(AudioMixer mixer, string exposedParam, float duration, float targetVolume_db)
-    {  
-        float currentTime = 0;
-        float currentVol;
-        mixer.GetFloat(exposedParam, out currentVol);
-        while (currentTime < duration)
-        {
-            currentTime += Time.deltaTime;
-            float newVol = Mathf.Lerp(currentVol, targetVolume_db, currentTime / duration);
-            mixer.SetFloat(exposedParam, newVol);
-            yield return null;
-        }
-        yield break;
     }
 }
