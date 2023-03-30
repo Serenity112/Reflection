@@ -1,3 +1,5 @@
+using Fungus;
+using System;
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -26,8 +28,6 @@ public class MMPanelsManager : MonoBehaviour
 
     private AsyncOperationHandle<GameObject> savesPanelHandler;
 
-    private int lastUsedSave = -1;
-
     private void Start()
     {
         if (instance == null)
@@ -40,17 +40,6 @@ public class MMPanelsManager : MonoBehaviour
         }
 
         UpdateButtonsState();
-
-        UpdateLastUsedSave();
-    }
-
-    // Последнйи активный сейв
-    private void UpdateLastUsedSave()
-    {
-        if (ES3.FileExists("SaveFiles.es3") && ES3.KeyExists("LastUsedSave", "SaveFiles.es3"))
-        {
-            lastUsedSave = ES3.Load<int>("LastUsedSave", "SaveFiles.es3");
-        }
     }
 
     // Кнопки меню
@@ -108,7 +97,28 @@ public class MMPanelsManager : MonoBehaviour
     // Продолжить игру
     public void ContinueGame()
     {
-        StartCoroutine(ILoadGame(lastUsedSave));
+        if (ES3.KeyExists("saveDataTimes", "SaveFiles.es3"))
+        {
+            string[] dates = ES3.Load<string[]>("saveDataTimes", "SaveFiles.es3");
+
+            int last_index = 0;
+            DateTime last_dt = DateTime.Parse(dates[0]);
+
+            for (int i = 0; i < dates.Length; i++)
+            {
+                if (dates[i] != null && dates[i] != string.Empty)
+                {
+                    DateTime dateTime = DateTime.Parse(dates[i]);
+                    if (dateTime < last_dt)
+                    {
+                        last_dt = dateTime;
+                        last_index = i;
+                    }
+                }
+            }
+
+            StartCoroutine(ILoadGame(last_index));
+        }
     }
 
     // Новая игра
@@ -166,11 +176,13 @@ public class MMPanelsManager : MonoBehaviour
         UpdateButtonsState();
     }
 
-    public IEnumerator ILoadGame(int saveNum)
+    public IEnumerator ILoadGame(int actualSaveNum)
     {
+        Debug.Log("actualSaveNum:" + actualSaveNum);
+
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
 
-        StaticVariables.StartingLoadSaveFile = saveNum;
+        StaticVariables.StartingLoadSaveFile = actualSaveNum;
 
         StaticVariables.ifInMainMenu = false;
 

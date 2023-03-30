@@ -1,4 +1,5 @@
 using System.Collections;
+using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -36,6 +37,9 @@ public class SaveManager : MonoBehaviour
 
     [HideInInspector] public bool[] savesTaken = new bool[maxPages * savesPerPage];
 
+    [HideInInspector] public string[] saveDataTimes = new string[maxPages * savesPerPage];
+
+
     public int currentPage = 0;
 
     void Start()
@@ -58,14 +62,27 @@ public class SaveManager : MonoBehaviour
             allScreenshots[i] = file.GetComponent<SaveFileFields>().screenshot;
         }
 
-        if(!StaticVariables.ifInMainMenu)
+        if (!StaticVariables.ifInMainMenu)
         {
             GameCamera = PanelsManager.instance.GameCamera;
         }
-        
+
         if (ES3.KeyExists("saveTaken", "screenshots.es3"))
         {
             savesTaken = ES3.Load<bool[]>("saveTaken", "screenshots.es3");
+        }
+
+        if (ES3.KeyExists("saveDataTimes", "SaveFiles.es3"))
+        {
+            saveDataTimes = ES3.Load<string[]>("saveDataTimes", "SaveFiles.es3");
+        }
+        else // Стартовая инициализация
+        {
+            for (int i = 0; i < saveDataTimes.Length; i++)
+            {
+                saveDataTimes[i] = string.Empty;
+            }
+            ES3.Save<string[]>("saveDataTimes", saveDataTimes, "SaveFiles.es3");
         }
 
         bottomPages = bottomPagesObj.GetComponent<BottomPages>();
@@ -141,11 +158,15 @@ public class SaveManager : MonoBehaviour
                 if (StaticVariables.ifInMainMenu)
                 {
                     FadeManager.FadeObject(MainMenuPanel, true);
-                } else
+                }
+                else
                 {
                     FadeManager.FadeObject(savedPanel, true);
-                }           
-                
+                }
+
+                saveFileFields.datetime.GetComponent<Text>().text = saveDataTimes[saveNum];
+                StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, true, optionsGradientSpeed));
+
                 saveFileFields.overPanel.GetComponent<CanvasGroup>().alpha = 1f; // Overpanel
 
                 var texture = ES3.LoadImage("screenshots/screenshot" + saveNum + ".png");
@@ -160,15 +181,17 @@ public class SaveManager : MonoBehaviour
             }
             else
             {
+                saveFileFields.datetime.GetComponent<CanvasGroup>().alpha = 0f;
+
                 screenshot.GetComponent<RawImage>().texture = null;
                 currentTextures[saveNum] = null;
 
                 screenshot.GetComponent<CanvasGroup>().alpha = 0f;
-                if(!StaticVariables.ifInMainMenu)
+                if (!StaticVariables.ifInMainMenu)
                 {
                     FadeManager.FadeObject(unsavedPanel, true);
                 }
-                   
+
                 saveFileFields.AllowSaveLoad = false;
                 saveFileFields.AllowOverPanel = false;
             }
@@ -260,10 +283,11 @@ public class SaveManager : MonoBehaviour
                 if (i != firstActiveSave)
                     StartCoroutine(FadeManager.FadeOnly(allScreenshots[i], true, pagesScrollSpeed));
 
-                if(StaticVariables.ifInMainMenu)
+                if (StaticVariables.ifInMainMenu)
                 {
                     StartCoroutine(FadeManager.FadeObject(MainMenuPanel, true, pagesScrollSpeed));
-                } else
+                }
+                else
                 {
                     StartCoroutine(FadeManager.FadeObject(savedPanel, true, pagesScrollSpeed));
                 }
@@ -280,12 +304,13 @@ public class SaveManager : MonoBehaviour
                 if (StaticVariables.ifInMainMenu)
                 {
                     FadeManager.FadeObject(MainMenuPanel, false);
-                } else
+                }
+                else
                 {
                     FadeManager.FadeObject(savedPanel, false);
                     FadeManager.FadeObject(unsavedPanel, true);
                 }
-               
+
                 saveFileFields.overPanel.GetComponent<CanvasGroup>().alpha = 0f; // Overpanel
                 saveFileFields.AllowSaveLoad = false;
                 saveFileFields.AllowOverPanel = false;
@@ -391,22 +416,33 @@ public class SaveManager : MonoBehaviour
             ES3.Save<int>("ContinueTrigger", 1, "SaveFiles.es3");
         }
 
-        ES3.Save<int>("LastUsedSave", actualSaveNum, "SaveFiles.es3");
-
         savesTaken[currentPage * savesPerPage + saveNum] = true;
         ES3.Save<bool[]>("saveTaken", savesTaken, "screenshots.es3");
 
         StaticVariables.UIsystemDown = false;
     }
 
+    public void SaveDateTime(int saveNum, string datetime)
+    {
+        saveDataTimes[currentPage * savesPerPage + saveNum] = datetime;
+        ES3.Save<string[]>("saveDataTimes", saveDataTimes, "SaveFiles.es3");
+    }
+
+    public void RemoveDateTime(int saveNum)
+    {
+        saveDataTimes[currentPage * savesPerPage + saveNum] = null;
+        ES3.Save<string[]>("saveDataTimes", saveDataTimes, "SaveFiles.es3");
+    }
+
     public void CloseSave()
     {
-        if(StaticVariables.ifInMainMenu) 
+        if (StaticVariables.ifInMainMenu)
         {
             MMPanelsManager.instance.CloseSaveMenu();
-        } else
+        }
+        else
         {
             PanelsManager.instance.closeSaveMenu();
-        }    
+        }
     }
 }

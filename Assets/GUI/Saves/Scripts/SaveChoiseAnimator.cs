@@ -95,8 +95,13 @@ public class SaveChoiseAnimator : MonoBehaviour
 
     IEnumerator RewriteSave()
     {
-        UserData.instance.SavePlayer(saveNum);
+        string datetime = DateTime.Now.ToString("HH:mm dd/MM/yy");
+        SaveManager.instance.SaveDateTime(saveNum, datetime);
+        saveFileFields.datetime.GetComponent<Text>().text = datetime;
+        //StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, true, SaveManager.instance.optionsGradientSpeed));
 
+        UserData.instance.SavePlayer(saveNum);
+       
         StartCoroutine(FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed));
         StartCoroutine(FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed));
         yield return StartCoroutine(ConfirmationPanel.ClosePanel());
@@ -142,10 +147,13 @@ public class SaveChoiseAnimator : MonoBehaviour
     IEnumerator IDeleteSave()
     {      
         StartCoroutine(FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed));
-        StartCoroutine(FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed));
         FadeManager.FadeObject(SavedPanel, false);
         FadeManager.FadeObject(UnSavedPanel, true);
         saveFileFields.CloseOverPanel();
+
+        StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed));
+        SaveManager.instance.RemoveDateTime(saveNum);
+
 
         yield return StartCoroutine(ConfirmationPanel.ClosePanel());
 

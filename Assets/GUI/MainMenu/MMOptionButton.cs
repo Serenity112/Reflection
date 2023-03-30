@@ -5,7 +5,9 @@ public class MMOptionButton : MonoBehaviour
     [SerializeField]
     private float speed;
 
+    [HideInInspector]
     public GameObject spacing;
+
     void Start()
     {
         spacing = transform.GetChild(0).gameObject;

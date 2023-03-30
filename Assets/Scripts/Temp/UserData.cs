@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Fungus;
+using System;
 
 public struct SaveData
 {
@@ -91,14 +92,16 @@ public class UserData : MonoBehaviour
 
         CurrentBlock = null;
 
+        Debug.Log("StaticVariables.StartingLoadSaveFile = " + StaticVariables.StartingLoadSaveFile);
+
         // Сейв, заданный в главном меню
         if (StaticVariables.StartingLoadSaveFile == -1)
         {
-            StartCoroutine(LoadGameFromStart());
+            LoadGameFromStart();
         }
         else
         {
-            LoadPlayer(StaticVariables.StartingLoadSaveFile);
+            LoadGame(StaticVariables.StartingLoadSaveFile);
         }
     }
 
@@ -138,23 +141,24 @@ public class UserData : MonoBehaviour
 
     }
 
-    private IEnumerator LoadGameFromStart()
+    private void LoadGameFromStart()
     {
-        //yield return StartCoroutine(DaysManager.instance.ILoadDay(1));
         Flowchart flowchart = PanelsManager.instance.flowchart;
         Block targetBlock = flowchart.FindBlock("Dream");
         flowchart.ExecuteBlock(targetBlock);
-        yield return null;
     }
 
-    public void LoadPlayer(int SaveNum)
+    public void LoadGame(int SaveNum)
     {
-        StartCoroutine(ILoadPlayer(SaveNum));
+        Debug.Log("ILoadGame 0");
+        StartCoroutine(ILoadGame(SaveNum));
     }
 
-    private IEnumerator ILoadPlayer(int SaveNum)
+    private IEnumerator ILoadGame(int SaveNum)
     {
         yield return new WaitForSeconds(1f);
+
+        Debug.Log("ILoadGame 1");
 
         SaveData newSave = ES3.Load<SaveData>("SaveFile" + SaveNum, "SaveFiles.es3");
 
@@ -174,7 +178,6 @@ public class UserData : MonoBehaviour
 
         // Index
         CurrentCommandIndex = newSave.CurrentCommandIndex;
-        CurrentCommandIndex--;
 
         // Background
         yield return StartCoroutine(BackgroundManager.instance.IReleaseBackground());
@@ -184,7 +187,7 @@ public class UserData : MonoBehaviour
         {
             StartCoroutine(BackgroundManager.instance.ISwapBackground(CurrentBG));
         }
-
+        Debug.Log("ILoadGame 2");
         // Special Events
         // Отгрузка
         switch (specialEvent)
@@ -195,7 +198,7 @@ public class UserData : MonoBehaviour
                 yield return StartCoroutine(DreamSnow.instance.IReleaseEvent());
                 break;
         }
-
+        Debug.Log("ILoadGame 3");
         // Загрузка
         specialEvent = newSave.specailEvent;
         switch (specialEvent)
@@ -207,7 +210,7 @@ public class UserData : MonoBehaviour
                 yield return StartCoroutine(DreamSnow.instance.ILoadEventByState(dreamSnowState));
                 break;
         }
-
+        Debug.Log("ILoadGame 4");
         //Sprites
         //Unload
         PackageConntector.instance.DisconnectAllPackages();
@@ -219,7 +222,7 @@ public class UserData : MonoBehaviour
 
         //GameObject.Find("ChatLog").GetComponent<LogManager>().DelLog();
         //LogBlocks = newSave.LogBlocks;
-
+        Debug.Log("ILoadGame 5");
 
         // Music
         // Отгрузка
@@ -237,9 +240,11 @@ public class UserData : MonoBehaviour
         {
             AudioManager.instance.AmbientStart(CurrentAmbient, 3f, AmbientSourceVolume);
         }
-
+        Debug.Log("ILoadGame 6");
         DialogMod.denyNextDialog = false;
 
         flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex, null);
+        CurrentCommandIndex--;
+        Debug.Log("ILoadGame 7");
     }
 }

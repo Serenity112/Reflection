@@ -375,7 +375,6 @@ namespace Fungus.EditorUtils
 
             foreach (XmlNode key in xDoc["Keys"].ChildNodes)
             {
-                Debug.Log("Added");
                 switch (key.Attributes["Command"].Value)
                 {
                     // Dialog
@@ -521,6 +520,8 @@ namespace Fungus.EditorUtils
                 index = block.CommandList.Count;
             }
 
+            index -= indexSubstract;
+
             var newCommand = Undo.AddComponent(block.gameObject, commandType) as Command;
             block.GetFlowchart().AddSelectedCommand(newCommand);
             newCommand.ParentBlock = block;
@@ -546,7 +547,7 @@ namespace Fungus.EditorUtils
             Undo.RecordObject(block, "Set command type");
             if (index < block.CommandList.Count - 1)
             {
-                block.CommandList.Insert(index - indexSubstract, newCommand);
+                block.CommandList.Insert(index, newCommand);
             }
             else
             {

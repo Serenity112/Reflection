@@ -18,6 +18,8 @@ public class SaveFileFields : MonoBehaviour
     public GameObject IconLeft;
     public GameObject IconRight;
 
+    public GameObject datetime;
+
     public bool AllowSaveLoad;
     public bool AllowOverPanel;
 

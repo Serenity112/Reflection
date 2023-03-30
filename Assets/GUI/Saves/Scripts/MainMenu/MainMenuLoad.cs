@@ -76,7 +76,7 @@ public class MainMenuLoad : MonoBehaviour
         yield return StartCoroutine(ExpandManager.ExpandObject(Cassette, 0.9f, 0.05f));
         yield return StartCoroutine(ExpandManager.ExpandObject(Cassette, currScale, 0.05f));
 
-        yield return StartCoroutine(ConfirmationPanel.CreatePanel("Загрузить !!!сохранение?", LoadFile(), CancelLoad()));
+        yield return StartCoroutine(ConfirmationPanel.CreatePanel("Загрузить сохранение?", LoadFile(), CancelLoad()));
     }
 
     IEnumerator LoadFile()

@@ -1,10 +1,11 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 public class FirstSaveAnimator : MonoBehaviour
-{   
+{
     [SerializeField] private GameObject CassetteImg;
-    [SerializeField] private Button ButtonUnsaved;   
+    [SerializeField] private Button ButtonUnsaved;
     [SerializeField] private Animator cassetteAnimator;
 
     private int saveNum;
@@ -18,7 +19,7 @@ public class FirstSaveAnimator : MonoBehaviour
     private SaveFileFields saveFileFields;
 
     private void Start()
-    {          
+    {
         saveFileFields = GetComponent<SaveFileFields>();
         saveNum = saveFileFields.saveNum;
         screenshot = saveFileFields.screenshot;
@@ -32,17 +33,17 @@ public class FirstSaveAnimator : MonoBehaviour
     {
         if (ButtonUnsaved.interactable && !PanelsManager.confirmPanelActive)
         {
-            if(CassetteFadeOut != null)
+            if (CassetteFadeOut != null)
                 StopCoroutine(CassetteFadeOut);
 
             CassetteFadeIn = FadeManager.FadeObject(CassetteImg, true, SaveManager.instance.optionsGradientSpeed);
             StartCoroutine(CassetteFadeIn);
-        }            
+        }
     }
 
     public void DisappearCassette()
     {
-        if (ButtonUnsaved.interactable && !PanelsManager.confirmPanelActive) 
+        if (ButtonUnsaved.interactable && !PanelsManager.confirmPanelActive)
         {
             if (CassetteFadeIn != null)
                 StopCoroutine(CassetteFadeIn);
@@ -50,7 +51,7 @@ public class FirstSaveAnimator : MonoBehaviour
             CassetteFadeOut = FadeManager.FadeObject(CassetteImg, false, SaveManager.instance.optionsGradientSpeed);
             StartCoroutine(CassetteFadeOut);
         }
-        
+
     }
 
     public void FirstSaveIconClick()
@@ -58,7 +59,7 @@ public class FirstSaveAnimator : MonoBehaviour
         if (!StaticVariables.UIsystemDown)
         {
             StartCoroutine(IFirstSaveIconClick());
-        }          
+        }
     }
 
     IEnumerator IFirstSaveIconClick()
@@ -73,9 +74,17 @@ public class FirstSaveAnimator : MonoBehaviour
         cassetteAnimator.Play("CasseteAnim");
         yield return StartCoroutine(ExpandManager.ExpandObject(CassetteImg, 0.9f, 0.05f));
         yield return StartCoroutine(ExpandManager.ExpandObject(CassetteImg, currScale, 0.05f));
-       
 
+        // Дата и время
+        string datetime = DateTime.Now.ToString("HH:mm dd/MM/yy");
+        SaveManager.instance.SaveDateTime(saveNum, datetime);
+        saveFileFields.datetime.GetComponent<Text>().text = datetime;
+        StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, true, SaveManager.instance.optionsGradientSpeed));
+
+        // Сам сейв
         UserData.instance.SavePlayer(saveNum);
+
+        // Скриншот
         StartCoroutine(SaveManager.instance.SetScreenshot(saveNum, screenshot));
         saveFileFields.AllowOverPanel = true;
 
@@ -91,5 +100,5 @@ public class FirstSaveAnimator : MonoBehaviour
         saveFileFields.AllowSaveLoad = true;
         saveFileFields.resetCassettePosition(CassetteImg);
         ButtonUnsaved.interactable = true;
-    }
+    }  
 }

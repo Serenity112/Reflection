@@ -43,7 +43,7 @@ public class DreamSnow : MonoBehaviour
         switch (state)
         {
             case DreamSnowState.Start:
-                bg_handler = Addressables.InstantiateAsync("Dream", backgroundsPanel.GetComponent<RectTransform>(), false, true);
+                bg_handler = Addressables.InstantiateAsync("SpaceportStart", backgroundsPanel.GetComponent<RectTransform>(), false, true);
                 yield return bg_handler;
 
                 snow_handler = Addressables.InstantiateAsync("Snow", backgroundsPanel.GetComponent<RectTransform>(), false, true);
@@ -51,7 +51,7 @@ public class DreamSnow : MonoBehaviour
 
                 break;
             case DreamSnowState.Launch:
-                bg_handler = Addressables.InstantiateAsync("DreamLaunch", backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
+                bg_handler = Addressables.InstantiateAsync("SpaceportLaunch", backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
                 yield return bg_handler;
 
                 snow_handler = Addressables.InstantiateAsync("Snow", backgroundsPanel.GetComponent<RectTransform>(), false, true);
@@ -69,7 +69,7 @@ public class DreamSnow : MonoBehaviour
 
         FadeManager.FadeObject(BlackPanel, true);
 
-        bg_handler = Addressables.InstantiateAsync("Dream", backgroundsPanel.GetComponent<RectTransform>(), false, true);
+        bg_handler = Addressables.InstantiateAsync("SpaceportStart", backgroundsPanel.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
 
         snow_handler = Addressables.InstantiateAsync("Snow", backgroundsPanel.GetComponent<RectTransform>(), false, true);
@@ -85,7 +85,7 @@ public class DreamSnow : MonoBehaviour
 
         AsyncOperationHandle<GameObject> old_handler = bg_handler;
 
-        bg_handler = Addressables.InstantiateAsync("DreamLaunch", backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
+        bg_handler = Addressables.InstantiateAsync("SpaceportLaunch", backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
 
         if (old_handler.IsValid())
