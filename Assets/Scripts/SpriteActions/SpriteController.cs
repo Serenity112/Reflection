@@ -96,7 +96,7 @@ public class SpriteController : MonoBehaviour
 
     [HideInInspector] public Dictionary<string, Vector3> CharactersScales = new Dictionary<string, Vector3>();
 
-    void Start()
+    void Awake()
     {
         if (instance == null)
         {

@@ -81,7 +81,7 @@ public class PanelsManager : MonoBehaviour
         PanelsCamera.enabled = false;
 
         Resources.UnloadUnusedAssets();
-        UserData.instance.LoadGame(saveNum);
+        StartCoroutine(UserData.instance.ILoadGame(saveNum));
 
         FadeManager.FadeObject(blackPanelPanels, false);
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, false, savesSpeed));  

@@ -30,7 +30,7 @@ public class LogManager : MonoBehaviour
 
     private string currName;
 
-    private void Start()
+    private void Awake()
     {
         if (instance == null)
         {

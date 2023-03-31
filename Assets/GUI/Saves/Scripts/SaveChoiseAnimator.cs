@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Linq;
+using static StaticVariables;
 
 public enum Side
 {
@@ -168,8 +169,8 @@ public class SaveChoiseAnimator : MonoBehaviour
             // Если после УДАЛЕНИЯ не осталось true сейвов, значит удалён последний => триггер 0
             if (!SaveManager.instance.savesTaken.Contains(true))
             {
-                ES3.Save<int>("ContinueTrigger", 0, "SaveFiles.es3");
-                StaticVariables.MainMenuContinueButtonAnimationTrigger = 0;
+                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.HideAnimation, "SaveFiles.es3");
+                StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.HideAnimation ;
             }
                 
             ES3.DeleteKey("SaveFile" + actualSaveNum, "SaveFiles.es3");

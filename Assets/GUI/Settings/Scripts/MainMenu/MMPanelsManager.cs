@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
+using static StaticVariables;
 
 public class MMPanelsManager : MonoBehaviour
 {
@@ -45,28 +46,35 @@ public class MMPanelsManager : MonoBehaviour
     // Кнопки меню
     private void UpdateButtonsState()
     {
-        if (ES3.FileExists("SaveFiles.es3") && ES3.KeyExists("ContinueTrigger", "SaveFiles.es3"))
+        try
         {
-            StaticVariables.MainMenuContinueButtonAnimationTrigger = ES3.Load<int>("ContinueTrigger", "SaveFiles.es3");
+            if (ES3.FileExists("SaveFiles.es3") && ES3.KeyExists("ContinueTrigger", "SaveFiles.es3"))
+            {
+                StaticVariables.MainMenuContinueButtonAnimationTrigger = ES3.Load<MMContinueButtonState>("ContinueTrigger", "SaveFiles.es3");
+            }
+        }
+        catch (Exception)
+        {
+            ES3Utils.FileRecovery("ContinueTrigger", "SaveFiles.es3");
         }
 
         switch (StaticVariables.MainMenuContinueButtonAnimationTrigger)
         {
-            case -1:
-                RemoveContinueButton();
+            case MMContinueButtonState.ButtonDeleted:
+                DeleteContinueButton();
                 break;
-            case 0:
-                AddContinueButton(); // Так как в сцене изначально кнопки нет
-                StartCoroutine(IRemoveContinueButton());
-                StaticVariables.MainMenuContinueButtonAnimationTrigger = -1;
-                ES3.Save<int>("ContinueTrigger", -1, "SaveFiles.es3");
+            case MMContinueButtonState.HideAnimation:
+                AddContinueButton(); // Так как в сцене изначально кнопки нет, для анимации исчезания
+                StartCoroutine(IHideContinueButton());
+                StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.ButtonDeleted;
+                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.ButtonDeleted, "SaveFiles.es3");
                 break;
-            case 1:
-                StartCoroutine(IAddContinueButton());
-                StaticVariables.MainMenuContinueButtonAnimationTrigger = 2;
-                ES3.Save<int>("ContinueTrigger", 2, "SaveFiles.es3");
+            case MMContinueButtonState.AppearAnimation:
+                StartCoroutine(IAppearContinueButton());
+                StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.ButtonAdded;
+                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.ButtonAdded, "SaveFiles.es3");
                 break;
-            case 2:
+            case MMContinueButtonState.ButtonAdded:
                 AddContinueButton();
                 break;
         }
@@ -77,18 +85,18 @@ public class MMPanelsManager : MonoBehaviour
         Buttons.GetComponent<Animator>().Play("ConstantAppear");
     }
 
-    private void RemoveContinueButton()
+    private void DeleteContinueButton()
     {
         Buttons.GetComponent<Animator>().Play("ConstantRemove");
     }
 
-    private IEnumerator IAddContinueButton()
+    private IEnumerator IAppearContinueButton()
     {
         yield return new WaitForSeconds(0.33f);
         Buttons.GetComponent<Animator>().Play("ContinueButtonAppear");
     }
 
-    private IEnumerator IRemoveContinueButton()
+    private IEnumerator IHideContinueButton()
     {
         yield return new WaitForSeconds(0.33f);
         Buttons.GetComponent<Animator>().Play("ContinueButtonRemove");
@@ -97,27 +105,46 @@ public class MMPanelsManager : MonoBehaviour
     // Продолжить игру
     public void ContinueGame()
     {
-        if (ES3.KeyExists("saveDataTimes", "SaveFiles.es3"))
+        try
         {
-            string[] dates = ES3.Load<string[]>("saveDataTimes", "SaveFiles.es3");
-
-            int last_index = 0;
-            DateTime last_dt = DateTime.Parse(dates[0]);
-
-            for (int i = 0; i < dates.Length; i++)
+            if (ES3.KeyExists("saveDataTimes", "SaveFiles.es3"))
             {
-                if (dates[i] != null && dates[i] != string.Empty)
+                string[] dates = ES3.Load<string[]>("saveDataTimes", "SaveFiles.es3");
+
+                int last_index = 0;
+                DateTime last_dt = new DateTime();
+
+                for (int i_beg = 0; i_beg < dates.Length; i_beg++)
                 {
-                    DateTime dateTime = DateTime.Parse(dates[i]);
-                    if (dateTime < last_dt)
+                    if (dates[i_beg] != null && dates[i_beg] != string.Empty)
                     {
-                        last_dt = dateTime;
-                        last_index = i;
+                        last_index = i_beg;
+                        last_dt = DateTime.Parse(dates[i_beg]);
+                        break;
                     }
                 }
-            }
 
-            StartCoroutine(ILoadGame(last_index));
+                for (int i = last_index + 1; i < dates.Length; i++)
+                {
+                    if (dates[i] != null && dates[i] != string.Empty)
+                    {
+                        DateTime dateTime = DateTime.Parse(dates[i]);
+
+                        if (dateTime > last_dt)
+                        {
+                            last_dt = dateTime;
+                            last_index = i;
+                        }
+                    }
+                }
+
+                StartCoroutine(ILoadGame(last_index));
+            }
+        }
+        catch (Exception) // Cottupted save
+        {
+            ES3Utils.FileRecovery("saveDataTimes", "SaveFiles.es3");
+            StartCoroutine(ILoadGame(-1));
         }
     }
 

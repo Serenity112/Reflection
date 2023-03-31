@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using static StaticVariables;
 
 public enum SavePageScroll
 {
@@ -165,7 +166,7 @@ public class SaveManager : MonoBehaviour
                 }
 
                 saveFileFields.datetime.GetComponent<Text>().text = saveDataTimes[saveNum];
-                StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, true, optionsGradientSpeed));
+                saveFileFields.datetime.GetComponent<CanvasGroup>().alpha = 1f;
 
                 saveFileFields.overPanel.GetComponent<CanvasGroup>().alpha = 1f; // Overpanel
 
@@ -409,11 +410,11 @@ public class SaveManager : MonoBehaviour
 
         ES3.SaveImage(texture, "screenshots/screenshot" + actualSaveNum + ".png");
 
-        // SetScreenshot вызывается только во время 1го сейва. Если до 1го сейва не было сейвов => триггер 1
+        // SetScreenshot вызывается только во время 1го сейва. Если до 1го сейва не было сейвов => триггер AppearAnimation
         if (!savesTaken.Contains(true))
         {
-            StaticVariables.MainMenuContinueButtonAnimationTrigger = 1;
-            ES3.Save<int>("ContinueTrigger", 1, "SaveFiles.es3");
+            StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.AppearAnimation;
+            ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.AppearAnimation, "SaveFiles.es3");
         }
 
         savesTaken[currentPage * savesPerPage + saveNum] = true;
@@ -430,7 +431,7 @@ public class SaveManager : MonoBehaviour
 
     public void RemoveDateTime(int saveNum)
     {
-        saveDataTimes[currentPage * savesPerPage + saveNum] = null;
+        saveDataTimes[currentPage * savesPerPage + saveNum] = string.Empty;
         ES3.Save<string[]>("saveDataTimes", saveDataTimes, "SaveFiles.es3");
     }
 

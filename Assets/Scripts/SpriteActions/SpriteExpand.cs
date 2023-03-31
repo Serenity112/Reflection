@@ -18,7 +18,7 @@ public class SpriteExpand : MonoBehaviour
 
     private float expand_time = 0.2f;
 
-    void Start()
+    void Awake()
     {
         if (instance == null)
         {

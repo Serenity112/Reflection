@@ -101,7 +101,7 @@ public class UserData : MonoBehaviour
         }
         else
         {
-            LoadGame(StaticVariables.StartingLoadSaveFile);
+            StartCoroutine(ILoadGame(StaticVariables.StartingLoadSaveFile));
         }
     }
 
@@ -148,17 +148,11 @@ public class UserData : MonoBehaviour
         flowchart.ExecuteBlock(targetBlock);
     }
 
-    public void LoadGame(int SaveNum)
-    {
-        Debug.Log("ILoadGame 0");
-        StartCoroutine(ILoadGame(SaveNum));
-    }
 
-    private IEnumerator ILoadGame(int SaveNum)
+    public IEnumerator ILoadGame(int SaveNum)
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(2f);
 
-        Debug.Log("ILoadGame 1");
 
         SaveData newSave = ES3.Load<SaveData>("SaveFile" + SaveNum, "SaveFiles.es3");
 
@@ -187,7 +181,7 @@ public class UserData : MonoBehaviour
         {
             StartCoroutine(BackgroundManager.instance.ISwapBackground(CurrentBG));
         }
-        Debug.Log("ILoadGame 2");
+
         // Special Events
         // Отгрузка
         switch (specialEvent)
@@ -198,7 +192,7 @@ public class UserData : MonoBehaviour
                 yield return StartCoroutine(DreamSnow.instance.IReleaseEvent());
                 break;
         }
-        Debug.Log("ILoadGame 3");
+
         // Загрузка
         specialEvent = newSave.specailEvent;
         switch (specialEvent)
@@ -210,7 +204,7 @@ public class UserData : MonoBehaviour
                 yield return StartCoroutine(DreamSnow.instance.ILoadEventByState(dreamSnowState));
                 break;
         }
-        Debug.Log("ILoadGame 4");
+
         //Sprites
         //Unload
         PackageConntector.instance.DisconnectAllPackages();
@@ -222,7 +216,6 @@ public class UserData : MonoBehaviour
 
         //GameObject.Find("ChatLog").GetComponent<LogManager>().DelLog();
         //LogBlocks = newSave.LogBlocks;
-        Debug.Log("ILoadGame 5");
 
         // Music
         // Отгрузка
@@ -240,11 +233,9 @@ public class UserData : MonoBehaviour
         {
             AudioManager.instance.AmbientStart(CurrentAmbient, 3f, AmbientSourceVolume);
         }
-        Debug.Log("ILoadGame 6");
         DialogMod.denyNextDialog = false;
 
         flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex, null);
         CurrentCommandIndex--;
-        Debug.Log("ILoadGame 7");
     }
 }
