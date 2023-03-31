@@ -92,8 +92,6 @@ public class UserData : MonoBehaviour
 
         CurrentBlock = null;
 
-        Debug.Log("StaticVariables.StartingLoadSaveFile = " + StaticVariables.StartingLoadSaveFile);
-
         // Сейв, заданный в главном меню
         if (StaticVariables.StartingLoadSaveFile == -1)
         {

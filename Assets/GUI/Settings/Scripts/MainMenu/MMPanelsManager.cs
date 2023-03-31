@@ -29,6 +29,8 @@ public class MMPanelsManager : MonoBehaviour
 
     private AsyncOperationHandle<GameObject> savesPanelHandler;
 
+    private AsyncOperationHandle<GameObject> aboutUsHandler;
+
     private void Start()
     {
         if (instance == null)
@@ -198,15 +200,13 @@ public class MMPanelsManager : MonoBehaviour
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, fadingSpeed));
 
-        Resources.UnloadUnusedAssets();
+        yield return Resources.UnloadUnusedAssets();
 
         UpdateButtonsState();
     }
 
     public IEnumerator ILoadGame(int actualSaveNum)
     {
-        Debug.Log("actualSaveNum:" + actualSaveNum);
-
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
 
         StaticVariables.StartingLoadSaveFile = actualSaveNum;
@@ -224,12 +224,42 @@ public class MMPanelsManager : MonoBehaviour
     // Меню "О нас"
     public void OpenInfoMenu()
     {
-        StartCoroutine(FadeManager.FadeObject(AboutUs, true, fadingSpeed));
+        StartCoroutine(IOpenInfoMenu());
+    }
+
+    private IEnumerator IOpenInfoMenu()
+    {
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
+
+        aboutUsHandler = Addressables.InstantiateAsync("AboutUs", ActivePanels.GetComponent<RectTransform>(), false, true);
+        yield return aboutUsHandler;
+
+        if (aboutUsHandler.Status == AsyncOperationStatus.Succeeded)
+        {
+            aboutUsHandler.Result.name = "AboutUs";
+
+            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, fadingSpeed));
+        }
+        else
+        {
+            Debug.Log("Error loading");
+        }
     }
 
     public void CloseInfoMenu()
     {
-        StartCoroutine(FadeManager.FadeObject(AboutUs, false, fadingSpeed));
+        StartCoroutine(ICloseInfoMenu());
+    }
+
+    private IEnumerator ICloseInfoMenu()
+    {
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
+
+        Addressables.ReleaseInstance(aboutUsHandler);
+
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, fadingSpeed));
+
+        yield return Resources.UnloadUnusedAssets();
     }
 
     // Выход из игры
