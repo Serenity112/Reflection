@@ -24,9 +24,6 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
     [SerializeField]
     private float settingsSpeed = 5f;
 
-    [SerializeField]
-    private float introMusicFadeSpeed = 3f;
-
     private AsyncOperationHandle<GameObject> settingsPanelHandler;
 
     private void Awake()
@@ -102,7 +99,7 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
                 SettingsConfig.ChangeResoulution(value);
                 break;
             case Settings.masterVolume:
-                SettingsConfig.SetVolume(audioMixer, "MasterVol", data / 100); // Деление на 100 т.к. метод принимает числа от 0 до 1
+                SettingsConfig.SetVolume(audioMixer, "MasterVol", data / 100); // Деление на 100 т.к. метод принимает числа от 0 до 1, а сейвах идут проценты от 0 до 100
                 break;
             case Settings.musicVolume:
                 SettingsConfig.SetVolume(audioMixer, "MusicVol", data / 100);
@@ -137,8 +134,7 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
     private static IEnumerator FadeVolume(AudioMixer mixer, string exposedParam, float duration, float targetVolume)
     {
         float currentTime = 0;
-        float currentVol;
-        mixer.GetFloat(exposedParam, out currentVol);
+        mixer.GetFloat(exposedParam, out float currentVol);
         while (currentTime < duration)
         {
             currentTime += Time.deltaTime;

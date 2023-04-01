@@ -37,8 +37,8 @@ public enum SettingsOptions
     r832x480,
     rAutomatic,
 
-    Volume, // Заглушка
-    Speed, // Заглушка
+    Volume, // Заглушка, влияет только enum Settings и data
+    Speed, // Заглушка, сейм
 }
 
 public struct SettingsOptionsData
@@ -113,14 +113,21 @@ public class SettingsConfig
 
     private static void LoadUserSettings()
     {
-        foreach (Settings setting in (Settings[])Enum.GetValues(typeof(Settings)))
+        try
         {
-            if (ES3.FileExists("PlayerSettings.es3") && ES3.KeyExists(setting.ToString(), "PlayerSettings.es3"))
+            foreach (Settings setting in (Settings[])Enum.GetValues(typeof(Settings)))
             {
-                SettingsOptionsData optiondata = ES3.Load<SettingsOptionsData>(setting.ToString(), "PlayerSettings.es3");
+                if (ES3.FileExists("PlayerSettings.es3") && ES3.KeyExists(setting.ToString(), "PlayerSettings.es3"))
+                {
+                    SettingsOptionsData optiondata = ES3.Load<SettingsOptionsData>(setting.ToString(), "PlayerSettings.es3");
 
-                chosenOptions[setting] = optiondata;
+                    chosenOptions[setting] = optiondata;
+                }
             }
+        }
+        catch (Exception) // Файл повреждён, настройки сбрасываются
+        {
+            ES3Utils.FileRecovery("", "PlayerSettings.es3");
         }
     }
 
@@ -131,11 +138,18 @@ public class SettingsConfig
 
     public static void SaveOption(Settings setting, SettingsOptions value, float data)
     {
-        ES3.Save<SettingsOptionsData>(setting.ToString(), new SettingsOptionsData(value, data), "PlayerSettings.es3");
-
-        if (chosenOptions.ContainsKey(setting))
+        try
         {
-            chosenOptions[setting] = new SettingsOptionsData(value, data);
+            ES3.Save<SettingsOptionsData>(setting.ToString(), new SettingsOptionsData(value, data), "PlayerSettings.es3");
+
+            if (chosenOptions.ContainsKey(setting))
+            {
+                chosenOptions[setting] = new SettingsOptionsData(value, data);
+            }
+        }
+        catch (Exception)
+        {
+            ES3Utils.FileRecovery(setting.ToString(), "PlayerSettings.es3");
         }
     }
 
