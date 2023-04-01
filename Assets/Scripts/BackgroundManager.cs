@@ -4,8 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using System;
-using Fungus;
+using static TextBoxController;
 
 public enum bgSwapType
 {
@@ -14,34 +13,36 @@ public enum bgSwapType
     Overlay,
 }
 
-public struct BgData
+public struct TextBoxTheme
 {
-    public BgData(int num, string name)
+    public TextBoxTheme(ThemeStyle style, float alpha)
     {
-        this.num = num;
-        this.name = name;
+        this.style = style;
+        this.alpha = alpha;
     }
 
-    public int num;
-    public string name;
+    public ThemeStyle style;
+    public float alpha;
 };
+
 public class BackgroundManager : MonoBehaviour
 {
     public static BackgroundManager instance = null;
 
-    [SerializeField] 
+    [SerializeField]
     private GameObject BlackPanel;
 
-    [SerializeField] 
+    [SerializeField]
     private GameObject backgroundsPanel;
 
-    [SerializeField] 
+    [SerializeField]
     private GameObject storytext;
 
     private AsyncOperationHandle<GameObject> bg_handler;
 
+    private Dictionary<string, TextBoxTheme> _textBoxThemes = new Dictionary<string, TextBoxTheme>();
 
-    void Start()
+    void Awake()
     {
         if (instance == null)
         {
@@ -51,6 +52,9 @@ public class BackgroundManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        _textBoxThemes.Add("AssemblyHall", new TextBoxTheme(ThemeStyle.Light, 0.75f));
+        _textBoxThemes.Add("Performance1", new TextBoxTheme(ThemeStyle.Dark, 0.9f));
     }
 
     public IEnumerator IReleaseBackground()
@@ -89,6 +93,8 @@ public class BackgroundManager : MonoBehaviour
             Addressables.ReleaseInstance(bg_handler);
         }
 
+        yield return StartCoroutine(SetTextBoxTheme(bg_adress));
+
         bg_handler = Addressables.InstantiateAsync(bg_adress, backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
 
@@ -117,6 +123,8 @@ public class BackgroundManager : MonoBehaviour
         {
             Addressables.ReleaseInstance(old_handler);
         }
+
+        yield return StartCoroutine(SetTextBoxTheme(bg_adress));
 
         Resources.UnloadUnusedAssets();
     }
@@ -149,6 +157,21 @@ public class BackgroundManager : MonoBehaviour
             Addressables.ReleaseInstance(old_handler);
         }
 
+        yield return StartCoroutine(SetTextBoxTheme(bg_adress));
+
         Resources.UnloadUnusedAssets();
+    }
+
+    private IEnumerator SetTextBoxTheme(string bg)
+    {
+        if (_textBoxThemes.ContainsKey(bg))
+        {
+            TextBoxTheme theme = _textBoxThemes[bg];
+            yield return StartCoroutine(TextBoxController.instance.IChangeTheme(theme.style, theme.alpha));
+        }
+        else
+        {
+            yield return StartCoroutine(TextBoxController.instance.IChangeTheme(ThemeStyle.Light, 0.8f)); // Стандартный текстбоксл
+        }
     }
 }

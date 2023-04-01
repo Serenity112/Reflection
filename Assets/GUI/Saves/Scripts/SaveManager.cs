@@ -221,7 +221,7 @@ public class SaveManager : MonoBehaviour
             GameObject unsavedPanel = saveFileFields.UnSavedPanel;
             GameObject overPanel = saveFileFields.overPanel;
 
-            StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, pagesScrollSpeed));
+            StartCoroutine(FadeManager.FadeOnly(saveFileFields.datetime, false, pagesScrollSpeed));
             StartCoroutine(FadeManager.FadeObject(overPanel, false, pagesScrollSpeed)); // Overpanel
             StartCoroutine(FadeManager.FadeObject(savedPanel, false, pagesScrollSpeed));
             FadeManager.FadeObject(unsavedPanel, false);
@@ -229,8 +229,12 @@ public class SaveManager : MonoBehaviour
             if (i != firstActiveSave)
                 StartCoroutine(FadeManager.FadeObject(allScreenshots[i], false, pagesScrollSpeed));
         }
+
         if (firstActiveSave != -1)
+        {
             yield return StartCoroutine(FadeManager.FadeObject(allScreenshots[firstActiveSave], false, pagesScrollSpeed));
+        }
+
 
         // Очистка текущих скринов
         ClearCurrent();
@@ -244,7 +248,7 @@ public class SaveManager : MonoBehaviour
             if (savesTaken[actualSaveNum])
             {
                 saveFileFields.datetime.GetComponent<Text>().text = saveDataTimes[actualSaveNum];
-                StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, true, pagesScrollSpeed));
+                StartCoroutine(FadeManager.FadeOnly(saveFileFields.datetime, true, pagesScrollSpeed));
 
                 var texture = ES3.LoadImage("screenshots/screenshot" + actualSaveNum + ".png");
                 texture.name = "screenshot" + actualSaveNum;
@@ -253,7 +257,7 @@ public class SaveManager : MonoBehaviour
             }
             else
             {
-                StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, pagesScrollSpeed));
+                StartCoroutine(FadeManager.FadeOnly(saveFileFields.datetime, false, pagesScrollSpeed));
 
                 allScreenshots[i].GetComponent<RawImage>().texture = null;
                 currentTextures[i] = null;

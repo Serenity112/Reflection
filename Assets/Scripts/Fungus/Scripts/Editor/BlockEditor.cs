@@ -607,7 +607,6 @@ namespace Fungus.EditorUtils
             // Add Button
             if (GUILayout.Button(addIcon))
             {
-                Debug.Log("Add");
                 //this may be less reliable for HDPI scaling but previous method using editor window height is now returning 
                 //  null in 2019.2 suspect ongoing ui changes, so default to screen.height and then attempt to get the better result
                 int h = Screen.height;
@@ -901,14 +900,12 @@ namespace Fungus.EditorUtils
 
         protected void Cut()
         {
-            Debug.Log("Cut");
             Copy();
             Delete();
         }
 
         protected void Copy()
         {
-            Debug.Log("Copying");
             var block = target as Block;
             var flowchart = (Flowchart)block.GetFlowchart();
 
@@ -927,11 +924,8 @@ namespace Fungus.EditorUtils
                 if (flowchart.SelectedCommands.Contains(command))
                 {
                     var type = command.GetType();
-                    Debug.Log(type.Name);
 
                     Command newCommand = Undo.AddComponent(commandCopyBuffer.gameObject, type) as Command;
-                    //
-
 
                     var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
                     foreach (var field in fields)
@@ -948,7 +942,6 @@ namespace Fungus.EditorUtils
 
                         if (copy)
                         {
-                            Debug.Log("field.SetValue: newCommand: " + newCommand + " field.GetValue(command): " + field.GetValue(command) + " field: " + field.Name);
                             field.SetValue(newCommand, field.GetValue(command));
                         }
                     }
@@ -958,7 +951,6 @@ namespace Fungus.EditorUtils
 
         protected void Paste()
         {
-            Debug.Log("Paste");
             var block = target as Block;
             var flowchart = (Flowchart)block.GetFlowchart();
 
@@ -977,9 +969,6 @@ namespace Fungus.EditorUtils
                 for (int i = 0; i < flowchart.SelectedBlock.CommandList.Count; ++i)
                 {
                     Command command = flowchart.SelectedBlock.CommandList[i];
-
-
-
                     foreach (Command selectedCommand in flowchart.SelectedCommands)
                     {
                         if (command == selectedCommand)
@@ -1126,7 +1115,6 @@ namespace Fungus.EditorUtils
 
         protected void PlayCommand()
         {
-            Debug.Log("PlayCommand");
             var targetBlock = target as Block;
             var flowchart = (Flowchart)targetBlock.GetFlowchart();
             Command command = flowchart.SelectedCommands[0];
@@ -1147,7 +1135,6 @@ namespace Fungus.EditorUtils
 
         protected void StopAllPlayCommand()
         {
-            Debug.Log("StopAllPlayCommand");
             var targetBlock = target as Block;
             var flowchart = (Flowchart)targetBlock.GetFlowchart();
             Command command = flowchart.SelectedCommands[0];
@@ -1159,14 +1146,12 @@ namespace Fungus.EditorUtils
 
         protected IEnumerator RunBlock(Flowchart flowchart, Block targetBlock, int commandIndex, float delay)
         {
-            Debug.Log("RunBlock");
             yield return new WaitForSeconds(delay);
             flowchart.ExecuteBlock(targetBlock, commandIndex);
         }
 
         protected void SelectPrevious()
         {
-            Debug.Log("SelectPrevious");
             var block = target as Block;
             var flowchart = (Flowchart)block.GetFlowchart();
 
@@ -1207,7 +1192,6 @@ namespace Fungus.EditorUtils
 
         protected void SelectNext()
         {
-            Debug.Log("SelectNext");
             var block = target as Block;
             var flowchart = (Flowchart)block.GetFlowchart();
 

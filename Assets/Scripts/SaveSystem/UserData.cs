@@ -146,7 +146,6 @@ public class UserData : MonoBehaviour
         flowchart.ExecuteBlock(targetBlock);
     }
 
-
     public IEnumerator ILoadGame(int SaveNum)
     {
         yield return new WaitForSeconds(2f);
