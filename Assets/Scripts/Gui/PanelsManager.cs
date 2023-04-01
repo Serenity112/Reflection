@@ -37,14 +37,8 @@ public class PanelsManager : MonoBehaviour
 
     public Flowchart flowchart;
 
-    [HideInInspector]
-    public static bool confirmPanelActive = false;
-
     // handlers
     private AsyncOperationHandle<GameObject> savePanelHandler;
-
-
-
 
     [SerializeField]
     private float savesSpeed;
@@ -60,13 +54,8 @@ public class PanelsManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        
+        StaticVariables.ifInMainMenu = false;
     }
-
-
-    // SETTINGS
-
-
 
     // LOAD
     public IEnumerator ILoadGame(int saveNum)

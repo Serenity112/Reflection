@@ -7,14 +7,16 @@ public class MainMenuLoad : MonoBehaviour
     [SerializeField] private GameObject Cassette;
     [SerializeField] private Button ButtonLoad;
     [SerializeField] private Animator cassetteAnimator;
+    public GameObject DeleteCross;
+
 
     private int saveNum;
     private GameObject screenshot;
-    private GameObject SavedPanel;
     private GameObject MainMenuPanel;
 
     private IEnumerator CassetteFadeIn;
     private IEnumerator CassetteFadeOut;
+
 
     private SaveFileFields saveFileFields;
     void Start()
@@ -22,7 +24,6 @@ public class MainMenuLoad : MonoBehaviour
         saveFileFields = GetComponent<SaveFileFields>();
         saveNum = saveFileFields.saveNum;
         screenshot = saveFileFields.screenshot;
-        SavedPanel = saveFileFields.SavedPanel;
         MainMenuPanel = saveFileFields.MainMenuPanel;
 
         ButtonLoad.interactable = true;
@@ -30,7 +31,7 @@ public class MainMenuLoad : MonoBehaviour
 
     public void AppearCassette()
     {
-        if (ButtonLoad.interactable && !PanelsManager.confirmPanelActive)
+        if (ButtonLoad.interactable && !StaticVariables.ConfirmationPanelActive)
         {
             if (CassetteFadeOut != null)
                 StopCoroutine(CassetteFadeOut);
@@ -44,7 +45,7 @@ public class MainMenuLoad : MonoBehaviour
 
     public void DisappearCassette()
     {
-        if (ButtonLoad.interactable && !PanelsManager.confirmPanelActive)
+        if (ButtonLoad.interactable && !StaticVariables.ConfirmationPanelActive)
         {
             if (CassetteFadeIn != null)
                 StopCoroutine(CassetteFadeIn);
@@ -67,7 +68,7 @@ public class MainMenuLoad : MonoBehaviour
 
     IEnumerator IClick()
     {
-        PanelsManager.confirmPanelActive = true;
+        StaticVariables.ConfirmationPanelActive = true;
 
         Vector3 currScale = Cassette.transform.localScale;
 
@@ -98,5 +99,42 @@ public class MainMenuLoad : MonoBehaviour
         cassetteAnimator.SetTrigger("StopLoad");
 
         saveFileFields.resetCassettePosition(Cassette);
+    }
+
+    // Удаление сейва
+
+    
+
+    public void DeleteAction()
+    {
+        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.ConfirmationPanelActive)
+        {
+            StartCoroutine(IDeleteDialog());
+        }
+    }
+
+    IEnumerator IDeleteDialog()
+    {
+        StaticVariables.ConfirmationPanelActive = true;
+        yield return StartCoroutine(ConfirmationPanel.CreatePanel("Удалить сохранение?", IDeleteSave(), ICancelDelete()));
+    }
+    IEnumerator IDeleteSave()
+    {
+        StartCoroutine(FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed));
+        FadeManager.FadeObject(MainMenuPanel, false);
+        saveFileFields.CloseOverPanel();
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+
+        StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed));
+        SaveManager.instance.RemoveDateTime(saveNum);
+
+        yield return StartCoroutine(ConfirmationPanel.ClosePanel());
+
+        SaveManager.instance.DeleteSave(saveNum);
+    }
+
+    IEnumerator ICancelDelete()
+    {
+        yield return StartCoroutine(ConfirmationPanel.ClosePanel());
     }
 }

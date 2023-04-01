@@ -23,7 +23,7 @@ public class SaveChoiseAnimator : MonoBehaviour
     [SerializeField] private Animator LoadAnimator;
     [SerializeField] private Button SaveButton;
     [SerializeField] private Button LoadButton;
-    [SerializeField] private GameObject DeleteCross;
+    public GameObject DeleteCross;
 
     private int saveNum;
 
@@ -39,6 +39,9 @@ public class SaveChoiseAnimator : MonoBehaviour
     private GameObject overscreenshot;
 
     private SaveFileFields saveFileFields;
+
+    private IEnumerator CrossFadeIn;
+    private IEnumerator CrossFadeOut;
 
     private void Start()
     {
@@ -58,7 +61,7 @@ public class SaveChoiseAnimator : MonoBehaviour
 
     public void SaveAction(SaveOption option)
     {
-        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !PanelsManager.confirmPanelActive)
+        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.ConfirmationPanelActive)
         {
             StartCoroutine(ISaveAction(option));
         }
@@ -70,7 +73,7 @@ public class SaveChoiseAnimator : MonoBehaviour
             case SaveOption.Save:
                 SaveAnimator.SetTrigger("DoSave");
 
-                PanelsManager.confirmPanelActive = true;
+                StaticVariables.ConfirmationPanelActive = true;
 
                 Vector3 saveScale = IconLeft.transform.localScale;
                 yield return StartCoroutine(ExpandManager.ExpandObject(IconLeft, 0.9f, 0.05f));
@@ -82,7 +85,7 @@ public class SaveChoiseAnimator : MonoBehaviour
             case SaveOption.Load:
                 LoadAnimator.SetTrigger("DoLoad");
 
-                PanelsManager.confirmPanelActive = true;
+                StaticVariables.ConfirmationPanelActive = true;
 
                 Vector3 loadScale = IconRight.transform.localScale;
                 yield return StartCoroutine(ExpandManager.ExpandObject(IconRight, 0.9f, 0.05f));
@@ -127,22 +130,19 @@ public class SaveChoiseAnimator : MonoBehaviour
         saveFileFields.OpenOverPanel();
     }
 
+    // Удаление сейва
+   
     public void DeleteAction()
     {
-        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !PanelsManager.confirmPanelActive)
+        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.ConfirmationPanelActive)
         {
-            StartCoroutine(IDelete());
+            StartCoroutine(IDeleteDialog());
         }
     }
 
-    IEnumerator IDelete()
+    IEnumerator IDeleteDialog()
     {
-        PanelsManager.confirmPanelActive = true;
-
-        Vector3 crossScale = DeleteCross.transform.localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(DeleteCross, 0.8f, 0.05f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(DeleteCross, crossScale, 0.05f));
-
+        StaticVariables.ConfirmationPanelActive = true;
         yield return StartCoroutine(ConfirmationPanel.CreatePanel("Удалить сохранение?", IDeleteSave(), ICancelDelete()));
     }
     IEnumerator IDeleteSave()
@@ -151,32 +151,14 @@ public class SaveChoiseAnimator : MonoBehaviour
         FadeManager.FadeObject(SavedPanel, false);
         FadeManager.FadeObject(UnSavedPanel, true);
         saveFileFields.CloseOverPanel();
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
 
         StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed));
         SaveManager.instance.RemoveDateTime(saveNum);
 
-
         yield return StartCoroutine(ConfirmationPanel.ClosePanel());
 
-        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
-
-        if (ES3.FileExists("screenshots/screenshot" + actualSaveNum + ".png"))
-        {
-            ES3.DeleteFile("screenshots/screenshot" + actualSaveNum + ".png");
-            SaveManager.instance.savesTaken[actualSaveNum] = false;
-            ES3.Save<bool[]>("saveTaken", SaveManager.instance.savesTaken, "screenshots.es3");
-
-            // Если после УДАЛЕНИЯ не осталось true сейвов, значит удалён последний => триггер 0
-            if (!SaveManager.instance.savesTaken.Contains(true))
-            {
-                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.HideAnimation, "SaveFiles.es3");
-                StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.HideAnimation ;
-            }
-                
-            ES3.DeleteKey("SaveFile" + actualSaveNum, "SaveFiles.es3");
-
-            // Добавить удаление спешл ивентов!
-        }
+        SaveManager.instance.DeleteSave(saveNum);
     }
 
     IEnumerator ICancelDelete()

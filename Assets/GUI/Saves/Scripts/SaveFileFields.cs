@@ -36,7 +36,7 @@ public class SaveFileFields : MonoBehaviour
     }
     public void OpenOverPanel()
     {
-        if (!PanelsManager.confirmPanelActive)
+        if (!StaticVariables.ConfirmationPanelActive)
         {
             overPanelIn = FadeManager.FadeObject(overPanel, true, SaveManager.instance.optionsGradientSpeed);
             StartCoroutine(overPanelIn);

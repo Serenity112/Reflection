@@ -6,6 +6,8 @@ public static class StaticVariables
 
     public static int StartingLoadSaveFile { get; set; } = -1; // -1 = Начать новую игру
 
+    public static bool ConfirmationPanelActive { get; set; } = false;
+
     public enum MMContinueButtonState
     {
         ButtonDeleted,

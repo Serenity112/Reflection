@@ -42,6 +42,8 @@ public class MMPanelsManager : MonoBehaviour
             Destroy(gameObject);
         }
 
+        StaticVariables.ifInMainMenu = true;
+
         UpdateButtonsState();
     }
 
@@ -169,8 +171,6 @@ public class MMPanelsManager : MonoBehaviour
 
     private IEnumerator IOpenSaveMenu()
     {
-        StaticVariables.ifInMainMenu = true;
-
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
         MMButtonsManager.instance.unlineButtons();
         Buttons.SetActive(false);

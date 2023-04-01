@@ -21,7 +21,7 @@ public class SaveChoiseIconAnimator : MonoBehaviour
     }
     public void appearSide(Side side)
     {
-        if (!PanelsManager.confirmPanelActive)
+        if (!StaticVariables.ConfirmationPanelActive)
         {
             StopAllCoroutines();
 
@@ -39,7 +39,7 @@ public class SaveChoiseIconAnimator : MonoBehaviour
 
     public void removeSide(Side side)
     {
-        if (!PanelsManager.confirmPanelActive)
+        if (!StaticVariables.ConfirmationPanelActive)
         {
             StopAllCoroutines();
 
