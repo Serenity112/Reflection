@@ -13,13 +13,19 @@ public class MainMenuLoadButton : MonoBehaviour
     }
     private void OnMouseEnter()
     {
-        mainMenuLoad.AppearCassette();
-        DeleteCross.GetComponent<DeleteCrossButton>().AppearCross();
+        if (!StaticVariables.ConfirmationPanelActive)
+        {
+            DeleteCross.GetComponent<DeleteCrossButton>().AppearCross();
+            mainMenuLoad.AppearCassette();
+        }
     }
 
     private void OnMouseExit()
     {
-        mainMenuLoad.DisappearCassette();
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+        if (!StaticVariables.ConfirmationPanelActive)
+        {
+            DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+            mainMenuLoad.DisappearCassette();
+        }
     }
 }

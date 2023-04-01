@@ -1,10 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
-using System.Linq;
-using static StaticVariables;
 
 public enum Side
 {
@@ -39,9 +36,6 @@ public class SaveChoiseAnimator : MonoBehaviour
     private GameObject overscreenshot;
 
     private SaveFileFields saveFileFields;
-
-    private IEnumerator CrossFadeIn;
-    private IEnumerator CrossFadeOut;
 
     private void Start()
     {
@@ -102,10 +96,10 @@ public class SaveChoiseAnimator : MonoBehaviour
         string datetime = DateTime.Now.ToString("HH:mm dd/MM/yy");
         SaveManager.instance.SaveDateTime(saveNum, datetime);
         saveFileFields.datetime.GetComponent<Text>().text = datetime;
-        //StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, true, SaveManager.instance.optionsGradientSpeed));
 
         UserData.instance.SavePlayer(saveNum);
-       
+
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         StartCoroutine(FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed));
         StartCoroutine(FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed));
         yield return StartCoroutine(ConfirmationPanel.ClosePanel());
@@ -120,6 +114,7 @@ public class SaveChoiseAnimator : MonoBehaviour
 
     IEnumerator ICancelSave()
     {
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         StartCoroutine(FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed));
         StartCoroutine(FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed));
         yield return StartCoroutine(ConfirmationPanel.ClosePanel());
@@ -163,6 +158,7 @@ public class SaveChoiseAnimator : MonoBehaviour
 
     IEnumerator ICancelDelete()
     {
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         yield return StartCoroutine(ConfirmationPanel.ClosePanel());
     }
 
@@ -183,6 +179,7 @@ public class SaveChoiseAnimator : MonoBehaviour
         LoadButton.interactable = true;
         DeleteCross.GetComponent<Button>().interactable = true;
 
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         StartCoroutine(FadeManager.FadeObject(IconRight, false, SaveManager.instance.optionsGradientSpeed));
         StartCoroutine(FadeManager.FadeObject(GradLeft, false, SaveManager.instance.optionsGradientSpeed));
         yield return StartCoroutine(ConfirmationPanel.ClosePanel());

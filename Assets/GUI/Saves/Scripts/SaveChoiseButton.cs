@@ -20,14 +20,20 @@ public class SaveChoiseButton : MonoBehaviour
     }
     private void OnMouseEnter()
     {
-        saveChoiseIconAnimator.appearSide(side);
-        DeleteCross.GetComponent<DeleteCrossButton>().AppearCross();
+        if (!StaticVariables.ConfirmationPanelActive)
+        {
+            DeleteCross.GetComponent<DeleteCrossButton>().AppearCross();
+            saveChoiseIconAnimator.appearSide(side);
+        }
     }
 
     private void OnMouseExit()
     {
-        saveChoiseIconAnimator.removeSide(side);
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+        if (!StaticVariables.ConfirmationPanelActive)
+        {
+            saveChoiseIconAnimator.removeSide(side);
+            DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+        }
     }
 
     public void SaveAction()

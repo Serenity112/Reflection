@@ -21,37 +21,31 @@ public class SaveChoiseIconAnimator : MonoBehaviour
     }
     public void appearSide(Side side)
     {
-        if (!StaticVariables.ConfirmationPanelActive)
-        {
-            StopAllCoroutines();
+        StopAllCoroutines();
 
-            switch (side)
-            {
-                case Side.Left:
-                    chooseLeft();
-                    break;
-                case Side.Right:
-                    chooseRight();
-                    break;
-            }
+        switch (side)
+        {
+            case Side.Left:
+                chooseLeft();
+                break;
+            case Side.Right:
+                chooseRight();
+                break;
         }
     }
 
     public void removeSide(Side side)
     {
-        if (!StaticVariables.ConfirmationPanelActive)
-        {
-            StopAllCoroutines();
+        StopAllCoroutines();
 
-            switch (side)
-            {
-                case Side.Left:
-                    cancelLeft();
-                    break;
-                case Side.Right:
-                    cancelRight();
-                    break;
-            }
+        switch (side)
+        {
+            case Side.Left:
+                cancelLeft();
+                break;
+            case Side.Right:
+                cancelRight();
+                break;
         }
     }
 

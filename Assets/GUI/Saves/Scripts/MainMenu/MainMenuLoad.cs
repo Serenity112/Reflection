@@ -31,7 +31,7 @@ public class MainMenuLoad : MonoBehaviour
 
     public void AppearCassette()
     {
-        if (ButtonLoad.interactable && !StaticVariables.ConfirmationPanelActive)
+        if (ButtonLoad.interactable)
         {
             if (CassetteFadeOut != null)
                 StopCoroutine(CassetteFadeOut);
@@ -45,7 +45,7 @@ public class MainMenuLoad : MonoBehaviour
 
     public void DisappearCassette()
     {
-        if (ButtonLoad.interactable && !StaticVariables.ConfirmationPanelActive)
+        if (ButtonLoad.interactable)
         {
             if (CassetteFadeIn != null)
                 StopCoroutine(CassetteFadeIn);
@@ -55,7 +55,6 @@ public class MainMenuLoad : MonoBehaviour
 
             saveFileFields.OpenOverPanel();
         }
-
     }
 
     public void Click()
@@ -93,6 +92,7 @@ public class MainMenuLoad : MonoBehaviour
 
     IEnumerator CancelLoad()
     {
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         StartCoroutine(FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed));
         yield return StartCoroutine(ConfirmationPanel.ClosePanel());
 
@@ -101,10 +101,8 @@ public class MainMenuLoad : MonoBehaviour
         saveFileFields.resetCassettePosition(Cassette);
     }
 
+
     // Удаление сейва
-
-    
-
     public void DeleteAction()
     {
         if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.ConfirmationPanelActive)
@@ -135,6 +133,7 @@ public class MainMenuLoad : MonoBehaviour
 
     IEnumerator ICancelDelete()
     {
-        yield return StartCoroutine(ConfirmationPanel.ClosePanel());
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+        yield return StartCoroutine(ConfirmationPanel.ClosePanel());         
     }
 }

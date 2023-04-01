@@ -32,7 +32,10 @@ public class DeleteCrossButton : MonoBehaviour
         expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
         StartCoroutine(expandOnEnter);
 
-        AppearCross();
+        if (!StaticVariables.ConfirmationPanelActive)
+        {
+            AppearCross();
+        }
     }
 
     void OnMouseExit()
@@ -42,31 +45,29 @@ public class DeleteCrossButton : MonoBehaviour
         shrinkOnExit = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
         StartCoroutine(shrinkOnExit);
 
-        DisappearCross();
+        if (!StaticVariables.ConfirmationPanelActive)
+        {
+            DisappearCross();
+        }
     }
 
     public void AppearCross()
     {
-        if (!StaticVariables.ConfirmationPanelActive)
-        {
-            if (CrossFadeOut != null)
-                StopCoroutine(CrossFadeOut);
 
-            CrossFadeIn = FadeManager.FadeOnly(gameObject, true, SaveManager.instance.optionsGradientSpeed);
-            StartCoroutine(CrossFadeIn);
-        }
+        if (CrossFadeOut != null)
+            StopCoroutine(CrossFadeOut);
+
+        CrossFadeIn = FadeManager.FadeOnly(gameObject, true, SaveManager.instance.optionsGradientSpeed);
+        StartCoroutine(CrossFadeIn);
     }
 
     public void DisappearCross()
     {
-        if (!StaticVariables.ConfirmationPanelActive)
-        {
-            if (CrossFadeIn != null)
-                StopCoroutine(CrossFadeIn);
+        if (CrossFadeIn != null)
+            StopCoroutine(CrossFadeIn);
 
-            CrossFadeOut = FadeManager.FadeOnly(gameObject, false, SaveManager.instance.optionsGradientSpeed);
-            StartCoroutine(CrossFadeOut);
-        }
+        CrossFadeOut = FadeManager.FadeOnly(gameObject, false, SaveManager.instance.optionsGradientSpeed);
+        StartCoroutine(CrossFadeOut);
     }
 
     private void OnClickAnimation()
