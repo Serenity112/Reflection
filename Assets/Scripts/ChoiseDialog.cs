@@ -19,7 +19,7 @@ namespace Fungus
         public override void OnEnter()
         {
             SayDialogCanvas = GameObject.Find("SayDialogCanvas");
-            SayDialogCanvas.GetComponent<DialogMod>().DenySkip();
+            //SayDialogCanvas.GetComponent<DialogMod>().DenySkip();
             ChoiseManager.GetComponent<ChoiseManager>().GenerateChoise(Messages, BlocksRedirection, ChoiseName);
 
             Continue();

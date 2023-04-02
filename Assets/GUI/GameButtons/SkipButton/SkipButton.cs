@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Fungus;
@@ -16,13 +15,12 @@ public class SkipButton : MonoBehaviour
     [SerializeField]
     private float shadesSpeed;
 
-    private float clickTime;
     private Animator animator;
     private GameObject buttonParent;
     private GameObject ShadeTriangle;
     private GameObject ShadeArrow;
     private GameObject ShadeArrowCopy;
-    private State state; 
+    private State state;
     private Vector3 origScale;
     private Vector3 expandedScale;
 
@@ -56,7 +54,6 @@ public class SkipButton : MonoBehaviour
 
         origScale = GetComponent<RectTransform>().localScale;
         expandedScale = origScale * 1.1f;
-        clickTime = 0.06f;
     }
 
     private void OnMouseEnter()
@@ -111,28 +108,38 @@ public class SkipButton : MonoBehaviour
         StartCoroutine(IClick());
     }
 
-    IEnumerator IClick()
+    private IEnumerator IClick()
     {
         GetComponent<Button>().interactable = false;
 
         switch (state)
         {
             case State.ReturnSkip:
-                animator.Play("DoSkip");
-                state = State.DoSkip;
                 DialogMod.autoSkip = true;
+                EnableSkip();
                 break;
             case State.DoSkip:
-                animator.Play("ReturnSkip");
-                state = State.ReturnSkip;
                 DialogMod.autoSkip = false;
+                DisableSkip();
                 break;
         }
 
         Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, clickTime));
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, clickTime));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
 
         GetComponent<Button>().interactable = true;
+    }
+
+    public void EnableSkip()
+    {
+        animator.Play("DoSkip");
+        state = State.DoSkip;        
+    }
+
+    public void DisableSkip()
+    {
+        animator.Play("ReturnSkip");
+        state = State.ReturnSkip;        
     }
 }

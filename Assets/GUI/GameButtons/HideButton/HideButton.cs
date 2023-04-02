@@ -1,19 +1,18 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Fungus;
+
 public class HideButton : MonoBehaviour
 {
     [SerializeField]
     private float shadesSpeed;
 
     [SerializeField]
-    public GameObject HideOverlayButton;
+    private GameObject HideOverlayButton;
 
     [SerializeField]
-    public GameObject ContinueButton;
-
+    private GameObject ContinueButton;
 
     private Animator animator;
 
@@ -35,10 +34,8 @@ public class HideButton : MonoBehaviour
     private GameObject CircleShade;
     private GameObject LineShade;
 
-
     private Vector3 origScale;
     private Vector3 expandedScale;
-   
 
     void Start()
     {
@@ -46,7 +43,7 @@ public class HideButton : MonoBehaviour
 
         animator = GetComponent<Animator>();
         origScale = gameObject.GetComponent<RectTransform>().localScale;
-        expandedScale = origScale*1.1f;
+        expandedScale = origScale * 1.1f;
 
         CircleShade = transform.GetChild(0).transform.GetChild(0).gameObject;
         LineShade = transform.GetChild(1).transform.GetChild(0).gameObject;
@@ -55,7 +52,7 @@ public class HideButton : MonoBehaviour
     void OnMouseEnter()
     {
         if (shrinkOnEnter != null)
-                StopCoroutine(shrinkOnEnter);
+            StopCoroutine(shrinkOnEnter);
         expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
         StartCoroutine(expandOnEnter);
 
@@ -92,10 +89,9 @@ public class HideButton : MonoBehaviour
         StartCoroutine(shades2out);
     }
 
-  
     public void Click()
     {
-        DialogMod.denyNextDialog = true;  
+        DialogMod.denyNextDialog = true;
         StartCoroutine(IClick());
     }
 
@@ -117,7 +113,7 @@ public class HideButton : MonoBehaviour
         StartCoroutine(gui1out);
         StartCoroutine(gui2out);
 
-        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;  
+        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
 
@@ -128,7 +124,7 @@ public class HideButton : MonoBehaviour
 
     public void ShowHiddeUI()
     {
-        StartCoroutine(IShowHiddenUI());   
+        StartCoroutine(IShowHiddenUI());
     }
 
     IEnumerator IShowHiddenUI()
@@ -152,5 +148,4 @@ public class HideButton : MonoBehaviour
         HideOverlayButton.SetActive(false);
         DialogMod.denyNextDialog = false;
     }
-
 }

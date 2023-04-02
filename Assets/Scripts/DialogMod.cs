@@ -46,21 +46,16 @@ namespace Fungus
 
         protected Writer writer;
 
-        // Кнопка скипа игры
-        public static bool autoSkip { get; set; }
+        public static bool autoSkip { get; set; } = false;
 
         // Публичный параметр для понимания, идтёт ли сейчас пропуск
-        public static bool skipping { get; set; }
+        public static bool skipping { get; set; } = false;
 
-        public SkipButton skipButton;
+        public SkipButton skipButton; // Для синхронизации кунопки tab и анимаций
 
-        public static bool denyNextDialog { get; set;}
+        public static bool denyNextDialog { get; set; } = false;
 
         public static bool wasCurrentDialogRead { get; set; }
-
-        public void DenySkip() { 
-            denyNextDialog = true; 
-        }
 
         protected virtual void Awake()
         {
@@ -96,11 +91,10 @@ namespace Fungus
 
         private void Start()
         {
-            //denySkip = true;
         }
 
         public void Update()
-        {                    
+        {
             if (EventSystem.current == null)
             {
                 return;
@@ -113,21 +107,28 @@ namespace Fungus
 
             if (writer != null && writer.IsWriting)
             {
-                if ((Input.GetKey(KeyCode.Tab) || autoSkip) && (SettingsConfig.skipEverything || wasCurrentDialogRead) && !denyNextDialog)
+                if ((Input.GetKey(KeyCode.Tab) || autoSkip) && (SettingsConfig.skipEverything || wasCurrentDialogRead))
                 {
-                    if(!skipping)
+                    if (!skipping)
                     {
+                        skipButton.EnableSkip();
                         skipping = true;
                     }
-                    
-                    SetNextLineFlag();
+
+                    if (!denyNextDialog)
+                    {
+                        SetNextLineFlag();
+                    }
                 }
                 else
                 {
-                    skipping = false;
+                    if (skipping)
+                    {
+                        skipButton.DisableSkip();
+                        skipping = false;
+                    }
                 }
             }
-
 
             switch (clickMode)
             {
@@ -136,22 +137,17 @@ namespace Fungus
                 case ClickMode.ClickAnywhere:
                     if (Input.GetMouseButtonDown(0))
                     {
-                        //UnityEngine.Debug.Log("CLICK3");
                         SetNextLineFlag();
                     }
                     break;
                 case ClickMode.ClickOnDialog:
                     if (dialogClickedFlag && !denyNextDialog)
                     {
-                        //UnityEngine.Debug.Log("CLICK2");
                         SetNextLineFlag();
                         dialogClickedFlag = false;
                     }
                     break;
             }
-
-
-
 
             if (ignoreClickTimer > 0f)
             {
@@ -190,8 +186,7 @@ namespace Fungus
         /// </summary>
         public virtual void SetNextLineFlag()
         {
-            //if(!denySkip)
-                nextLineInputFlag = true;
+            nextLineInputFlag = true;
         }
 
         /// <summary>
@@ -199,7 +194,7 @@ namespace Fungus
         /// </summary>
         public virtual void SetDialogClickedFlag()
         {
-            if(!denyNextDialog)
+            if (!denyNextDialog)
             {
                 // Ignore repeat clicks for a short time to prevent accidentally clicking through the character dialogue
                 if (ignoreClickTimer > 0f)
@@ -211,17 +206,8 @@ namespace Fungus
                 // Only applies in Click On Dialog mode
                 if (clickMode == ClickMode.ClickOnDialog)
                 {
-                   // UnityEngine.Debug.Log("CLICK1");
                     dialogClickedFlag = true;
                 }
-                else
-                {
-                   // UnityEngine.Debug.Log("BLOCKEd");
-                }
-            } 
-            else
-            {
-                //UnityEngine.Debug.Log("Button denied");
             }
         }
 
