@@ -10,14 +10,14 @@ using UnityEngine.UI;
 public class PanelsManager : MonoBehaviour
 {
     public static PanelsManager instance = null;
-    
+
     [SerializeField] private GameObject ActivePanels;
 
     public Camera GameCamera;
 
     public Camera PanelsCamera;
 
-    [SerializeField] private GameObject blackPanelGame;  
+    [SerializeField] private GameObject blackPanelGame;
 
     [SerializeField] private GameObject blackPanelPanels;
 
@@ -70,10 +70,13 @@ public class PanelsManager : MonoBehaviour
         PanelsCamera.enabled = false;
 
         Resources.UnloadUnusedAssets();
+
         StartCoroutine(UserData.instance.ILoadGame(saveNum));
+        // yield return'ы не работают тут по какой-то причине
+        //yield return new WaitForSeconds(0.5f);
 
         FadeManager.FadeObject(blackPanelPanels, false);
-        yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, false, savesSpeed));  
+        yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, false, savesSpeed));
     }
 
     // SAVES

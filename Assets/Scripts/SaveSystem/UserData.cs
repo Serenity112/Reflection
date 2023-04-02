@@ -148,8 +148,7 @@ public class UserData : MonoBehaviour
 
     public IEnumerator ILoadGame(int SaveNum)
     {
-        yield return new WaitForSeconds(2f);
-
+        yield return new WaitForSeconds(0.5f);
 
         SaveData newSave = ES3.Load<SaveData>("SaveFile" + SaveNum, "SaveFiles.es3");
 
@@ -202,11 +201,11 @@ public class UserData : MonoBehaviour
                 break;
         }
 
-        //Sprites
-        //Unload
+        // Спрайты
+        // Отгрузка
         PackageConntector.instance.DisconnectAllPackages();
         SpriteController.instance.UnloadSprites();
-        //Load
+        // Загрузка
         SpriteController.instance.GameSpriteData = newSave.SpriteData;
         SpriteController.instance.AutoConnectPackages();
         SpriteController.instance.LoadSprites();
@@ -214,9 +213,9 @@ public class UserData : MonoBehaviour
         //GameObject.Find("ChatLog").GetComponent<LogManager>().DelLog();
         //LogBlocks = newSave.LogBlocks;
 
-        // Music
+        // Музыка
         // Отгрузка
-        yield return AudioManager.instance.UnloadCurrent();
+        yield return StartCoroutine(AudioManager.instance.UnloadCurrent());
         // Загрузка
         CurrentMusic = newSave.CurrentMusic;
         CurrentAmbient = newSave.CurrentAmbient;
@@ -234,5 +233,7 @@ public class UserData : MonoBehaviour
 
         flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex, null);
         CurrentCommandIndex--;
+
+        //yield return null;
     }
 }

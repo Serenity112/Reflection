@@ -12,7 +12,7 @@ public class PackageConntector : MonoBehaviour
 
     private static Dictionary<string, AsyncOperationHandle<Sprite>> handlers;
 
-    private void Start()
+    private void Awake()
     {
         if (instance == null)
         {

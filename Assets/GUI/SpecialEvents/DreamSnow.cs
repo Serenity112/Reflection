@@ -27,7 +27,7 @@ public class DreamSnow : MonoBehaviour
 
     public DreamSnowState currentState;
 
-    private void Start()
+    private void Awake()
     {
         if (instance == null)
         {

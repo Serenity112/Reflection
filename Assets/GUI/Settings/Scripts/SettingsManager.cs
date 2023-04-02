@@ -142,7 +142,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
                 break;
             case Settings.textSpeed:
                 SettingsConfig.changeTextSpeed(PanelsCanvas.GetComponent<Writer>(), data);
-                break; 
+                break;
         }
     }
 }

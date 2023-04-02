@@ -100,7 +100,7 @@ public class BackgroundManager : MonoBehaviour
 
         if (bg_handler.Status != AsyncOperationStatus.Succeeded)
         {
-            Debug.Log("Error loading second bg with adress " + bg_adress);
+            Debug.Log("Error loading " + bg_adress);
         }
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, speed));
@@ -116,7 +116,7 @@ public class BackgroundManager : MonoBehaviour
 
         if (bg_handler.Status != AsyncOperationStatus.Succeeded)
         {
-            Debug.Log("Error loading second bg with adress " + bg_adress);
+            Debug.Log("Error loading " + bg_adress);
         }
 
         if (old_handler.IsValid())
@@ -139,7 +139,7 @@ public class BackgroundManager : MonoBehaviour
 
         if (bg_handler.Status != AsyncOperationStatus.Succeeded)
         {
-            Debug.Log("Error loading second bg with adress " + bg_adress);
+            Debug.Log("Error loading " + bg_adress);
         }
 
         GameObject newBg = bg_handler.Result;
@@ -171,7 +171,7 @@ public class BackgroundManager : MonoBehaviour
         }
         else
         {
-            yield return StartCoroutine(TextBoxController.instance.IChangeTheme(ThemeStyle.Light, 0.8f)); // Стандартный текстбоксл
+            yield return StartCoroutine(TextBoxController.instance.IChangeTheme(ThemeStyle.Light, 0.8f)); // Стандартный текстбокс
         }
     }
 }
