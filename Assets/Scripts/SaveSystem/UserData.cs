@@ -215,7 +215,8 @@ public class UserData : MonoBehaviour
 
         // Музыка
         // Отгрузка
-        yield return StartCoroutine(AudioManager.instance.UnloadCurrent());
+        yield return StartCoroutine(AudioManager.instance.FadeOutCurrent());
+
         // Загрузка
         CurrentMusic = newSave.CurrentMusic;
         CurrentAmbient = newSave.CurrentAmbient;

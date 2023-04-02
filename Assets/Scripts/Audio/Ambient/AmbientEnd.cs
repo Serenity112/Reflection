@@ -8,7 +8,7 @@ namespace Fungus
     public class AmbientEnd : Command
     {
         [SerializeField]
-        private float duration;
+        private float duration = 3f;
 
         public override void OnEnter()
         {

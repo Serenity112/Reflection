@@ -12,7 +12,7 @@ namespace Fungus
         private string backgroundName;
 
         [SerializeField]
-        private float speed;
+        private float speed = 6f;
 
         [SerializeField]
         private bgSwapType fadeType;
@@ -27,11 +27,6 @@ namespace Fungus
             UserData.instance.CurrentCommandIndex += 1;
 
             UserData.instance.CurrentBG = backgroundName;
-
-            if(speed == 0f)
-            {
-                speed = 6f;
-            }
 
             yield return StartCoroutine(BackgroundManager.instance.ISwap(backgroundName, fadeType, speed));
 

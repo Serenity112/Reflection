@@ -13,7 +13,7 @@ namespace Fungus
         private DreamSnowState state;
 
         [SerializeField]
-        private float speed;
+        private float speed = 6f;
 
         [SerializeField]
         private string new_bg;
@@ -27,11 +27,6 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            if (speed == 0f)
-            {
-                speed = 6f;
-            }
-
             switch (state)
             {
                 case DreamSnowState.Start:
@@ -41,7 +36,7 @@ namespace Fungus
                     yield return StartCoroutine(DreamSnow.instance.IRocketLaunch(speed));
                     break;
                 case DreamSnowState.End:
-                    yield return StartCoroutine(DreamSnow.instance.IEndDreamSnow(new_bg, speed));                 
+                    yield return StartCoroutine(DreamSnow.instance.IEndDreamSnow(new_bg, speed));
                     break;
             }
 

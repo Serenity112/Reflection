@@ -11,7 +11,7 @@ namespace Fungus
         private string ost;
 
         [SerializeField]
-        private float duration;
+        private float duration = 3f;
 
         [SerializeField]
         private float targetVol = 1;

@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Fungus;
-using System.Numerics;
 
 public class AudioManager : MonoBehaviour
 {
@@ -19,28 +18,15 @@ public class AudioManager : MonoBehaviour
     private Dictionary<string, AudioClip> Sound;
 
     [Serializable]
-    public struct MusicArr
+    public struct AudioArr
     {
         public string name;
         public AudioClip clip;
     }
-    public MusicArr[] MusicData;
 
-    [Serializable]
-    public struct AmbientArr
-    {
-        public string name;
-        public AudioClip clip;
-    }
-    public AmbientArr[] AmbientData;
-
-    [Serializable]
-    public struct SoundArr
-    {
-        public string name;
-        public AudioClip clip;
-    }
-    public SoundArr[] SoundData;
+    public AudioArr[] MusicData;
+    public AudioArr[] AmbientData;
+    public AudioArr[] SoundData;
 
     // int для накопительного эффекта, bool не подойдёт
     public int _isFading = 0;
@@ -79,24 +65,41 @@ public class AudioManager : MonoBehaviour
     }
 
     // Music
-    public IEnumerator UnloadCurrent()
+
+    public IEnumerator FadeOutCurrent()
     {
         StartCoroutine(StartFade(musicSource, 0.4f, 0));
         StartCoroutine(StartFade(musicBuffSource, 0.4f, 0));
         StartCoroutine(StartFade(ambientSource, 0.4f, 0));
         yield return StartCoroutine(StartFade(soundSource, 0.4f, 0));
 
+        ClearCurrent();
+    }
+
+    public void ClearCurrent()
+    {
+        musicSource.Stop();
         musicSource.clip = null;
+
+        musicBuffSource.Stop();
         musicBuffSource.clip = null;
+
+        ambientSource.Stop();
         ambientSource.clip = null;
+
+        soundSource.Stop();
         soundSource.clip = null;
-        yield return null;
     }
 
     // Метод для быстрого закликивания, который ставит источники в актуальное положение. Если нет заклика, ничего не делает
-    // НЕ ДОРАБОТАНО
-    private void LoadCurrent()
+    // НЕ ДОРАБОТАНО. Пока просто обрывает все активные аудио-источники, если идёт переходный процесс
+    private void InterruptCurrent()
     {
+        if (_isFading != 0)
+        {
+            ClearCurrent();
+        }
+
         return;
 
         if (_isFading != 0)
@@ -131,10 +134,15 @@ public class AudioManager : MonoBehaviour
     // Включает музыку с 0й громкости до громкости настроек
     public void MusicStart(string name, float duration, float targetVol = 1)
     {
+        if (!Music.ContainsKey(name))
+        {
+            return;
+        }
+
+        InterruptCurrent();
+
         UserData.instance.CurrentMusic = name;
         UserData.instance.MusicSourceVolume = targetVol;
-
-        LoadCurrent();
 
         musicSource.volume = 0;
         musicSource.clip = Music[name];
@@ -150,17 +158,14 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    public void MusicEnd(float duration)
-    {
-        StartCoroutine(IMusicEnd(duration));
-    }
+    public void MusicEnd(float duration) => StartCoroutine(IMusicEnd(duration));
 
     private IEnumerator IMusicEnd(float duration)
     {
+        InterruptCurrent();
+
         UserData.instance.CurrentMusic = null;
         UserData.instance.MusicSourceVolume = 0;
-
-        LoadCurrent();
 
         AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
 
@@ -168,29 +173,32 @@ public class AudioManager : MonoBehaviour
         {
             activeSource.volume = 0;
             activeSource.Stop();
-            yield break;
         }
-
-        yield return StartCoroutine(StartFade(activeSource, duration, 0));
-        activeSource.Stop();
+        else
+        {
+            yield return StartCoroutine(StartFade(activeSource, duration, 0));
+            activeSource.Stop();
+        }
     }
 
     // Переход трека в трек
-    public void MusicTransition(string name, float duration)
-    {
-        StartCoroutine(IMusicTransition(name, duration));
-    }
+    public void MusicTransition(string name, float duration) => StartCoroutine(IMusicTransition(name, duration));
 
     private IEnumerator IMusicTransition(string name, float duration)
     {
+        if (!Music.ContainsKey(name))
+        {
+            yield break;
+        }
+
+        InterruptCurrent();
+
         UserData.instance.CurrentMusic = name;
 
         AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
         AudioSource newSource = musicSource.isPlaying ? musicBuffSource : musicSource;
 
         float curr_vol = UserData.instance.MusicSourceVolume;
-
-        LoadCurrent();
 
         newSource.volume = 0;
         newSource.clip = Music[name];
@@ -201,25 +209,28 @@ public class AudioManager : MonoBehaviour
             newSource.volume = curr_vol;
             activeSource.volume = 0;
             activeSource.Stop();
-            yield break;
         }
-
-        StartCoroutine(StartFade(newSource, duration, curr_vol));
-        yield return StartCoroutine(StartFade(activeSource, duration, 0));
-        activeSource.Stop();
+        else
+        {
+            StartCoroutine(StartFade(newSource, duration, curr_vol));
+            yield return StartCoroutine(StartFade(activeSource, duration, 0));
+            activeSource.Stop();
+        }
     }
 
     // Трек -> тишина -> трек
-    public void MusicChange(string name, float duration)
-    {
-        StartCoroutine(IMusicChange(name, duration));
-    }
+    public void MusicChange(string name, float duration) => StartCoroutine(IMusicChange(name, duration));
 
     private IEnumerator IMusicChange(string name, float duration)
-    {      
-        UserData.instance.CurrentMusic = name;
+    {
+        if (!Music.ContainsKey(name))
+        {
+            yield break;
+        }
 
-        LoadCurrent();
+        InterruptCurrent();
+
+        UserData.instance.CurrentMusic = name;       
 
         AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
 
@@ -232,26 +243,27 @@ public class AudioManager : MonoBehaviour
             musicSource.clip = Music[name];
             musicSource.volume = curr_vol;
             musicSource.Play();
-            yield break;
         }
+        else
+        {
+            yield return StartCoroutine(StartFade(activeSource, duration, 0));
+            musicSource.Stop();
 
-        yield return StartCoroutine(StartFade(activeSource, duration, 0));
-        musicSource.Stop();
+            yield return new WaitForSeconds(1f); // Задержка между треками
 
-        yield return new WaitForSeconds(1f); // Задержка между треками
+            musicSource.volume = 0;
+            musicSource.clip = Music[name];
+            musicSource.Play();
 
-        musicSource.volume = 0;
-        musicSource.clip = Music[name];
-        musicSource.Play();
-
-        yield return StartCoroutine(StartFade(musicSource, duration, curr_vol));
+            yield return StartCoroutine(StartFade(musicSource, duration, curr_vol));
+        }
     }
 
-    public void MusicVolChange(float duration, float factor) // 0 to 1
+    public void MusicVolChange(float duration, float factor) // factor is 0 to 1
     {
-        UserData.instance.MusicSourceVolume = factor;
+        InterruptCurrent();
 
-        LoadCurrent();
+        UserData.instance.MusicSourceVolume = factor;
 
         AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
 
@@ -267,9 +279,9 @@ public class AudioManager : MonoBehaviour
 
     public void MusicVolDefault(float duration)
     {
-        UserData.instance.MusicSourceVolume = 1;
+        InterruptCurrent();
 
-        LoadCurrent();
+        UserData.instance.MusicSourceVolume = 1;
 
         AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
 
@@ -286,10 +298,15 @@ public class AudioManager : MonoBehaviour
     // Ambient
     public void AmbientStart(string name, float duration, float targetVol = 1)
     {
+        if (!Ambient.ContainsKey(name))
+        {
+            return;
+        }
+
+        InterruptCurrent();
+
         UserData.instance.CurrentAmbient = name;
         UserData.instance.AmbientSourceVolume = targetVol;
-
-        LoadCurrent();
 
         ambientSource.volume = 0;
         ambientSource.clip = Ambient[name];
@@ -305,39 +322,44 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    public void AmbientEnd(float duration)
-    {
-        StartCoroutine(IAmbientEnd(duration));
-    }
+    public void AmbientEnd(float duration) => StartCoroutine(IAmbientEnd(duration));
 
     private IEnumerator IAmbientEnd(float duration)
     {
+        if (!Ambient.ContainsKey(name))
+        {
+            yield break;
+        }
+
+        InterruptCurrent();
+
         UserData.instance.CurrentAmbient = null;
         UserData.instance.AmbientSourceVolume = 0;
-
-        LoadCurrent();
 
         if (duration == 0 || DialogMod.skipping)
         {
             ambientSource.volume = 0;
             ambientSource.Stop();
-            yield break;
         }
-
-        yield return StartCoroutine(StartFade(ambientSource, duration, 0));
-        ambientSource.Stop();
+        else
+        {
+            yield return StartCoroutine(StartFade(ambientSource, duration, 0));
+            ambientSource.Stop();
+        }
     }
 
-    public void AmbientChange(string name, float duration)
-    {
-        StartCoroutine(IAmbientChange(name, duration));
-    }
+    public void AmbientChange(string name, float duration) => StartCoroutine(IAmbientChange(name, duration));
 
     private IEnumerator IAmbientChange(string name, float duration)
     {
-        UserData.instance.CurrentAmbient = name;
+        if (!Ambient.ContainsKey(name))
+        {
+            yield break;
+        }
 
-        LoadCurrent();
+        InterruptCurrent();
+
+        UserData.instance.CurrentAmbient = name;
 
         float curr_vol = ambientSource.volume;
 
@@ -345,25 +367,26 @@ public class AudioManager : MonoBehaviour
         {
             ambientSource.clip = Ambient[name];
             ambientSource.Play();
-            yield break;
         }
+        else
+        {
+            yield return StartCoroutine(StartFade(ambientSource, duration, 0));
+            ambientSource.Stop();
 
-        yield return StartCoroutine(StartFade(ambientSource, duration, 0));
-        ambientSource.Stop();
+            yield return new WaitForSeconds(1f); // Задержка между треками
 
-        yield return new WaitForSeconds(1f); // Задержка между треками
+            ambientSource.clip = Ambient[name];
+            ambientSource.Play();
 
-        ambientSource.clip = Ambient[name];
-        ambientSource.Play();
-
-        StartCoroutine(StartFade(ambientSource, duration, curr_vol));
+            StartCoroutine(StartFade(ambientSource, duration, curr_vol));
+        }
     }
 
     public void AmbientVolChange(float duration, float factor) // 0 to 1
     {
-        UserData.instance.AmbientSourceVolume = factor;
+        InterruptCurrent();
 
-        LoadCurrent();
+        UserData.instance.AmbientSourceVolume = factor;
 
         if (duration == 0 || DialogMod.skipping)
         {
@@ -376,10 +399,10 @@ public class AudioManager : MonoBehaviour
     }
 
     public void AmbientVolDefault(float duration)
-    {       
-        UserData.instance.AmbientSourceVolume = 1;
+    {
+        InterruptCurrent();
 
-        LoadCurrent();
+        UserData.instance.AmbientSourceVolume = 1;
 
         if (duration == 0 || DialogMod.skipping)
         {
@@ -394,6 +417,11 @@ public class AudioManager : MonoBehaviour
     // Sound
     public void SoundStart(string name, float duration)
     {
+        if (!Sound.ContainsKey(name))
+        {
+            return;
+        }
+
         soundSource.volume = 0;
         soundSource.clip = Sound[name];
         soundSource.Play();

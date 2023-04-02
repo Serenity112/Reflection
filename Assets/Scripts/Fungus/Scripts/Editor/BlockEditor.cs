@@ -420,7 +420,7 @@ namespace Fungus.EditorUtils
                                 float.Parse(GetInnerText(key, "arg4")))}); // Speed
                         break;
                     case "RemoveSprite":
-                        AddCommand("Fungus.FungusRemoveMove", new FieldArg[] {
+                        AddCommand("Fungus.FungusSpriteRemove", new FieldArg[] {
                             new FieldArg("characterName", key["arg1"].InnerText), // Name
                             new FieldArg("speed", GetInnerText(key, "arg2") == null ? null :
                                 float.Parse(GetInnerText(key, "arg2")))}); // Speed
@@ -440,7 +440,8 @@ namespace Fungus.EditorUtils
                         break;
                     case "MusicEnd":
                         AddCommand("Fungus.MusicEnd", new FieldArg[] {
-                            new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))});
+                            //new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))
+                        });
                         break;
                     case "MusicTransition":
                         AddCommand("Fungus.MusicTransition", new FieldArg[] {
@@ -449,12 +450,14 @@ namespace Fungus.EditorUtils
                         break;
                     case "MusicDefaultVol":
                         AddCommand("Fungus.MusicDefaultVol", new FieldArg[] {
-                            new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))});
+                            //new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))
+                        });
                         break;
                     case "MusicVolDown":
                         AddCommand("Fungus.MusicVolDown", new FieldArg[] {
-                            new FieldArg("duration", GetInnerText(key, "arg1")),
-                            new FieldArg("factor", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2")))});
+                            //new FieldArg("duration", GetInnerText(key, "arg1")),
+                            //new FieldArg("factor", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2")))
+                        });
                         break;
                     // Ambient
                     case "AmbientStart":
@@ -465,16 +468,19 @@ namespace Fungus.EditorUtils
                         break;
                     case "AmbientEnd":
                         AddCommand("Fungus.AmbientEnd", new FieldArg[] {
-                            new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))});
+                            //new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))
+                        });
                         break;
                     case "AmbientVolDown":
                         AddCommand("Fungus.MusicVolDown", new FieldArg[] {
-                            new FieldArg("duration", GetInnerText(key, "arg1")),
-                            new FieldArg("factor", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2")))});
+                            //new FieldArg("duration", GetInnerText(key, "arg1")),
+                            //new FieldArg("factor", GetInnerText(key, "arg2") == null ? null : float.Parse(GetInnerText(key, "arg2")))
+                        });
                         break;
                     case "AmbientDefaultVol":
                         AddCommand("Fungus.AmbientDefaultVol", new FieldArg[] {
-                            new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))});
+                            //new FieldArg("duration", GetInnerText(key, "arg1") == null ? null : float.Parse(GetInnerText(key, "arg1")))
+                        });
                         break;
                     // Sound
                     case "SoundStart":

@@ -8,7 +8,7 @@ namespace Fungus
     public class MusicVolChange : Command
     {
         [SerializeField]
-        private float duration;
+        private float duration = 3f;
 
         [SerializeField]
         private float factor;
