@@ -61,7 +61,6 @@ public class DreamSnow : MonoBehaviour
         }
     }
 
-
     public IEnumerator IStartDreamSnow(float speed)
     {
         UserData.instance.specialEvent = SpecialEvents.DreamSnow;
@@ -73,11 +72,10 @@ public class DreamSnow : MonoBehaviour
         yield return bg_handler;
 
         snow_handler = Addressables.InstantiateAsync("Snow", backgroundsPanel.GetComponent<RectTransform>(), false, true);
-        yield return bg_handler;
+        yield return snow_handler;
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, speed));
     }
-
 
     public IEnumerator IRocketLaunch(float speed)
     {
@@ -98,7 +96,7 @@ public class DreamSnow : MonoBehaviour
             GameObject result = bg_handler.Result;
             result.GetComponent<Shaker>().Shake();
         }
-        
+
         Resources.UnloadUnusedAssets();
     }
 
@@ -110,11 +108,12 @@ public class DreamSnow : MonoBehaviour
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
 
-        if (bg_handler.IsValid() && snow_handler.IsValid())
-        {
-            Addressables.ReleaseInstance(bg_handler);
-            Addressables.ReleaseInstance(snow_handler);
-        }
+        yield return Addressables.ReleaseInstance(bg_handler);
+        yield return Addressables.ReleaseInstance(snow_handler);
+
+        yield return StartCoroutine(IReleaseEvent());
+
+        Resources.UnloadUnusedAssets();
 
         yield return StartCoroutine(BackgroundManager.instance.ISwapBackground(new_bg));
 
@@ -123,9 +122,14 @@ public class DreamSnow : MonoBehaviour
 
     public IEnumerator IReleaseEvent()
     {
-        if (bg_handler.IsValid() && snow_handler.IsValid())
+        if (bg_handler.IsValid())
         {
+            Debug.Log("Releasingh dreamsnow event");
             yield return Addressables.ReleaseInstance(bg_handler);
+        }
+
+        if (snow_handler.IsValid())
+        {
             yield return Addressables.ReleaseInstance(snow_handler);
         }
     }

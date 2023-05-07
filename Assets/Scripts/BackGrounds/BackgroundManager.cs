@@ -98,6 +98,7 @@ public class BackgroundManager : MonoBehaviour
         bg_handler = Addressables.InstantiateAsync(bg_adress, backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
 
+
         if (bg_handler.Status != AsyncOperationStatus.Succeeded)
         {
             Debug.Log("Error loading " + bg_adress);

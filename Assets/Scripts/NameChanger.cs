@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,13 +6,9 @@ public class NameChanger : MonoBehaviour
 {
     public static NameChanger instance = null;
 
-    public Sprite[] Names;
+    private Dictionary<string, string> _localizedNames = new Dictionary<string, string>();
 
-    GameObject namePanel;
-
-    public Dictionary<string, int> namesToSprite = new Dictionary<string, int>();
-
-    private void Start()
+    private void Awake()
     {
         if (instance == null)
         {
@@ -24,35 +19,34 @@ public class NameChanger : MonoBehaviour
             Destroy(gameObject);
         }
 
-        namePanel = this.gameObject;
-
-        namesToSprite["kat"] = 0;
-        namesToSprite["nas"] = 1;
-        namesToSprite["eve"] = 2;
-        namesToSprite["tan"] = 3;
-        namesToSprite["pas"] = 4;
-        namesToSprite["ser"] = 5;
-        namesToSprite["tum"] = 6;
-        namesToSprite["raket"] = 7;
-        namesToSprite["dev"] = 8;
-        namesToSprite["nob"] = 9;
+        // Временное решение. При добавлении локализации изменить
+        _localizedNames.Add("Katya", "Катя");
+        _localizedNames.Add("Nastya", "Настя");
+        _localizedNames.Add("Tanya", "Таня");
+        _localizedNames.Add("Eveline", "Эвелина");
+        _localizedNames.Add("Pasha", "Паша");
+        _localizedNames.Add("Tumanov", "Туманов");
+        _localizedNames.Add("Raketnikov", "Ракетников");
+        _localizedNames.Add("Sergey", "Сергей");
     }
 
     public void SetName(string name)
     {
-        if (!(namesToSprite.ContainsKey(name)))
+        if (name == null || name == string.Empty || !_localizedNames.ContainsKey(name))
         {
-            DelName();
-        } else
+            SetNameText("");
+        }
+        else
         {
-            namePanel.GetComponent<Image>().sprite = Names[namesToSprite[name]];
-            namePanel.SetActive(true);
-        }   
+            SetNameText(_localizedNames[name]);
+        }
     }
 
-    public void DelName()
+    private void SetNameText(string text)
     {
-        namePanel.SetActive(false);
+        foreach (Transform child in gameObject.transform)
+        {
+            child.gameObject.GetComponent<Text>().text = text;
+        }
     }
-  
 }

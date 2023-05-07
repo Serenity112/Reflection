@@ -74,7 +74,8 @@ ExportedObj/
 *.jpgsettings
 *.pdf
 *.index
-
+*.mov
+*.bin
 
 # Unity3D generated meta files
 *.pidb.meta

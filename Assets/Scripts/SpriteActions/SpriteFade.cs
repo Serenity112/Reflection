@@ -36,7 +36,8 @@ public class SpriteFade : MonoBehaviour
     {
         if (skip)
         {
-            yield return StartCoroutine(FadeManager.ColorFadeObject(obj, fadein));
+            FadeManager.ColorFadeObject(obj, fadein);
+            yield return null;
         }
         else
         {
@@ -50,8 +51,9 @@ public class SpriteFade : MonoBehaviour
 
         if (skip)
         {
-            StartCoroutine(FadeManager.ColorFadeObject(Body, true));
-            yield return StartCoroutine(FadeManager.ColorFadeObject(Face1, true));
+            FadeManager.ColorFadeObject(Body, true);
+            FadeManager.ColorFadeObject(Face1, true);
+            yield return null;
         }
         else
         {

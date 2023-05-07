@@ -9,7 +9,7 @@ namespace Fungus
     public class FungusSwapSprites : Command
     {
         [SerializeField]
-        private string characterName;
+        private string CharacterName;
 
         [SerializeField]
         private int Pose;
@@ -18,16 +18,16 @@ namespace Fungus
         private int Emotion;
 
         [SerializeField]
-        private Vector3 newPosition;
+        private Vector3 newPosition = Vector3.zero;
 
         [SerializeField]
-        private float disappearSpeed;
+        private float appearSpeed = 3f;
 
         [SerializeField]
-        private float appearSpeed;
+        private float disappearSpeed = 5f;
 
         [SerializeField]
-        private float movementSpeed;
+        private float movementSpeed = 0f;
 
         // Юзать тогда, когда подряд идёт много операций с работой с ассетами. Это будет ждать, пока анимация закончится. Иначе будут наклоадыватья ассеты
         [SerializeField]
@@ -44,30 +44,20 @@ namespace Fungus
         {
             DialogMod.denyNextDialog = true; // разрешение будет в конце выполнения SwapSprites.
 
-            if (disappearSpeed * appearSpeed == 0)
+            if (delayBetweenNext)
             {
-                appearSpeed = 3f;
-                disappearSpeed = 3.2f;
-            }
-
-            if(newPosition != Vector3.zero && movementSpeed == 0)
-            {
-                movementSpeed = 3f;
-            }
-
-            if(delayBetweenNext)
-            {
-                yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(characterName, Pose, Emotion, newPosition, disappearSpeed, appearSpeed, movementSpeed, DialogMod.skipping));
+                yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, disappearSpeed, appearSpeed, movementSpeed, DialogMod.skipping));
 
                 Continue();
-            } else
+            }
+            else
             {
-                StartCoroutine(SpritesSwapper.instance.SwapSprites(characterName, Pose, Emotion, newPosition, disappearSpeed, appearSpeed, movementSpeed, DialogMod.skipping));
+                StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, disappearSpeed, appearSpeed, movementSpeed, DialogMod.skipping));
 
                 yield return null;
 
                 Continue();
-            }   
+            }
         }
 
         public override Color GetButtonColor()

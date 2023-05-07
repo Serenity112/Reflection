@@ -43,7 +43,7 @@ public class SpriteController : MonoBehaviour
 {
     public static SpriteController instance = null;
 
-    [SerializeField] private Dictionary<Tuple<string, int>, List<AssetReference>> characterAssets = new Dictionary<Tuple<string, int>, List<AssetReference>>();
+    [SerializeField] private Dictionary<(string name, int pose_num), List<AssetReference>> characterAssets = new Dictionary<(string, int), List<AssetReference>>();
 
     [SerializeField] private List<AssetReference> Pasha1;//Clothes pose1
     [SerializeField] private List<AssetReference> Pasha2;//Clothes pose2
@@ -122,44 +122,44 @@ public class SpriteController : MonoBehaviour
         CharactersScales.Add("Tumanov", new Vector3(26f, 26f, 0f));
 
         // Assets
-        characterAssets.Add(new Tuple<string, int>("Pasha", 1), Pasha1);
-        characterAssets.Add(new Tuple<string, int>("Pasha", 2), Pasha2);
-        characterAssets.Add(new Tuple<string, int>("Pasha", 3), Pasha3);
-        characterAssets.Add(new Tuple<string, int>("Pasha", 4), Pasha4);
-        characterAssets.Add(new Tuple<string, int>("Pasha", 5), Pasha5);
-        characterAssets.Add(new Tuple<string, int>("Pasha", 6), Pasha6);
-        characterAssets.Add(new Tuple<string, int>("Pasha", 7), Pasha7);
-        characterAssets.Add(new Tuple<string, int>("Pasha", 8), Pasha8);
-        characterAssets.Add(new Tuple<string, int>("Pasha", 9), Pasha9);
+        characterAssets.Add(("Pasha", 1), Pasha1);
+        characterAssets.Add(("Pasha", 2), Pasha2);
+        characterAssets.Add(("Pasha", 3), Pasha3);
+        characterAssets.Add(("Pasha", 4), Pasha4);
+        characterAssets.Add(("Pasha", 5), Pasha5);
+        characterAssets.Add(("Pasha", 6), Pasha6);
+        characterAssets.Add(("Pasha", 7), Pasha7);
+        characterAssets.Add(("Pasha", 8), Pasha8);
+        characterAssets.Add(("Pasha", 9), Pasha9);
 
-        characterAssets.Add(new Tuple<string, int>("Katya", 1), Katya1);
-        characterAssets.Add(new Tuple<string, int>("Katya", 2), Katya2);
-        characterAssets.Add(new Tuple<string, int>("Katya", 3), Katya3);
-        characterAssets.Add(new Tuple<string, int>("Katya", 4), Katya4);
-        characterAssets.Add(new Tuple<string, int>("Katya", 5), Katya5);
-        characterAssets.Add(new Tuple<string, int>("Katya", 6), Katya6);
-        characterAssets.Add(new Tuple<string, int>("Katya", 7), Katya7);
-        characterAssets.Add(new Tuple<string, int>("Katya", 8), Katya8);
-        characterAssets.Add(new Tuple<string, int>("Katya", 9), Katya9);
+        characterAssets.Add(("Katya", 1), Katya1);
+        characterAssets.Add(("Katya", 2), Katya2);
+        characterAssets.Add(("Katya", 3), Katya3);
+        characterAssets.Add(("Katya", 4), Katya4);
+        characterAssets.Add(("Katya", 5), Katya5);
+        characterAssets.Add(("Katya", 6), Katya6);
+        characterAssets.Add(("Katya", 7), Katya7);
+        characterAssets.Add(("Katya", 8), Katya8);
+        characterAssets.Add(("Katya", 9), Katya9);
 
-        characterAssets.Add(new Tuple<string, int>("Nastya", 1), Nastya1);
-        characterAssets.Add(new Tuple<string, int>("Nastya", 2), Nastya2);
-        characterAssets.Add(new Tuple<string, int>("Nastya", 3), Nastya3);
+        characterAssets.Add(("Nastya", 1), Nastya1);
+        characterAssets.Add(("Nastya", 2), Nastya2);
+        characterAssets.Add(("Nastya", 3), Nastya3);
 
-        characterAssets.Add(new Tuple<string, int>("Evelina", 1), Evelina1);
-        characterAssets.Add(new Tuple<string, int>("Evelina", 2), Evelina2);
-        characterAssets.Add(new Tuple<string, int>("Evelina", 3), Evelina3);
+        characterAssets.Add(("Evelina", 1), Evelina1);
+        characterAssets.Add(("Evelina", 2), Evelina2);
+        characterAssets.Add(("Evelina", 3), Evelina3);
 
-        characterAssets.Add(new Tuple<string, int>("Tanya", 1), Tanya1);
-        characterAssets.Add(new Tuple<string, int>("Tanya", 2), Tanya2);
-        characterAssets.Add(new Tuple<string, int>("Tanya", 3), Tanya3);
+        characterAssets.Add(("Tanya", 1), Tanya1);
+        characterAssets.Add(("Tanya", 2), Tanya2);
+        characterAssets.Add(("Tanya", 3), Tanya3);
 
-        characterAssets.Add(new Tuple<string, int>("Raketnikov", 1), Raketnikov);
+        characterAssets.Add(("Raketnikov", 1), Raketnikov);
 
-        characterAssets.Add(new Tuple<string, int>("Tumanov", 1), Tumanov1);
-        characterAssets.Add(new Tuple<string, int>("Tumanov", 2), Tumanov2);
-        characterAssets.Add(new Tuple<string, int>("Tumanov", 3), Tumanov3);
-        characterAssets.Add(new Tuple<string, int>("Tumanov", 4), Tumanov4);
+        characterAssets.Add(("Tumanov", 1), Tumanov1);
+        characterAssets.Add(("Tumanov", 2), Tumanov2);
+        characterAssets.Add(("Tumanov", 3), Tumanov3);
+        characterAssets.Add(("Tumanov", 4), Tumanov4);
     }
 
     public void printData()
@@ -223,7 +223,7 @@ public class SpriteController : MonoBehaviour
     }
 
     // Activity
-    public int GetActivityByName(string name)
+    public int GetSpriteByName(string name)
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
@@ -236,7 +236,7 @@ public class SpriteController : MonoBehaviour
         return -1;
     }
 
-    public int GetNewActivity(string name)
+    public int GetAvaliableSpriteNum(string name)
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
@@ -275,7 +275,7 @@ public class SpriteController : MonoBehaviour
                 {
                     scale = scale * SpriteExpand.instance.expand_coefficient;
                 }
-                
+
                 sprite.transform.localScale = scale;
             }
         }
@@ -393,20 +393,20 @@ public class SpriteController : MonoBehaviour
         StartCoroutine(LoadSpriteByParts(currSprite, character, pose, emotion));
     }
 
-    public IEnumerator LoadSpriteByParts(GameObject currSprite, string character, int pose, int emotion)
+    public IEnumerator LoadSpriteByParts(GameObject spriteToLoad, string character, int pose, int emotion)
     {
-        StartCoroutine(ILoadSpriteOfSpecificObject(currSprite, character, pose, 0, SpritePart.BASE));
+        StartCoroutine(ILoadSpriteOfSpecificObject(spriteToLoad, character, pose, 0, SpritePart.BASE));
 
-        GameObject Face = currSprite.transform.GetChild(0).gameObject;
+        GameObject Face = spriteToLoad.transform.GetChild(0).gameObject;
 
         yield return StartCoroutine(ILoadSpriteOfSpecificObject(Face, character, pose, emotion, SpritePart.FACE1));
     }
 
     public IEnumerator ILoadSpriteOfSpecificObject(GameObject obj, string characterName, int pose, int emotion, SpritePart part)
     {
-        AssetReference spriteReference = characterAssets[new Tuple<string, int>(characterName, pose)][emotion];
+        AssetReference spriteReference = characterAssets[(characterName, pose)][emotion];
 
-        int spriteNum = GetActivityByName(characterName);
+        int spriteNum = GetSpriteByName(characterName);
 
         AsyncOperationHandle<Sprite> newHandle = spriteReference.LoadAssetAsync<Sprite>();
 
@@ -423,7 +423,7 @@ public class SpriteController : MonoBehaviour
                 obj.GetComponent<SpriteRenderer>().sprite = newHandle.Result;
                 break;
             default:
-                Debug.Log("Error in Sprite loading!");
+                Debug.Log($"Error in sprite {characterName} loading!");
                 break;
         }
     }

@@ -33,7 +33,7 @@ namespace Fungus
                 time = 0.1f;
             }
                 
-            int spriteNum = SpriteController.instance.GetActivityByName(characterName);
+            int spriteNum = SpriteController.instance.GetSpriteByName(characterName);
 
             SpriteController.instance.SaveSpriteData(spriteNum, position);
 

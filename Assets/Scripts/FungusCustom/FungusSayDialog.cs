@@ -57,7 +57,7 @@ namespace Fungus
 
             LogManager.instance.NewMessage(storyText, speaker);
 
-            //nameChanger.SetName(speaker);
+            NameChanger.instance.SetName(speaker);
 
             saveString = UserData.instance.CurrentBlock + "_" + UserData.instance.CurrentCommandIndex;
 

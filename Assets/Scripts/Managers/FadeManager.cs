@@ -115,19 +115,17 @@ public class FadeManager : MonoBehaviour
         }
     }
 
-    public static IEnumerator ColorFadeObject(GameObject obj, bool fadein)
+    public static void ColorFadeObject(GameObject obj, bool fadein)
     {
         obj.SetActive(true);
 
         if (fadein)
         {
             obj.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
-            yield break;
         }
         else
         {
             obj.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
-            yield break;
         }
     }
 }

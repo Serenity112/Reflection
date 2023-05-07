@@ -1,10 +1,10 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SpriteApearer : MonoBehaviour
 {
     public static SpriteApearer instance = null;
+
     private void Start()
     {
         if (instance == null)
@@ -16,11 +16,12 @@ public class SpriteApearer : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    public IEnumerator SpriteAppear(string characterName, int Pose, int Emotion, Vector3 Position, float speed, bool skip)
-    {
-        int newSpriteNum = SpriteController.instance.GetNewActivity(characterName);
 
-        SpriteController.instance.SaveSpriteData(newSpriteNum, characterName, Pose, Emotion, Position, 1f, false);
+    public IEnumerator SpriteAppear(string characterName, int pose, int emotion, Vector3 position, float speed, bool skip)
+    {
+        int newSpriteNum = SpriteController.instance.GetAvaliableSpriteNum(characterName);
+
+        SpriteController.instance.SaveSpriteData(newSpriteNum, characterName, pose, emotion, position, 1f, false);
 
         GameObject Current = SpriteController.instance.GetSprite(newSpriteNum);
         GameObject Face1 = Current.transform.GetChild(0).gameObject;
@@ -32,9 +33,9 @@ public class SpriteApearer : MonoBehaviour
 
         SpriteController.instance.SetDefaultScale(Current, characterName);
 
-        Current.transform.localPosition = Position;
+        Current.transform.localPosition = position;
 
-        yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Current, characterName, Pose, Emotion));
+        yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Current, characterName, pose, emotion));
 
         yield return StartCoroutine(SpriteFade.instance.IAppearFullSprite(Current, speed, skip));
 

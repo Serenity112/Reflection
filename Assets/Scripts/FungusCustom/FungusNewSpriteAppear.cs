@@ -9,7 +9,7 @@ namespace Fungus
     public class FungusNewSpriteAppear : Command
     {
         [SerializeField]
-        private string characterName;
+        private string CharacterName;
 
         [SerializeField]
         private int Pose;
@@ -18,10 +18,10 @@ namespace Fungus
         private int Emotion;
 
         [SerializeField]
-        private Vector3 Position;
+        private Vector3 Position = Vector3.zero;
 
         [SerializeField]
-        private float appearSpeed;
+        private float AppearSpeed = 3f;
 
         public override void OnEnter()
         {
@@ -32,10 +32,7 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            if (appearSpeed == 0)
-                appearSpeed = 3f;
-
-            yield return StartCoroutine(SpriteApearer.instance.SpriteAppear(characterName, Pose, Emotion, Position, appearSpeed, DialogMod.skipping));
+            yield return StartCoroutine(SpriteApearer.instance.SpriteAppear(CharacterName, Pose, Emotion, Position, AppearSpeed, DialogMod.skipping));
 
             Continue();
         }

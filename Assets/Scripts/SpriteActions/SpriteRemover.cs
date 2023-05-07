@@ -25,7 +25,7 @@ public class SpriteRemover : MonoBehaviour
         SpriteMove.instance.StopSpriteMoving();
         SpriteController.instance.SkipSpriteActions();
 
-        int spriteNum = SpriteController.instance.GetActivityByName(characterName);
+        int spriteNum = SpriteController.instance.GetSpriteByName(characterName);
 
         GameObject Current = SpriteController.instance.GetSprite(spriteNum);
         GameObject Face1 = Current.transform.GetChild(0).gameObject;

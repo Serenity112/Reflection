@@ -48,7 +48,7 @@ public class SpriteExpand : MonoBehaviour
 
     public void SetExpanding(string characterName, bool skip)
     {
-        int spriteNum = SpriteController.instance.GetActivityByName(characterName);
+        int spriteNum = SpriteController.instance.GetSpriteByName(characterName);
 
         if (spriteNum != -1)
         {
@@ -88,7 +88,7 @@ public class SpriteExpand : MonoBehaviour
 
     private void shrinkOldSprite(bool skip)
     {
-        int oldSpriteNum = SpriteController.instance.GetActivityByName(lastExpandedSpriteName);
+        int oldSpriteNum = SpriteController.instance.GetSpriteByName(lastExpandedSpriteName);
 
         if (oldSpriteNum != -1)
         {
