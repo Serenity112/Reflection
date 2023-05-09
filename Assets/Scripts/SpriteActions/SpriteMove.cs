@@ -26,18 +26,16 @@ public class SpriteMove : MonoBehaviour
         StopAllCoroutines();
     }
 
-    public void SetMovementSprites(int Character, Vector3 vector, float smoothTime, float vExtend, bool skip)
+    public void SetMovementSprites(GameObject sprite, Vector3 vector, float smoothTime, float vExtend, bool skip)
     {
-        StartCoroutine(MoveSprite(Character, vector, smoothTime, vExtend, skip));
+        StartCoroutine(IMoveSprite(sprite, vector, smoothTime, vExtend, skip));
     }
 
-    private IEnumerator MoveSprite(int spriteNum, Vector3 vect, float smoothTime, float vExtend, bool skip)
+    public IEnumerator IMoveSprite(GameObject sprite, Vector3 vect, float smoothTime, float vExtend, bool skip)
     {
-        GameObject Sprite = SpriteController.instance.GetSprite(spriteNum);
-
-        if (skip)
+        if (skip || sprite.transform.localPosition == vect)
         {
-            Sprite.transform.localPosition = vect;
+            sprite.transform.localPosition = vect;
 
             yield return null;
         }
@@ -46,16 +44,16 @@ public class SpriteMove : MonoBehaviour
             Vector3 velocity1 = Vector3.zero;
             Vector3 Evect1 = new Vector3(vExtend * vect.x, vExtend * vect.y, vExtend * vect.z);
 
-            while (Sprite.transform.localPosition != Evect1)
+            while (sprite.transform.localPosition != Evect1)
             {
-                if (Math.Abs(Math.Abs(Sprite.transform.localPosition.x) - Math.Abs(vect.x)) < 0.001)
+                if (Math.Abs(Math.Abs(sprite.transform.localPosition.x) - Math.Abs(vect.x)) < 1)
                 {
-                    Sprite.transform.localPosition = vect;
+                    sprite.transform.localPosition = vect;
                     DialogMod.denyNextDialog = false;
                     yield break;
                 }
 
-                Sprite.transform.localPosition = Vector3.SmoothDamp(Sprite.transform.localPosition, Evect1, ref velocity1, smoothTime);
+                sprite.transform.localPosition = Vector3.SmoothDamp(sprite.transform.localPosition, Evect1, ref velocity1, smoothTime);
 
                 yield return null;
             }

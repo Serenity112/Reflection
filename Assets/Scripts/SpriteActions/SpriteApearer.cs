@@ -35,8 +35,9 @@ public class SpriteApearer : MonoBehaviour
 
         Current.transform.localPosition = position;
 
-        yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Current, characterName, pose, emotion));
+        yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Current, newSpriteNum, characterName, pose, emotion));
 
+        // Можно добавить опционпльность синк/асинк появления, но вроде синк лучше всегда
         yield return StartCoroutine(SpriteFade.instance.IAppearFullSprite(Current, speed, skip));
 
         // Возможно нужно доабвить скип фейда и мува, но вроде и так нормально

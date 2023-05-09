@@ -355,7 +355,7 @@ public class SpriteController : MonoBehaviour
                 string name = data.name;
 
                 // Loading
-                LoadCurrSprite(sprite, name, pose, emotion);
+                LoadCurrSprite(sprite, i, name, pose, emotion);
             }
         }
     }
@@ -388,25 +388,23 @@ public class SpriteController : MonoBehaviour
         }
     }
 
-    public void LoadCurrSprite(GameObject currSprite, string character, int pose, int emotion)
+    public void LoadCurrSprite(GameObject currSprite, int spriteNum, string character, int pose, int emotion)
     {
-        StartCoroutine(LoadSpriteByParts(currSprite, character, pose, emotion));
+        StartCoroutine(LoadSpriteByParts(currSprite, spriteNum, character, pose, emotion));
     }
 
-    public IEnumerator LoadSpriteByParts(GameObject spriteToLoad, string character, int pose, int emotion)
+    public IEnumerator LoadSpriteByParts(GameObject spriteToLoad, int spriteNum, string character, int pose, int emotion)
     {
-        StartCoroutine(ILoadSpriteOfSpecificObject(spriteToLoad, character, pose, 0, SpritePart.BASE));
+        StartCoroutine(ILoadSpriteOfSpecificObject(spriteToLoad, spriteNum, character, pose, 0, SpritePart.BASE));
 
         GameObject Face = spriteToLoad.transform.GetChild(0).gameObject;
 
-        yield return StartCoroutine(ILoadSpriteOfSpecificObject(Face, character, pose, emotion, SpritePart.FACE1));
+        yield return StartCoroutine(ILoadSpriteOfSpecificObject(Face, spriteNum, character, pose, emotion, SpritePart.FACE1));
     }
 
-    public IEnumerator ILoadSpriteOfSpecificObject(GameObject obj, string characterName, int pose, int emotion, SpritePart part)
+    public IEnumerator ILoadSpriteOfSpecificObject(GameObject obj, int spriteNum, string characterName, int pose, int emotion, SpritePart part)
     {
         AssetReference spriteReference = characterAssets[(characterName, pose)][emotion];
-
-        int spriteNum = GetSpriteByName(characterName);
 
         AsyncOperationHandle<Sprite> newHandle = spriteReference.LoadAssetAsync<Sprite>();
 

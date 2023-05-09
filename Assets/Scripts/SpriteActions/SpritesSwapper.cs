@@ -1,7 +1,10 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Fungus;
+using System;
+
 public class SpritesSwapper : MonoBehaviour
 {
     public static SpritesSwapper instance = null;
@@ -18,9 +21,8 @@ public class SpritesSwapper : MonoBehaviour
         }
     }
 
-    public IEnumerator SwapSprites(string spriteName, int pose, int emotion, Vector3 newPosition, float disappearSpeed, float appearSpeed, float moveSpeed, bool skip)
+    public IEnumerator SwapSprites(string spriteName, int pose, int emotion, Vector3 newPosition, float disappearSpeed, float appearSpeed, float moveSpeed, bool skip, bool waitForFinished)
     {
-        SpriteController.instance.printData();
         SpriteMove.instance.StopSpriteMoving();
         SpriteFade.instance.StopSpritesFading();
 
@@ -33,11 +35,6 @@ public class SpritesSwapper : MonoBehaviour
         if (ChangePose)
         {
             int sprite2 = SpriteController.instance.GetAvaliableSpriteNum(spriteName);
-
-            // При вызове LoadSpriteByParts ищется спрайт по имени чтобы занести данные о нем в массив. Но надо находить уже новый спрайт.
-            // Поэтому 1й делается "невидимым", ставя имя null. А потом уже чистится
-            SpriteController.instance.GameSpriteData[sprite1].name = null;
-            //SpriteController.instance.GameSpriteData[sprite2].prevSprite = sprite1; // prevSprite - для синхронизации выцветаний
 
             SpriteController.instance.SaveSpriteData(sprite1, 0f);
             SpriteController.instance.SaveSpriteData(sprite2, spriteName, pose, emotion);
@@ -65,34 +62,56 @@ public class SpritesSwapper : MonoBehaviour
             // Изменить, если добавится гарантированное смещение в зависимости от поз
             Current2.transform.localPosition = Current1.transform.localPosition;
 
-            yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Current2, spriteName, pose, emotion));
+            yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Current2, sprite2, spriteName, pose, emotion));
 
+            bool move = false;
             if (newPosition == Vector3.zero) // Если 0й вектор, спрайт не двигается
             {
                 SpriteController.instance.SaveSpriteData(sprite2, Current1.transform.localPosition);
             }
             else
             {
+                move = true;
                 SpriteController.instance.SaveSpriteData(sprite2, newPosition);
-
-                SpriteMove.instance.SetMovementSprites(sprite1, newPosition, moveSpeed, 1, skip);
-                SpriteMove.instance.SetMovementSprites(sprite2, newPosition, moveSpeed, 1, skip);
             }
 
-            StartCoroutine(SpriteFade.instance.ISetFadingSprite(Current1, false, disappearSpeed, skip));
-            StartCoroutine(SpriteFade.instance.ISetFadingSprite(Face1_1, false, disappearSpeed, skip));
+            // IEnumerators
+            List<IEnumerator> enumerators = new List<IEnumerator>
+            {
+                SpriteFade.instance.ISetFadingSprite(Current1, false, disappearSpeed, skip),
+                SpriteFade.instance.ISetFadingSprite(Face1_1, false, disappearSpeed, skip),
+                SpriteFade.instance.ISetFadingSprite(Current2, true, appearSpeed, skip),
+                SpriteFade.instance.ISetFadingSprite(Face1_2, true, appearSpeed, skip)
+            };
 
-            StartCoroutine(SpriteFade.instance.ISetFadingSprite(Current2, true, appearSpeed, skip));
-            yield return StartCoroutine(SpriteFade.instance.ISetFadingSprite(Face1_2, true, appearSpeed, skip));
+            if (move)
+            {
+                enumerators.Add(SpriteMove.instance.IMoveSprite(Current1, newPosition, moveSpeed, 1, skip));
+                enumerators.Add(SpriteMove.instance.IMoveSprite(Current2, newPosition, moveSpeed, 1, skip));
+            }
 
-            Addressables.Release(SpriteController.instance.GameSpriteData[sprite1].handles[0]);
-            Addressables.Release(SpriteController.instance.GameSpriteData[sprite1].handles[1]);
-            Resources.UnloadUnusedAssets();
+            // Actions
+            List<Action> postActions = new List<Action>
+            {
+                 delegate { Addressables.Release(SpriteController.instance.GameSpriteData[sprite1].handles[0]); },
+                 delegate { Addressables.Release(SpriteController.instance.GameSpriteData[sprite1].handles[1]); },
+                 delegate { Resources.UnloadUnusedAssets(); },
+                 delegate { SpriteController.instance.DelActivity(sprite1); },
+                 delegate { DialogMod.denyNextDialog = false; },
+            };
 
-            //SpriteController.instance.GameSpriteData[sprite2].prevSprite = -1;
-            SpriteController.instance.DelActivity(sprite1);
+            if (waitForFinished)
+            {
+                yield return StartCoroutine(IDelayedActions(enumerators, postActions));
+            }
+            else
+            {
+                StartCoroutine(IDelayedActions(enumerators, postActions));
+            }
 
-            DialogMod.denyNextDialog = false;
+            Debug.Log("Swap ended");
+
+            yield return null;
         }
         else
         {
@@ -110,20 +129,55 @@ public class SpritesSwapper : MonoBehaviour
             Face2.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
             Face1.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
 
-            yield return StartCoroutine(SpriteController.instance.ILoadSpriteOfSpecificObject(Face1, spriteName, pose, emotion, SpritePart.FACE1));
+            yield return StartCoroutine(SpriteController.instance.ILoadSpriteOfSpecificObject(Face1, sprite1, spriteName, pose, emotion, SpritePart.FACE1));
 
+            bool move = false;
             if (newPosition != Vector3.zero) // Если 0й вектор, спрайт не двигается
             {
+                move = true;
                 SpriteController.instance.SaveSpriteData(sprite1, newPosition);
-                SpriteMove.instance.SetMovementSprites(sprite1, newPosition, moveSpeed, 1, skip);
             }
 
-            Addressables.Release(SpriteController.instance.GameSpriteData[sprite1].handles[2]);
+            // IEnumerators
+            List<IEnumerator> enumerators = new List<IEnumerator>
+            {
+                SpriteFade.instance.ISetFadingSprite(Face1, true, disappearSpeed, skip),
+                SpriteFade.instance.ISetFadingSprite(Face2, false, appearSpeed, skip),
+            };
 
-            SpriteFade.instance.SetFadingSprite(Face2, false, appearSpeed, skip);
-            SpriteFade.instance.SetFadingSprite(Face1, true, disappearSpeed, skip);
+            if (move)
+            {
+                enumerators.Add(SpriteMove.instance.IMoveSprite(Current, newPosition, moveSpeed, 1, skip));
+            }
 
-            DialogMod.denyNextDialog = false;
+            // Actions
+            List<Action> postActions = new List<Action>
+            {
+                 delegate { Addressables.Release(SpriteController.instance.GameSpriteData[sprite1].handles[2]); },
+                 delegate { Resources.UnloadUnusedAssets(); },
+                 delegate { DialogMod.denyNextDialog = false; },
+            };
+
+            if (waitForFinished)
+            {
+                yield return StartCoroutine(IDelayedActions(enumerators, postActions));
+            }
+            else
+            {
+                StartCoroutine(IDelayedActions(enumerators, postActions));
+            }
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator IDelayedActions(List<IEnumerator> enumerators, List<Action> actions)
+    {
+        yield return CoroutineWaitForAll.instance.WaitForAll(enumerators);
+
+        foreach (Action action in actions)
+        {
+            action.Invoke();
         }
     }
 }

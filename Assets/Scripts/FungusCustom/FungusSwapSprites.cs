@@ -29,9 +29,8 @@ namespace Fungus
         [SerializeField]
         private float movementSpeed = 0f;
 
-        // Юзать тогда, когда подряд идёт много операций с работой с ассетами. Это будет ждать, пока анимация закончится. Иначе будут наклоадыватья ассеты
         [SerializeField]
-        private bool delayBetweenNext = false;
+        private bool waitForFinished = false;
 
         public override void OnEnter()
         {
@@ -44,20 +43,9 @@ namespace Fungus
         {
             DialogMod.denyNextDialog = true; // разрешение будет в конце выполнения SwapSprites.
 
-            if (delayBetweenNext)
-            {
-                yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, disappearSpeed, appearSpeed, movementSpeed, DialogMod.skipping));
+            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, disappearSpeed, appearSpeed, movementSpeed, DialogMod.skipping, waitForFinished));
 
-                Continue();
-            }
-            else
-            {
-                StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, disappearSpeed, appearSpeed, movementSpeed, DialogMod.skipping));
-
-                yield return null;
-
-                Continue();
-            }
+            Continue();
         }
 
         public override Color GetButtonColor()

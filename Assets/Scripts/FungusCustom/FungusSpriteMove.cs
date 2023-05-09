@@ -14,7 +14,7 @@ namespace Fungus
         private Vector3 position;
 
         [SerializeField]
-        private float time;
+        private float time = 0.1f;
 
         [SerializeField]
         private float vExtend;
@@ -28,16 +28,13 @@ namespace Fungus
 
             DialogMod.denyNextDialog = true; // Запрет отключтся в конце выполнения SetMovementSprites
 
-            if (time == 0f)
-            {
-                time = 0.1f;
-            }
-                
             int spriteNum = SpriteController.instance.GetSpriteByName(characterName);
 
             SpriteController.instance.SaveSpriteData(spriteNum, position);
 
-            SpriteMove.instance.SetMovementSprites(spriteNum, position, time, vExtend, DialogMod.skipping);
+            GameObject sprite = SpriteController.instance.GetSprite(spriteNum);
+
+            SpriteMove.instance.SetMovementSprites(sprite, position, time, vExtend, DialogMod.skipping);
 
             Continue();
         }
