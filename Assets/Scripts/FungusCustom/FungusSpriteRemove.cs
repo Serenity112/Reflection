@@ -9,13 +9,10 @@ namespace Fungus
     public class FungusSpriteRemove : Command
     {
         [SerializeField]
-        private string characterName;
+        private string CharacterName;
 
         [SerializeField]
-        private float speed;
-
-        [SerializeField]
-        private bool extend;
+        private float DisappearSpeed = 3f;
 
         public override void OnEnter()
         {
@@ -25,12 +22,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            if(speed == 0f)
-            {
-                speed = 3f;
-            }
-
-            yield return StartCoroutine(SpriteRemover.instance.RemoveSprite(characterName, speed, extend, DialogMod.skipping));
+            yield return StartCoroutine(SpriteRemover.instance.RemoveSprite(CharacterName, DisappearSpeed, DialogMod.skipping));
 
             Continue();
         }

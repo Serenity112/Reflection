@@ -16,8 +16,6 @@ namespace Fungus
         [SerializeField]
         private float time = 0.1f;
 
-        [SerializeField]
-        private float vExtend;
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
@@ -34,7 +32,7 @@ namespace Fungus
 
             GameObject sprite = SpriteController.instance.GetSprite(spriteNum);
 
-            SpriteMove.instance.SetMovementSprites(sprite, position, time, vExtend, DialogMod.skipping);
+            SpriteMove.instance.SetMovementSprites(sprite, position, time, DialogMod.skipping);
 
             Continue();
         }

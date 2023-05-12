@@ -26,34 +26,37 @@ public class SpriteMove : MonoBehaviour
         StopAllCoroutines();
     }
 
-    public void SetMovementSprites(GameObject sprite, Vector3 vector, float smoothTime, float vExtend, bool skip)
+    public void SetMovementSprites(GameObject sprite, Vector3 vector, float smoothTime, bool skip)
     {
-        StartCoroutine(IMoveSprite(sprite, vector, smoothTime, vExtend, skip));
+        StartCoroutine(IMoveSprite(sprite, vector, smoothTime, skip));
     }
 
-    public IEnumerator IMoveSprite(GameObject sprite, Vector3 vect, float smoothTime, float vExtend, bool skip)
+    public IEnumerator IMoveSprite(GameObject sprite, Vector3 targetVect, float smoothTime, bool skip)
     {
-        if (skip || sprite.transform.localPosition == vect)
+        if (skip || sprite.transform.localPosition == targetVect)
         {
-            sprite.transform.localPosition = vect;
+            sprite.transform.localPosition = targetVect;
 
             yield return null;
         }
         else
         {
-            Vector3 velocity1 = Vector3.zero;
-            Vector3 Evect1 = new Vector3(vExtend * vect.x, vExtend * vect.y, vExtend * vect.z);
+            Vector3 velocity = Vector3.zero;
 
-            while (sprite.transform.localPosition != Evect1)
+            bool targetGstart = targetVect.x > sprite.transform.localPosition.x;
+
+            while (sprite.transform.localPosition != targetVect)
             {
-                if (Math.Abs(Math.Abs(sprite.transform.localPosition.x) - Math.Abs(vect.x)) < 1)
+                float diff = targetGstart ? targetVect.x - sprite.transform.localPosition.x : sprite.transform.localPosition.x - targetVect.x;
+
+                if (Math.Abs(diff) < 1)
                 {
-                    sprite.transform.localPosition = vect;
+                    sprite.transform.localPosition = targetVect;
                     DialogMod.denyNextDialog = false;
                     yield break;
                 }
 
-                sprite.transform.localPosition = Vector3.SmoothDamp(sprite.transform.localPosition, Evect1, ref velocity1, smoothTime);
+                sprite.transform.localPosition = Vector3.SmoothDamp(sprite.transform.localPosition, targetVect, ref velocity, smoothTime);
 
                 yield return null;
             }

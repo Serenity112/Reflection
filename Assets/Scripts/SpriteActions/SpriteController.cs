@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -164,19 +165,21 @@ public class SpriteController : MonoBehaviour
 
     public void printData()
     {
+        StringBuilder builder = new StringBuilder();
+
         for (int i = 0; i < 4; i++)
         {
             if (GameSpriteData[i].name == null)
             {
-                Debug.Log(i + " Null" + " " + GameSpriteData[i].pose + " " + GameSpriteData[i].emotion + " a: " + GameSpriteData[i].alpha);
+                builder.AppendLine($"Sprite {i}: null, pose: {GameSpriteData[i].pose}, emo: {GameSpriteData[i].emotion} alpha: {GameSpriteData[i].alpha}\n");
             }
             else
             {
-                Debug.Log(i + " " + GameSpriteData[i].name + " " + GameSpriteData[i].pose + " " + GameSpriteData[i].emotion + " a: " + GameSpriteData[i].alpha);
+                builder.AppendLine($"Sprite {i}: {GameSpriteData[i].name}, pose: {GameSpriteData[i].pose}, emo: {GameSpriteData[i].emotion} alpha: {GameSpriteData[i].alpha}\n");
             }
-
         }
-        // Debug.Log("_____________________");
+
+        Debug.Log(builder.ToString());
     }
 
     // SaveSpriteData
@@ -404,6 +407,8 @@ public class SpriteController : MonoBehaviour
 
     public IEnumerator ILoadSpriteOfSpecificObject(GameObject obj, int spriteNum, string characterName, int pose, int emotion, SpritePart part)
     {
+        Debug.Log($"spriteReference: name {characterName} pose {pose} emotion {emotion}");
+
         AssetReference spriteReference = characterAssets[(characterName, pose)][emotion];
 
         AsyncOperationHandle<Sprite> newHandle = spriteReference.LoadAssetAsync<Sprite>();

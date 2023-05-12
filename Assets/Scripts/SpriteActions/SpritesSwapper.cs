@@ -23,6 +23,7 @@ public class SpritesSwapper : MonoBehaviour
 
     public IEnumerator SwapSprites(string spriteName, int pose, int emotion, Vector3 newPosition, float disappearSpeed, float appearSpeed, float moveSpeed, bool skip, bool waitForFinished)
     {
+        SpriteController.instance.printData();
         SpriteMove.instance.StopSpriteMoving();
         SpriteFade.instance.StopSpritesFading();
 
@@ -86,15 +87,15 @@ public class SpritesSwapper : MonoBehaviour
 
             if (move)
             {
-                enumerators.Add(SpriteMove.instance.IMoveSprite(Current1, newPosition, moveSpeed, 1, skip));
-                enumerators.Add(SpriteMove.instance.IMoveSprite(Current2, newPosition, moveSpeed, 1, skip));
+                enumerators.Add(SpriteMove.instance.IMoveSprite(Current1, newPosition, moveSpeed, skip));
+                enumerators.Add(SpriteMove.instance.IMoveSprite(Current2, newPosition, moveSpeed, skip));
             }
 
             // Actions
             List<Action> postActions = new List<Action>
             {
-                 delegate { Addressables.Release(SpriteController.instance.GameSpriteData[sprite1].handles[0]); },
-                 delegate { Addressables.Release(SpriteController.instance.GameSpriteData[sprite1].handles[1]); },
+                 delegate { Addressables.ReleaseInstance(SpriteController.instance.GameSpriteData[sprite1].handles[0]); },
+                 delegate { Addressables.ReleaseInstance(SpriteController.instance.GameSpriteData[sprite1].handles[1]); },
                  delegate { Resources.UnloadUnusedAssets(); },
                  delegate { SpriteController.instance.DelActivity(sprite1); },
                  delegate { DialogMod.denyNextDialog = false; },
@@ -109,8 +110,6 @@ public class SpritesSwapper : MonoBehaviour
                 StartCoroutine(IDelayedActions(enumerators, postActions));
             }
 
-            Debug.Log("Swap ended");
-
             yield return null;
         }
         else
@@ -120,12 +119,11 @@ public class SpritesSwapper : MonoBehaviour
             GameObject Current = SpriteController.instance.GetSprite(sprite1);
             GameObject Face1 = Current.transform.GetChild(0).gameObject;
             GameObject Face2 = Current.transform.GetChild(1).gameObject;
-            //spritecontroller.SetScale(Current, NewSpriteName);
 
             //Используем 2й handle как буффер
             SpriteController.instance.GameSpriteData[sprite1].handles[2] = SpriteController.instance.GameSpriteData[sprite1].handles[1];
-
             Face2.GetComponent<SpriteRenderer>().sprite = Face1.GetComponent<SpriteRenderer>().sprite;
+
             Face2.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
             Face1.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
 
@@ -147,13 +145,13 @@ public class SpritesSwapper : MonoBehaviour
 
             if (move)
             {
-                enumerators.Add(SpriteMove.instance.IMoveSprite(Current, newPosition, moveSpeed, 1, skip));
+                enumerators.Add(SpriteMove.instance.IMoveSprite(Current, newPosition, moveSpeed, skip));
             }
 
             // Actions
             List<Action> postActions = new List<Action>
             {
-                 delegate { Addressables.Release(SpriteController.instance.GameSpriteData[sprite1].handles[2]); },
+                 delegate { Addressables.ReleaseInstance(SpriteController.instance.GameSpriteData[sprite1].handles[2]); },
                  delegate { Resources.UnloadUnusedAssets(); },
                  delegate { DialogMod.denyNextDialog = false; },
             };

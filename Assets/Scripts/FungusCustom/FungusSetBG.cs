@@ -9,13 +9,13 @@ namespace Fungus
     public class FungusSetBG : Command
     {
         [SerializeField]
-        private string backgroundName;
+        private string BackgroundName;
 
         [SerializeField]
-        private float speed = 6f;
+        private float AppearSpeed = 6f;
 
         [SerializeField]
-        private bgSwapType fadeType;
+        private bgSwapType FadeType;
 
         public override void OnEnter()
         {
@@ -26,9 +26,9 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            UserData.instance.CurrentBG = backgroundName;
+            UserData.instance.CurrentBG = BackgroundName;
 
-            yield return StartCoroutine(BackgroundManager.instance.ISwap(backgroundName, fadeType, speed));
+            yield return StartCoroutine(BackgroundManager.instance.ISwap(BackgroundName, FadeType, AppearSpeed));
 
             Continue();
         }

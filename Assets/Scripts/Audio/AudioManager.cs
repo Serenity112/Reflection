@@ -24,12 +24,18 @@ public class AudioManager : MonoBehaviour
         public AudioClip clip;
     }
 
+    private enum AudioType
+    {
+        Music,
+        Ambient,
+    }
+
+    public int _musicTally = 0;
+
+
     public AudioArr[] MusicData;
     public AudioArr[] AmbientData;
     public AudioArr[] SoundData;
-
-    // int для накопительного эффекта, bool не подойдёт
-    public int _isFading = 0;
 
     void Awake()
     {
@@ -68,11 +74,14 @@ public class AudioManager : MonoBehaviour
 
     public IEnumerator FadeOutCurrent()
     {
-        StartCoroutine(StartFade(musicSource, 0.4f, 0));
-        StartCoroutine(StartFade(musicBuffSource, 0.4f, 0));
-        StartCoroutine(StartFade(ambientSource, 0.4f, 0));
-        yield return StartCoroutine(StartFade(soundSource, 0.4f, 0));
-
+        float time = 0.4f;
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            StartFade(musicSource, time, 0),
+            StartFade(musicBuffSource, time, 0),
+            StartFade(ambientSource, time, 0),
+            StartFade(soundSource, time, 0),
+        });
         ClearCurrent();
     }
 
@@ -95,14 +104,14 @@ public class AudioManager : MonoBehaviour
     // НЕ ДОРАБОТАНО. Пока просто обрывает все активные аудио-источники, если идёт переходный процесс
     private void InterruptCurrent()
     {
-        if (_isFading != 0)
+       /* if (_audioTally != 0)
         {
             ClearCurrent();
         }
 
         return;
 
-        if (_isFading != 0)
+        if (_audioTally != 0)
         {
             AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
 
@@ -127,7 +136,7 @@ public class AudioManager : MonoBehaviour
 
                 ambientSource.Play();
             }
-        }
+        }*/
     }
 
 
@@ -230,7 +239,7 @@ public class AudioManager : MonoBehaviour
 
         InterruptCurrent();
 
-        UserData.instance.CurrentMusic = name;       
+        UserData.instance.CurrentMusic = name;
 
         AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
 
@@ -438,7 +447,7 @@ public class AudioManager : MonoBehaviour
 
     public IEnumerator StartFade(AudioSource source, float duration, float targetVolume_linear)
     {
-        _isFading++;
+        //_audioTally++;
 
         float currentTime = 0;
         float currentVolume_linear = source.volume;
@@ -449,7 +458,7 @@ public class AudioManager : MonoBehaviour
             yield return null;
         }
 
-        _isFading--;
+        //_audioTally--;
         yield break;
     }
 }
