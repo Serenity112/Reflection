@@ -8,16 +8,13 @@ namespace Fungus
     public class SoundStart : Command
     {
         [SerializeField]
-        private string ost;
-
-        [SerializeField]
-        private float duration = 3f;
+        private string SoundName;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.SoundStart(ost, duration);
+            AudioManager.instance.SoundStart(SoundName);
             Continue();
         }
 

@@ -407,8 +407,6 @@ public class SpriteController : MonoBehaviour
 
     public IEnumerator ILoadSpriteOfSpecificObject(GameObject obj, int spriteNum, string characterName, int pose, int emotion, SpritePart part)
     {
-        Debug.Log($"spriteReference: name {characterName} pose {pose} emotion {emotion}");
-
         AssetReference spriteReference = characterAssets[(characterName, pose)][emotion];
 
         AsyncOperationHandle<Sprite> newHandle = spriteReference.LoadAssetAsync<Sprite>();

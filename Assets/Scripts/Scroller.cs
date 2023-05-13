@@ -9,6 +9,6 @@ public class Scroller : MonoBehaviour
 
     private void Update()
     {
-        image.uvRect = new Rect(image.uvRect.position + new Vector2(x, y)* Time.deltaTime,image.uvRect.size);
+        image.uvRect = new Rect(image.uvRect.position + new Vector2(x, y) * Time.deltaTime, image.uvRect.size);
     }
 }

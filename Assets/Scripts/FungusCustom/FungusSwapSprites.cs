@@ -27,7 +27,7 @@ namespace Fungus
         private float disappearSpeed = 5f;
 
         [SerializeField]
-        private float movementSpeed = 0f;
+        private float movementTime = 0f;
 
         [SerializeField]
         private bool waitForFinished = false;
@@ -43,7 +43,7 @@ namespace Fungus
         {
             DialogMod.denyNextDialog = true; // разрешение будет в конце выполнения SwapSprites.
 
-            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, disappearSpeed, appearSpeed, movementSpeed, DialogMod.skipping, waitForFinished));
+            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, disappearSpeed, appearSpeed, movementTime, DialogMod.skipping, waitForFinished));
 
             Continue();
         }

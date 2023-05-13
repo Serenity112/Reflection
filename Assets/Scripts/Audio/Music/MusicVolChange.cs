@@ -8,16 +8,17 @@ namespace Fungus
     public class MusicVolChange : Command
     {
         [SerializeField]
-        private float duration = 3f;
+        private float Duration = 1.5f;
 
+        [Range(0, 1)]
         [SerializeField]
-        private float factor;
+        private float Volume;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.MusicVolChange(duration, factor);
+            AudioManager.instance.MusicVolChange(Duration, Volume);
             Continue();
         }
 

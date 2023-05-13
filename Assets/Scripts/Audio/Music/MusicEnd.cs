@@ -8,13 +8,13 @@ namespace Fungus
     public class MusicEnd : Command
     {
         [SerializeField]
-        private float duration = 3f;
+        private float Duration = 1.5f;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.MusicEnd(duration);
+            AudioManager.instance.MusicEnd(Duration);
             Continue();
         }
 

@@ -8,16 +8,16 @@ namespace Fungus
     public class AmbientVolChange : Command
     {
         [SerializeField]
-        private float duration = 3f;
+        private float Duration = 1.5f;
 
         [SerializeField]
-        private float factor;
+        private float Volume;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.AmbientVolChange(duration, factor);
+            AudioManager.instance.AmbientVolChange(Duration, Volume);
             Continue();
         }
 

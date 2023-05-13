@@ -8,19 +8,20 @@ namespace Fungus
     public class MusicStart : Command
     {
         [SerializeField]
-        private string ost;
+        private string MusicName;
 
         [SerializeField]
-        private float duration = 3f;
+        private float Duration = 1.5f;
 
+        [Range(0, 1)]
         [SerializeField]
-        private float targetVol = 1;
+        private float Volume = 1;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.MusicStart(ost, duration, targetVol);
+            AudioManager.instance.MusicStart(MusicName, Duration, Volume);
             Continue();
         }
 

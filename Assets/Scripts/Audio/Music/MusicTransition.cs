@@ -8,16 +8,16 @@ namespace Fungus
     public class MusicTransition : Command
     {
         [SerializeField]
-        private string ost;
+        private string MusicName;
 
         [SerializeField]
-        private float duration = 3f;
+        private float Duration = 1.5f;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.MusicTransition(ost, duration);
+            AudioManager.instance.MusicTransition(MusicName, Duration);
             Continue();
         }
 
