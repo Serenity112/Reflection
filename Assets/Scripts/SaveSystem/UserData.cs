@@ -23,7 +23,7 @@ public struct SaveData
 
         LogBlocks = new List<string>();
 
-        specailEvent = SpecialEvents.none;
+        specailEvent = SpecialEvent.none;
     }
 
     int saveNum;
@@ -41,13 +41,14 @@ public struct SaveData
 
     public List<string> LogBlocks;
 
-    public SpecialEvents specailEvent;
+    public SpecialEvent specailEvent;
 }
 
-public enum SpecialEvents
+public enum SpecialEvent
 {
     none,
     DreamSnow,
+    StationScroll,
     TanyaCG,
 }
 
@@ -73,7 +74,9 @@ public class UserData : MonoBehaviour
     public float AmbientSourceVolume { get; set; }
 
     // Events
-    public SpecialEvents specialEvent { get; set; }
+    public SpecialEvent specialEvent { get; set; }
+
+    private const string _startingDayName = "Dream";
 
     private void Start()
     {
@@ -88,7 +91,7 @@ public class UserData : MonoBehaviour
 
         CurrentBG = null;
 
-        specialEvent = SpecialEvents.none;
+        specialEvent = SpecialEvent.none;
 
         CurrentBlock = null;
 
@@ -103,9 +106,9 @@ public class UserData : MonoBehaviour
         }
     }
 
-    public void SavePlayer(int SaveNum)
+    public void SavePlayer(int saveNum)
     {
-        SaveData newSave = new SaveData(SaveNum);
+        SaveData newSave = new SaveData(saveNum);
 
         newSave.Background = instance.CurrentBG;
         newSave.CurrentBlock = instance.CurrentBlock;
@@ -120,18 +123,10 @@ public class UserData : MonoBehaviour
         newSave.AmbientSourceVolume = instance.AmbientSourceVolume;
 
         newSave.specailEvent = instance.specialEvent;
-
-        switch (specialEvent)
-        {
-            case SpecialEvents.none:
-                break;
-            case SpecialEvents.DreamSnow:
-                ES3.Save<DreamSnowState>("DreamSnowSave" + SaveNum, DreamSnow.instance.currentState, "SpecialEvents.es3");
-                break;
-        }
+        SaveSpecialEvent(newSave.specailEvent, saveNum);
 
 
-        ES3.Save<SaveData>("SaveFile" + SaveNum, newSave, "SaveFiles.es3");
+        ES3.Save<SaveData>("SaveFile" + saveNum, newSave, "SaveFiles.es3");
 
         //newSave.CurrentOst = audiomanager.currentOst;
         //
@@ -142,15 +137,63 @@ public class UserData : MonoBehaviour
     private void LoadGameFromStart()
     {
         Flowchart flowchart = PanelsManager.instance.flowchart;
-        Block targetBlock = flowchart.FindBlock("Dream");
+        Block targetBlock = flowchart.FindBlock(_startingDayName);
         flowchart.ExecuteBlock(targetBlock);
     }
 
-    public IEnumerator ILoadGame(int SaveNum)
+    // При добавлении новых ивентов нужно обновить следующие 3 метода :)
+    private void SaveSpecialEvent(SpecialEvent specialEvent, int saveNum)
+    {
+        switch (specialEvent)
+        {
+            case SpecialEvent.none:
+                break;
+            case SpecialEvent.DreamSnow:
+                ES3.Save<DreamSnowState>("DreamSnowSave" + saveNum, DreamSnow.instance.currentState, "SpecialEvents.es3");
+                break;
+            case SpecialEvent.StationScroll:
+                ES3.Save<StationScrollState>("StationScrollSave" + saveNum, StationScroll.instance.currentState, "SpecialEvents.es3");
+                break;
+        }
+    }
+
+    private IEnumerator UnloadSpecialEvent(SpecialEvent specialEvent)
+    {
+        switch (specialEvent)
+        {
+            case SpecialEvent.none:
+                break;
+            case SpecialEvent.DreamSnow:
+                yield return StartCoroutine(DreamSnow.instance.IReleaseEvent());
+                break;
+            case SpecialEvent.StationScroll:
+                yield return StartCoroutine(StationScroll.instance.IReleaseEvent());
+                break;
+        }
+    }
+
+    private IEnumerator LoadSpecialEvent(SpecialEvent specialEvent, int saveNum)
+    {
+        switch (specialEvent)
+        {
+            case SpecialEvent.none:
+                break;
+            case SpecialEvent.DreamSnow:
+                DreamSnowState dreamSnowState = ES3.Load<DreamSnowState>("DreamSnowSave" + saveNum, "SpecialEvents.es3");
+                yield return StartCoroutine(DreamSnow.instance.ILoadEventByState(dreamSnowState));
+                break;
+            case SpecialEvent.StationScroll:
+                StationScrollState stationScrollState = ES3.Load<StationScrollState>("StationScrollSave" + saveNum, "SpecialEvents.es3");
+                yield return StartCoroutine(StationScroll.instance.ILoadEventByState(stationScrollState));
+                break;
+        }
+    }
+
+    public IEnumerator ILoadGame(int saveNum)
     {
         yield return new WaitForSeconds(0.5f);
 
-        SaveData newSave = ES3.Load<SaveData>("SaveFile" + SaveNum, "SaveFiles.es3");
+        SaveData newSave = ES3.Load<SaveData>("SaveFile" + saveNum, "SaveFiles.es3");
 
         Flowchart flowchart = PanelsManager.instance.flowchart;
 
@@ -167,6 +210,7 @@ public class UserData : MonoBehaviour
         CurrentBlock = newSave.CurrentBlock;
 
         // Index
+
         CurrentCommandIndex = newSave.CurrentCommandIndex;
 
         // Background
@@ -178,28 +222,14 @@ public class UserData : MonoBehaviour
             StartCoroutine(BackgroundManager.instance.ISwapBackground(CurrentBG));
         }
 
+
         // Special Events
         // Отгрузка
-        switch (specialEvent)
-        {
-            case SpecialEvents.none:
-                break;
-            case SpecialEvents.DreamSnow:
-                yield return StartCoroutine(DreamSnow.instance.IReleaseEvent());
-                break;
-        }
-
+        yield return StartCoroutine(UnloadSpecialEvent(newSave.specailEvent));
         // Загрузка
         specialEvent = newSave.specailEvent;
-        switch (specialEvent)
-        {
-            case SpecialEvents.none:
-                break;
-            case SpecialEvents.DreamSnow:
-                DreamSnowState dreamSnowState = ES3.Load<DreamSnowState>("DreamSnowSave" + SaveNum, "SpecialEvents.es3");
-                yield return StartCoroutine(DreamSnow.instance.ILoadEventByState(dreamSnowState));
-                break;
-        }
+        yield return StartCoroutine(LoadSpecialEvent(specialEvent, saveNum));
+
 
         // Спрайты
         // Отгрузка

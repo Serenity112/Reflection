@@ -119,10 +119,10 @@ public class MainMenuLoad : MonoBehaviour
     IEnumerator IDeleteSave()
     {
         StartCoroutine(FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed));
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         FadeManager.FadeObject(MainMenuPanel, false);
         saveFileFields.CloseOverPanel();
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-
+        
         StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed));
         SaveManager.instance.RemoveDateTime(saveNum);
 

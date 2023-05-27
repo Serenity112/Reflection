@@ -51,7 +51,7 @@ public class DreamSnow : MonoBehaviour
 
                 break;
             case DreamSnowState.Launch:
-                bg_handler = Addressables.InstantiateAsync("SpaceportLaunch", backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
+                bg_handler = Addressables.InstantiateAsync("SpaceportLaunch", backgroundsPanel.GetComponent<RectTransform>(), false, true);
                 yield return bg_handler;
 
                 snow_handler = Addressables.InstantiateAsync("Snow", backgroundsPanel.GetComponent<RectTransform>(), false, true);
@@ -63,7 +63,7 @@ public class DreamSnow : MonoBehaviour
 
     public IEnumerator IStartDreamSnow(float speed)
     {
-        UserData.instance.specialEvent = SpecialEvents.DreamSnow;
+        UserData.instance.specialEvent = SpecialEvent.DreamSnow;
         currentState = DreamSnowState.Start;
 
         FadeManager.FadeObject(BlackPanel, true);
@@ -103,13 +103,10 @@ public class DreamSnow : MonoBehaviour
     public IEnumerator IEndDreamSnow(string new_bg, float speed)
     {
         UserData.instance.CurrentBG = new_bg;
-        UserData.instance.specialEvent = SpecialEvents.none;
+        UserData.instance.specialEvent = SpecialEvent.none;
         currentState = DreamSnowState.End;
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
-
-        yield return Addressables.ReleaseInstance(bg_handler);
-        yield return Addressables.ReleaseInstance(snow_handler);
 
         yield return StartCoroutine(IReleaseEvent());
 
@@ -124,7 +121,6 @@ public class DreamSnow : MonoBehaviour
     {
         if (bg_handler.IsValid())
         {
-            Debug.Log("Releasingh dreamsnow event");
             yield return Addressables.ReleaseInstance(bg_handler);
         }
 

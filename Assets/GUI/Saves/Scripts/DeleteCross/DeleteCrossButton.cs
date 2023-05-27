@@ -53,7 +53,6 @@ public class DeleteCrossButton : MonoBehaviour
 
     public void AppearCross()
     {
-
         if (CrossFadeOut != null)
             StopCoroutine(CrossFadeOut);
 
