@@ -63,6 +63,7 @@ public class DreamSnow : MonoBehaviour
 
     public IEnumerator IStartDreamSnow(float speed)
     {
+        UserData.instance.CurrentBG = null;
         UserData.instance.specialEvent = SpecialEvent.DreamSnow;
         currentState = DreamSnowState.Start;
 
@@ -79,6 +80,8 @@ public class DreamSnow : MonoBehaviour
 
     public IEnumerator IRocketLaunch(float speed)
     {
+        UserData.instance.CurrentBG = null;
+
         currentState = DreamSnowState.Launch;
 
         AsyncOperationHandle<GameObject> old_handler = bg_handler;

@@ -85,7 +85,7 @@ public class BackgroundManager : MonoBehaviour
     public IEnumerator IBlackFadeBackground(string bg_adress, float speed)
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
-        storytext.GetComponent<Text>().text = "";
+        TextBoxController.instance.SetStoryText("");
 
         // Удаление старых фонов    
         if (bg_handler.IsValid())

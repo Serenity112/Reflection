@@ -8,7 +8,22 @@ public class TextBoxController : MonoBehaviour
 {
     public static TextBoxController instance = null;
 
+    [SerializeField]
+    private GameObject StoryText;
+
     private AsyncOperationHandle<GameObject> _textBoxThemeHandler;
+
+    public enum TextBoxStyle
+    {
+        Default,
+        Blackfade,
+    }
+
+    public enum ThemeStyle
+    {
+        Light,
+        Dark,
+    }
 
     void Start()
     {
@@ -20,11 +35,6 @@ public class TextBoxController : MonoBehaviour
         {
             Destroy(gameObject);
         }
-    }
-    public enum ThemeStyle
-    {
-        Light,
-        Dark,
     }
 
     public IEnumerator IChangeTheme(ThemeStyle theme, float alpha)
@@ -48,6 +58,19 @@ public class TextBoxController : MonoBehaviour
             Color tempColor = image.color;
             tempColor.a = alpha;
             image.color = tempColor;
+        }
+    }
+
+    public void SetStoryText(string text)
+    {
+        StoryText.GetComponent<Text>().text = text;
+    }
+
+    public void SetTextBoxStyle(TextBoxStyle style)
+    {
+        switch (style)
+        {
+
         }
     }
 }

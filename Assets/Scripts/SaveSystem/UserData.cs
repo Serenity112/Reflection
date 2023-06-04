@@ -225,7 +225,7 @@ public class UserData : MonoBehaviour
 
         // Special Events
         // Отгрузка
-        yield return StartCoroutine(UnloadSpecialEvent(newSave.specailEvent));
+        yield return StartCoroutine(UnloadSpecialEvent(specialEvent));
         // Загрузка
         specialEvent = newSave.specailEvent;
         yield return StartCoroutine(LoadSpecialEvent(specialEvent, saveNum));

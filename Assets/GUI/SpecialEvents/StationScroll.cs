@@ -60,6 +60,7 @@ public class StationScroll : MonoBehaviour
 
     public IEnumerator IAppearBg(float speed)
     {
+        UserData.instance.CurrentBG = null;
         UserData.instance.specialEvent = SpecialEvent.StationScroll;
         currentState = StationScrollState.Start;
 
@@ -74,7 +75,7 @@ public class StationScroll : MonoBehaviour
 
     public IEnumerator IScrollBg(float speed, bool skip)
     {
-        DialogMod.denyNextDialog = true;
+        UserData.instance.CurrentBG = null;
 
         currentState = StationScrollState.Scroll;
 
@@ -82,12 +83,11 @@ public class StationScroll : MonoBehaviour
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed));
 
         bg_handler.Result.transform.GetChild(0).gameObject.GetComponent<Animator>().Play("Scroll");
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(2.1f);
+        TextBoxController.instance.SetStoryText("");
 
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, true, speed));
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed));
-
-        DialogMod.denyNextDialog = false;
+        yield return StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed));
     }
 
     public IEnumerator IEndScroll(string new_bg, float speed)

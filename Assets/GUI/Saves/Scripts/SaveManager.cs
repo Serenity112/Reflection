@@ -68,9 +68,9 @@ public class SaveManager : MonoBehaviour
             GameCamera = PanelsManager.instance.GameCamera;
         }
 
-        if (ES3.KeyExists("saveTaken", "screenshots.es3"))
+        if (ES3.KeyExists("saveTaken", "SavesTaken.es3"))
         {
-            savesTaken = ES3.Load<bool[]>("saveTaken", "screenshots.es3");
+            savesTaken = ES3.Load<bool[]>("saveTaken", "SavesTaken.es3");
         }
 
         if (ES3.KeyExists("saveDataTimes", "SaveFiles.es3"))
@@ -378,7 +378,7 @@ public class SaveManager : MonoBehaviour
         ES3.SaveImage(texture, "screenshots/screenshot" + actualSaveNum + ".png");
 
         savesTaken[currentPage * savesPerPage + saveNum] = true;
-        ES3.Save<bool[]>("saveTaken", savesTaken, "screenshots.es3");
+        ES3.Save<bool[]>("saveTaken", savesTaken, "SavesTaken.es3");
 
 
         screenshot.GetComponent<RawImage>().texture = texture;
@@ -429,7 +429,7 @@ public class SaveManager : MonoBehaviour
         }
 
         savesTaken[currentPage * savesPerPage + saveNum] = true;
-        ES3.Save<bool[]>("saveTaken", savesTaken, "screenshots.es3");
+        ES3.Save<bool[]>("saveTaken", savesTaken, "SavesTaken.es3");
 
         StaticVariables.UIsystemDown = false;
     }
@@ -442,7 +442,7 @@ public class SaveManager : MonoBehaviour
         {
             ES3.DeleteFile("screenshots/screenshot" + actualSaveNum + ".png");
             savesTaken[actualSaveNum] = false;
-            ES3.Save<bool[]>("saveTaken", savesTaken, "screenshots.es3");
+            ES3.Save<bool[]>("saveTaken", savesTaken, "SavesTaken.es3");
 
             // Если после УДАЛЕНИЯ не осталось true сейвов, значит удалён последний => триггер 0
             if (!savesTaken.Contains(true))

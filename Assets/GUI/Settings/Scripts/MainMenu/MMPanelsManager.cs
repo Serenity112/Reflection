@@ -118,6 +118,7 @@ public class MMPanelsManager : MonoBehaviour
                 int last_index = 0;
                 DateTime last_dt = new DateTime();
 
+                // ќпределение первого last_dt, чтобы далее с ним сравнивать
                 for (int i_beg = 0; i_beg < dates.Length; i_beg++)
                 {
                     if (dates[i_beg] != null && dates[i_beg] != string.Empty)
@@ -128,6 +129,7 @@ public class MMPanelsManager : MonoBehaviour
                     }
                 }
 
+                // ѕоиск минимальной даты
                 for (int i = last_index + 1; i < dates.Length; i++)
                 {
                     if (dates[i] != null && dates[i] != string.Empty)
