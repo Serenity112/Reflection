@@ -262,6 +262,10 @@ public class UserData : MonoBehaviour
         }
         DialogMod.denyNextDialog = false;
 
+        // «акрыть меню выбора, если оно вдруг есть
+        StartCoroutine(ChoiceManager.instance.HideOptionsBox(20f));
+        ChoiceManager.instance.ReleaseChoiceBox();
+
         flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex, null);
         CurrentCommandIndex--;
 

@@ -5,6 +5,7 @@ using Fungus;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.AddressableAssets;
 using System.Collections;
+using System.Linq;
 
 public class ChoiceManager : MonoBehaviour
 {
@@ -14,13 +15,15 @@ public class ChoiceManager : MonoBehaviour
 
     private AsyncOperationHandle<GameObject> _options_handler;
 
-    private GameObject result = null;
-
     private static string _optionsPrefabName = "OptionsBox";
 
     private float _fadeSpeed = 5f;
 
-    private string _currentChoice;
+    private ChoiceArr[] _currentChoices;
+
+    private string _currentChoiceCode;
+
+    private string _saveFileName = "SaveFiles.es3";
 
     [Serializable]
     public struct ChoiceArr
@@ -47,16 +50,17 @@ public class ChoiceManager : MonoBehaviour
     }
 
 
-    public void CreateChoice(ChoiceArr[] choices, string choiceName)
+    public void CreateChoice(ChoiceArr[] choices, string choiceCode)
     {
-        StartCoroutine(ICreateChoice(choices, choiceName));
+        StartCoroutine(ICreateChoice(choices, choiceCode));
     }
 
-    private IEnumerator ICreateChoice(ChoiceArr[] choices, string choiceName)
+    private IEnumerator ICreateChoice(ChoiceArr[] choices, string choiceCode)
     {
         DialogMod.denyNextDialog = true;
 
-        _currentChoice = choiceName;
+        _currentChoices = choices;
+        _currentChoiceCode = choiceCode;
 
         _options_handler = Addressables.InstantiateAsync(_optionsPrefabName, gameObject.GetComponent<RectTransform>(), false, true);
         yield return _options_handler;
@@ -66,7 +70,7 @@ public class ChoiceManager : MonoBehaviour
             Debug.Log("Error");
         }
 
-        result = _options_handler.Result;
+        GameObject result = _options_handler.Result;
 
         // Пока работает только для 2х выборов, исправить в дальнейших эпизодах
         for (int i = 0; i < 2; i++)
@@ -75,41 +79,60 @@ public class ChoiceManager : MonoBehaviour
             choiceButton.SetOptions(choices[i].Message, choices[i].BlockName);
         }
 
-        StartCoroutine(FadeManager.FadeObject(GameButtonsManager.instance.SkipButton, false, _fadeSpeed));
-        StartCoroutine(FadeManager.FadeObject(GameButtonsManager.instance.HideButton, false, _fadeSpeed));
-        StartCoroutine(FadeManager.FadeObject(GameButtonsManager.instance.LogButton, false, _fadeSpeed));
-        StartCoroutine(FadeManager.FadeObject(GameButtonsManager.instance.ContinueGame, false, _fadeSpeed));
-
-        StartCoroutine(FadeManager.FadeOnly(gameObject, true, _fadeSpeed));
-        yield return StartCoroutine(FadeManager.FadeObject(TextBox, false, _fadeSpeed));
+        yield return StartCoroutine(ShowOptionsBox(_fadeSpeed));
     }
 
     public IEnumerator LoadChoise(string blockName)
     {
         TextBoxController.instance.SetStoryText("");
 
-        StartCoroutine(FadeManager.FadeObject(GameButtonsManager.instance.SkipButton, true, _fadeSpeed));
-        StartCoroutine(FadeManager.FadeObject(GameButtonsManager.instance.HideButton, true, _fadeSpeed));
-        StartCoroutine(FadeManager.FadeObject(GameButtonsManager.instance.LogButton, true, _fadeSpeed));
-        StartCoroutine(FadeManager.FadeObject(GameButtonsManager.instance.ContinueGame, true, _fadeSpeed));
+        yield return StartCoroutine(HideOptionsBox(_fadeSpeed));
+        ReleaseChoiceBox();
 
-        StartCoroutine(FadeManager.FadeOnly(gameObject, false, _fadeSpeed));
-        yield return StartCoroutine(FadeManager.FadeObject(TextBox, true, _fadeSpeed));
+        for (int i = 0; i < _currentChoices.Length; i++)
+        {
+            if (_currentChoices[i].BlockName == blockName)
+            {
+                ES3.Save<int>($"Choice_{_currentChoiceCode}", i, _saveFileName);
+            }
+        }
 
+        LoadBlock(blockName);
+
+        DialogMod.denyNextDialog = false;
+    }
+
+    public IEnumerator ShowOptionsBox(float speed)
+    {
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            GameButtonsManager.instance.HideTextBoxButtons(speed),
+            FadeManager.FadeOnly(gameObject, true, speed),
+            FadeManager.FadeObject(TextBox, false, speed),
+        });
+    }
+
+    public IEnumerator HideOptionsBox(float speed)
+    {
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            GameButtonsManager.instance.ShowTextBoxButtons(speed),
+            FadeManager.FadeOnly(gameObject, false, speed),
+            FadeManager.FadeObject(TextBox, true, speed)
+        });
+    }
+
+    public void ReleaseChoiceBox()
+    {
         if (_options_handler.IsValid())
         {
             Addressables.ReleaseInstance(_options_handler);
         }
-
-        DialogMod.denyNextDialog = false;
-
-        LoadBlock(blockName);
     }
 
     private void LoadBlock(string blockName)
     {
         string currentBlock = UserData.instance.CurrentBlock;
-        Debug.Log("currentBlock: " + currentBlock);
         if (currentBlock != null)
         {
             Block activeBlock = PanelsManager.instance.flowchart.FindBlock(currentBlock);
@@ -120,7 +143,6 @@ public class ChoiceManager : MonoBehaviour
         }
 
         Block targetBlock = PanelsManager.instance.flowchart.FindBlock(blockName);
-        Debug.Log("targetBlock: " + blockName);
         UserData.instance.CurrentBlock = blockName;
         if (targetBlock != null)
         {

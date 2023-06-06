@@ -179,7 +179,7 @@ public class SpriteController : MonoBehaviour
             }
         }
 
-        Debug.Log(builder.ToString());
+        //Debug.Log(builder.ToString());
     }
 
     // SaveSpriteData
