@@ -34,8 +34,6 @@ public class ChoiceButton : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        Debug.Log("enter");
-
         if (_shrinkOnExit != null)
             StopCoroutine(_shrinkOnExit);
         _expandOnEnter = ExpandManager.ExpandObject(gameObject, _expandedScale, _expandTime);

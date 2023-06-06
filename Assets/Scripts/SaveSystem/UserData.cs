@@ -110,21 +110,28 @@ public class UserData : MonoBehaviour
     {
         SaveData newSave = new SaveData(saveNum);
 
+        // Фоны
         newSave.Background = instance.CurrentBG;
         newSave.CurrentBlock = instance.CurrentBlock;
 
+        // Команды
         newSave.CurrentCommandIndex = instance.CurrentCommandIndex;
 
+        //Спрайты
         newSave.SpriteData = SpriteController.instance.GameSpriteData;
 
+        // Музыка
         newSave.CurrentMusic = instance.CurrentMusic;
         newSave.CurrentAmbient = instance.CurrentAmbient;
         newSave.MusicSourceVolume = instance.MusicSourceVolume;
         newSave.AmbientSourceVolume = instance.AmbientSourceVolume;
 
+        // Ивенты
         newSave.specailEvent = instance.specialEvent;
         SaveSpecialEvent(newSave.specailEvent, saveNum);
 
+        // Выборы
+        ChoiceManager.instance.SaveChoices(saveNum);
 
         ES3.Save<SaveData>("SaveFile" + saveNum, newSave, "SaveFiles.es3");
 
@@ -262,9 +269,10 @@ public class UserData : MonoBehaviour
         }
         DialogMod.denyNextDialog = false;
 
-        // Закрыть меню выбора, если оно вдруг есть
+        // Выборы игрока
         StartCoroutine(ChoiceManager.instance.HideOptionsBox(20f));
         ChoiceManager.instance.ReleaseChoiceBox();
+        ChoiceManager.instance.LoadSavedChoices(saveNum);
 
         flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex, null);
         CurrentCommandIndex--;

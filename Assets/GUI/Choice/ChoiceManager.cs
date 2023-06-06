@@ -23,7 +23,10 @@ public class ChoiceManager : MonoBehaviour
 
     private string _currentChoiceCode;
 
+    private string _savedChoicesName = "SavedChoices";
     private string _saveFileName = "SaveFiles.es3";
+
+    private Dictionary<string, int> _saveFileChoices;
 
     [Serializable]
     public struct ChoiceArr
@@ -42,13 +45,9 @@ public class ChoiceManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        _saveFileChoices = new Dictionary<string, int>();
     }
-
-    void Start()
-    {
-
-    }
-
 
     public void CreateChoice(ChoiceArr[] choices, string choiceCode)
     {
@@ -93,7 +92,14 @@ public class ChoiceManager : MonoBehaviour
         {
             if (_currentChoices[i].BlockName == blockName)
             {
-                ES3.Save<int>($"Choice_{_currentChoiceCode}", i, _saveFileName);
+                if (_saveFileChoices.ContainsKey(blockName))
+                {
+                    _saveFileChoices[blockName] = i;
+                }
+                else
+                {
+                    _saveFileChoices.Add(blockName, i);
+                }
             }
         }
 
@@ -148,6 +154,24 @@ public class ChoiceManager : MonoBehaviour
         {
             targetBlock.Stop();
             PanelsManager.instance.flowchart.ExecuteBlock(targetBlock, 0);
+        }
+    }
+
+    public void SaveChoices(int saveNum)
+    {
+        string savedChoicesName = $"{_savedChoicesName}{saveNum}";
+        if (ES3.FileExists(_saveFileName))
+        {
+            ES3.Save<Dictionary<string, int>>(savedChoicesName, _saveFileChoices, _saveFileName);
+        }
+    }
+
+    public void LoadSavedChoices(int saveNum)
+    {
+        string savedChoicesName = $"{_savedChoicesName}{saveNum}";
+        if (ES3.FileExists(_saveFileName) && ES3.KeyExists(savedChoicesName, _saveFileName))
+        {
+            _saveFileChoices = ES3.Load<Dictionary<string, int>>(savedChoicesName, _saveFileName);
         }
     }
 }
