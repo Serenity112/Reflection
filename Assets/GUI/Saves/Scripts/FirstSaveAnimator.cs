@@ -31,7 +31,7 @@ public class FirstSaveAnimator : MonoBehaviour
 
     public void AppearCassette()
     {
-        if (ButtonUnsaved.interactable && !StaticVariables.ConfirmationPanelActive)
+        if (ButtonUnsaved.interactable && !StaticVariables.OverlayPanelActive)
         {
             if (CassetteFadeOut != null)
                 StopCoroutine(CassetteFadeOut);
@@ -43,7 +43,7 @@ public class FirstSaveAnimator : MonoBehaviour
 
     public void DisappearCassette()
     {
-        if (ButtonUnsaved.interactable && !StaticVariables.ConfirmationPanelActive)
+        if (ButtonUnsaved.interactable && !StaticVariables.OverlayPanelActive)
         {
             if (CassetteFadeIn != null)
                 StopCoroutine(CassetteFadeIn);

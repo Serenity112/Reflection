@@ -1,37 +1,34 @@
 using Fungus;
 using System;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using static StaticVariables;
 
-public class MMPanelsManager : MonoBehaviour
+public class MMPanelsManager : MonoBehaviour, IPanelsManager
 {
     public static MMPanelsManager instance = null;
 
-    [SerializeField]
-    private GameObject BlackPanel;
+    public GameObject BlackPanel;
+
+    public GameObject ActivePanels;
+
+    public GameObject MainMenuButtons;
+
+    public GameObject AboutUs;
 
     [SerializeField]
-    private GameObject ActivePanels;
-
-    [SerializeField]
-    private GameObject Buttons;
-
-    [SerializeField]
-    private GameObject AboutUs;
-
-    [SerializeField]
-    private float fadingSpeed = 5f;
+    private float FadingSpeed = 5f;
 
     private AsyncOperationHandle<GameObject> savesPanelHandler;
 
     private AsyncOperationHandle<GameObject> aboutUsHandler;
 
-    private void Start()
+    private string SaveFilesData;
+
+    private void Awake()
     {
         if (instance == null)
         {
@@ -42,24 +39,35 @@ public class MMPanelsManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        StaticVariables.ifInMainMenu = true;
+        PanelsConfig.CurrentManager = this;
 
-        UpdateButtonsState();
+        SaveFilesData = ES3Utils.SaveFilesData;
+
+        StaticVariables.ifInMainMenu = true;
     }
 
-    // Кнопки меню
-    private void UpdateButtonsState()
+    private void Start()
+    {
+        UpdateContinueButtonState();
+    }
+
+    public GameObject GetBlackPanel() => BlackPanel;
+
+    public GameObject GetActivePanelsParent() => ActivePanels;
+
+    // Состояние кнопки "Продолжить"
+    private void UpdateContinueButtonState()
     {
         try
         {
-            if (ES3.FileExists("SaveFiles.es3") && ES3.KeyExists("ContinueTrigger", "SaveFiles.es3"))
+            if (ES3.FileExists(SaveFilesData) && ES3.KeyExists("ContinueTrigger", SaveFilesData))
             {
-                StaticVariables.MainMenuContinueButtonAnimationTrigger = ES3.Load<MMContinueButtonState>("ContinueTrigger", "SaveFiles.es3");
+                StaticVariables.MainMenuContinueButtonAnimationTrigger = ES3.Load<MMContinueButtonState>("ContinueTrigger", SaveFilesData);
             }
         }
         catch (Exception)
         {
-            ES3Utils.FileRecovery("ContinueTrigger", "SaveFiles.es3");
+            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
 
         switch (StaticVariables.MainMenuContinueButtonAnimationTrigger)
@@ -71,12 +79,12 @@ public class MMPanelsManager : MonoBehaviour
                 AddContinueButton(); // Так как в сцене изначально кнопки нет, для анимации исчезания
                 StartCoroutine(IHideContinueButton());
                 StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.ButtonDeleted;
-                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.ButtonDeleted, "SaveFiles.es3");
+                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.ButtonDeleted, SaveFilesData);
                 break;
             case MMContinueButtonState.AppearAnimation:
                 StartCoroutine(IAppearContinueButton());
                 StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.ButtonAdded;
-                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.ButtonAdded, "SaveFiles.es3");
+                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.ButtonAdded, SaveFilesData);
                 break;
             case MMContinueButtonState.ButtonAdded:
                 AddContinueButton();
@@ -84,52 +92,53 @@ public class MMPanelsManager : MonoBehaviour
         }
     }
 
+    // Анимации кнопки "Продолжить"
     private void AddContinueButton()
     {
-        Buttons.GetComponent<Animator>().Play("ConstantAppear");
+        MainMenuButtons.GetComponent<Animator>().Play("ConstantAppear");
     }
 
     private void DeleteContinueButton()
     {
-        Buttons.GetComponent<Animator>().Play("ConstantRemove");
+        MainMenuButtons.GetComponent<Animator>().Play("ConstantRemove");
     }
 
     private IEnumerator IAppearContinueButton()
     {
         yield return new WaitForSeconds(0.33f);
-        Buttons.GetComponent<Animator>().Play("ContinueButtonAppear");
+        MainMenuButtons.GetComponent<Animator>().Play("ContinueButtonAppear");
     }
 
     private IEnumerator IHideContinueButton()
     {
         yield return new WaitForSeconds(0.33f);
-        Buttons.GetComponent<Animator>().Play("ContinueButtonRemove");
+        MainMenuButtons.GetComponent<Animator>().Play("ContinueButtonRemove");
     }
 
-    // Продолжить игру
+    // Нажатие кнопки "Продолжиь игру"
     public void ContinueGame()
     {
         try
         {
-            if (ES3.KeyExists("saveDataTimes", "SaveFiles.es3"))
+            if (ES3.FileExists(SaveFilesData) && ES3.KeyExists("saveDataTimes", SaveFilesData))
             {
-                string[] dates = ES3.Load<string[]>("saveDataTimes", "SaveFiles.es3");
+                string[] dates = ES3.Load<string[]>("saveDataTimes", SaveFilesData);
 
                 int last_index = 0;
                 DateTime last_dt = new DateTime();
 
                 // Определение первого last_dt, чтобы далее с ним сравнивать
-                for (int i_beg = 0; i_beg < dates.Length; i_beg++)
+                for (int i = 0; i < dates.Length; i++)
                 {
-                    if (dates[i_beg] != null && dates[i_beg] != string.Empty)
+                    if (dates[i] != null && dates[i] != string.Empty)
                     {
-                        last_index = i_beg;
-                        last_dt = DateTime.Parse(dates[i_beg]);
+                        last_index = i;
+                        last_dt = DateTime.Parse(dates[i]);
                         break;
                     }
                 }
 
-                // Поиск минимальной даты
+                // Поиск минимальной даты начиная со следующей после найденной в предыдущем цикле
                 for (int i = last_index + 1; i < dates.Length; i++)
                 {
                     if (dates[i] != null && dates[i] != string.Empty)
@@ -146,36 +155,31 @@ public class MMPanelsManager : MonoBehaviour
 
                 StartCoroutine(ILoadGame(last_index));
             }
+            else
+            {
+                // Кнопка "Продлжить" не может существовать в этом случае. Но на случай коррапта она дополнительно скрывается.
+                DeleteContinueButton();
+            }
         }
-        catch (Exception) // Cottupted save
+        catch (Exception)
         {
-            ES3Utils.FileRecovery("saveDataTimes", "SaveFiles.es3");
-            StartCoroutine(ILoadGame(-1));
+            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
     }
 
     // Новая игра
-    public void StartNewGame()
-    {
-        StartCoroutine(ILoadGame(-1));
-    }
+    public void StartNewGame() => StartCoroutine(ILoadGame(-1));
 
     // Сейвы
-    public void OpenSaveMenu()
-    {
-        StartCoroutine(IOpenSaveMenu());
-    }
+    public void OpenSaveMenu() => StartCoroutine(IOpenSaveMenu());
 
-    public void CloseSaveMenu()
-    {
-        StartCoroutine(ICloseSaveMenu());
-    }
+    public void CloseSaveMenu() => StartCoroutine(ICloseSaveMenu());
 
     private IEnumerator IOpenSaveMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
         MMButtonsManager.instance.unlineButtons();
-        Buttons.SetActive(false);
+        MainMenuButtons.SetActive(false);
 
         savesPanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return savesPanelHandler;
@@ -184,7 +188,7 @@ public class MMPanelsManager : MonoBehaviour
         {
             savesPanelHandler.Result.name = "SaveGuiPanel";
 
-            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, fadingSpeed));
+            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
         }
         else
         {
@@ -194,22 +198,22 @@ public class MMPanelsManager : MonoBehaviour
 
     private IEnumerator ICloseSaveMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
         Addressables.ReleaseInstance(savesPanelHandler);
 
-        Buttons.SetActive(true);
+        MainMenuButtons.SetActive(true);
 
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, fadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
 
-        yield return Resources.UnloadUnusedAssets();
+        Resources.UnloadUnusedAssets();
 
-        UpdateButtonsState();
+        UpdateContinueButtonState();
     }
 
     public IEnumerator ILoadGame(int actualSaveNum)
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
         StaticVariables.StartingLoadSaveFile = actualSaveNum;
 
@@ -224,14 +228,11 @@ public class MMPanelsManager : MonoBehaviour
     }
 
     // Меню "О нас"
-    public void OpenInfoMenu()
-    {
-        StartCoroutine(IOpenInfoMenu());
-    }
+    public void OpenInfoMenu() => StartCoroutine(IOpenInfoMenu());
 
     private IEnumerator IOpenInfoMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
         aboutUsHandler = Addressables.InstantiateAsync("AboutUs", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return aboutUsHandler;
@@ -240,7 +241,7 @@ public class MMPanelsManager : MonoBehaviour
         {
             aboutUsHandler.Result.name = "AboutUs";
 
-            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, fadingSpeed));
+            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
         }
         else
         {
@@ -248,20 +249,17 @@ public class MMPanelsManager : MonoBehaviour
         }
     }
 
-    public void CloseInfoMenu()
-    {
-        StartCoroutine(ICloseInfoMenu());
-    }
+    public void CloseInfoMenu() => StartCoroutine(ICloseInfoMenu());
 
     private IEnumerator ICloseInfoMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, fadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
         Addressables.ReleaseInstance(aboutUsHandler);
 
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, fadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
 
-        yield return Resources.UnloadUnusedAssets();
+        Resources.UnloadUnusedAssets();
     }
 
     // Выход из игры

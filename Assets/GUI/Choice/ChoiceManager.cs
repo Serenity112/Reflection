@@ -5,13 +5,13 @@ using Fungus;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.AddressableAssets;
 using System.Collections;
-using System.Linq;
 
 public class ChoiceManager : MonoBehaviour
 {
     public static ChoiceManager instance = null;
 
-    public GameObject TextBox;
+    [SerializeField]
+    private GameObject TextBox;
 
     private AsyncOperationHandle<GameObject> _options_handler;
 
@@ -94,11 +94,11 @@ public class ChoiceManager : MonoBehaviour
             {
                 if (_saveFileChoices.ContainsKey(blockName))
                 {
-                    _saveFileChoices[blockName] = i;
+                    _saveFileChoices[_currentChoiceCode] = i;
                 }
                 else
                 {
-                    _saveFileChoices.Add(blockName, i);
+                    _saveFileChoices.Add(_currentChoiceCode, i);
                 }
             }
         }

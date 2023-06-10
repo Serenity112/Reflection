@@ -13,7 +13,7 @@ public class MainMenuLoadButton : MonoBehaviour
     }
     private void OnMouseEnter()
     {
-        if (!StaticVariables.ConfirmationPanelActive)
+        if (!StaticVariables.OverlayPanelActive)
         {
             DeleteCross.GetComponent<DeleteCrossButton>().AppearCross();
             mainMenuLoad.AppearCassette();
@@ -22,7 +22,7 @@ public class MainMenuLoadButton : MonoBehaviour
 
     private void OnMouseExit()
     {
-        if (!StaticVariables.ConfirmationPanelActive)
+        if (!StaticVariables.OverlayPanelActive)
         {
             DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
             mainMenuLoad.DisappearCassette();

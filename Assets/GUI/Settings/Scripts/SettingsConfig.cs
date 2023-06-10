@@ -26,7 +26,7 @@ public enum SettingsOptions
     WindowsScreen,
 
     BlackLines,
-    Expand,
+    Zoom,
 
     SkipEveryting,
     SkipRead,
@@ -60,7 +60,7 @@ public class SettingsConfig
 
     public static List<ISettingsOption> options = new List<ISettingsOption>();
 
-    public static ISettingsManager currentManager;
+    public static ISettingsManager currentManager { get; set; }
 
     public static float spacingSpeed = 5f;
 
@@ -229,7 +229,7 @@ public class SettingsConfig
                     rect.sizeDelta = new Vector2(1920f, 1080f);
                 }
                 break;
-            case SettingsOptions.Expand:
+            case SettingsOptions.Zoom:
                 canvas.GetComponent<CanvasScaler>().screenMatchMode = CanvasScaler.ScreenMatchMode.Shrink;
 
                 foreach (Transform child in canvas.transform)

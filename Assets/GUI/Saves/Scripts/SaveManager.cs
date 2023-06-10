@@ -477,7 +477,7 @@ public class SaveManager : MonoBehaviour
         }
         else
         {
-            PanelsManager.instance.closeSaveMenu();
+            PanelsManager.instance.CloseSaveMenu();
         }
     }
 }

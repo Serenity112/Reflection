@@ -17,13 +17,19 @@ public class MMOptionButton : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        StopAllCoroutines();
-        StartCoroutine(FadeManager.FadeObject(spacing, true, speed));
+        if (!StaticVariables.OverlayPanelActive)
+        {
+            StopAllCoroutines();
+            StartCoroutine(FadeManager.FadeObject(spacing, true, speed));
+        }
     }
 
     private void OnMouseExit()
     {
-        StopAllCoroutines();
-        StartCoroutine(FadeManager.FadeObject(spacing, false, speed));
+        if (!StaticVariables.OverlayPanelActive)
+        {
+            StopAllCoroutines();
+            StartCoroutine(FadeManager.FadeObject(spacing, false, speed));
+        }
     }
 }

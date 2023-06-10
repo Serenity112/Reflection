@@ -67,7 +67,7 @@ public class MainMenuLoad : MonoBehaviour
 
     IEnumerator IClick()
     {
-        StaticVariables.ConfirmationPanelActive = true;
+        StaticVariables.OverlayPanelActive = true;
 
         Vector3 currScale = Cassette.transform.localScale;
 
@@ -76,13 +76,13 @@ public class MainMenuLoad : MonoBehaviour
         yield return StartCoroutine(ExpandManager.ExpandObject(Cassette, 0.9f, 0.05f));
         yield return StartCoroutine(ExpandManager.ExpandObject(Cassette, currScale, 0.05f));
 
-        yield return StartCoroutine(ConfirmationPanel.CreatePanel("Загрузить сохранение?", LoadFile(), CancelLoad()));
+        yield return StartCoroutine(ConfirmationPanel.instance.CreateConfirmationPanel("Загрузить сохранение?", LoadFile(), CancelLoad()));
     }
 
     IEnumerator LoadFile()
     {
         StartCoroutine(FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed));
-        StartCoroutine(ConfirmationPanel.ClosePanel());
+        StartCoroutine(ConfirmationPanel.instance.ClosePanel());
 
         int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
         yield return StartCoroutine(MMPanelsManager.instance.ILoadGame(actualSaveNum));
@@ -94,7 +94,7 @@ public class MainMenuLoad : MonoBehaviour
     {
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         StartCoroutine(FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed));
-        yield return StartCoroutine(ConfirmationPanel.ClosePanel());
+        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
 
         cassetteAnimator.SetTrigger("StopLoad");
 
@@ -105,7 +105,7 @@ public class MainMenuLoad : MonoBehaviour
     // Удаление сейва
     public void DeleteAction()
     {
-        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.ConfirmationPanelActive)
+        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.OverlayPanelActive)
         {
             StartCoroutine(IDeleteDialog());
         }
@@ -113,8 +113,8 @@ public class MainMenuLoad : MonoBehaviour
 
     IEnumerator IDeleteDialog()
     {
-        StaticVariables.ConfirmationPanelActive = true;
-        yield return StartCoroutine(ConfirmationPanel.CreatePanel("Удалить сохранение?", IDeleteSave(), ICancelDelete()));
+        StaticVariables.OverlayPanelActive = true;
+        yield return StartCoroutine(ConfirmationPanel.instance.CreateConfirmationPanel("Удалить сохранение?", IDeleteSave(), ICancelDelete()));
     }
     IEnumerator IDeleteSave()
     {
@@ -126,7 +126,7 @@ public class MainMenuLoad : MonoBehaviour
         StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed));
         SaveManager.instance.RemoveDateTime(saveNum);
 
-        yield return StartCoroutine(ConfirmationPanel.ClosePanel());
+        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
 
         SaveManager.instance.DeleteSave(saveNum);
     }
@@ -134,6 +134,6 @@ public class MainMenuLoad : MonoBehaviour
     IEnumerator ICancelDelete()
     {
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-        yield return StartCoroutine(ConfirmationPanel.ClosePanel());         
+        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());         
     }
 }

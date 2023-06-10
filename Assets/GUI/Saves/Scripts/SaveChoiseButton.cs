@@ -20,7 +20,7 @@ public class SaveChoiseButton : MonoBehaviour
     }
     private void OnMouseEnter()
     {
-        if (!StaticVariables.ConfirmationPanelActive)
+        if (!StaticVariables.OverlayPanelActive)
         {
             DeleteCross.GetComponent<DeleteCrossButton>().AppearCross();
             saveChoiseIconAnimator.appearSide(side);
@@ -29,7 +29,7 @@ public class SaveChoiseButton : MonoBehaviour
 
     private void OnMouseExit()
     {
-        if (!StaticVariables.ConfirmationPanelActive)
+        if (!StaticVariables.OverlayPanelActive)
         {
             saveChoiseIconAnimator.removeSide(side);
             DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();

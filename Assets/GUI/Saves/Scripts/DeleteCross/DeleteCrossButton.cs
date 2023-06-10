@@ -32,7 +32,7 @@ public class DeleteCrossButton : MonoBehaviour
         expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
         StartCoroutine(expandOnEnter);
 
-        if (!StaticVariables.ConfirmationPanelActive)
+        if (!StaticVariables.OverlayPanelActive)
         {
             AppearCross();
         }
@@ -45,7 +45,7 @@ public class DeleteCrossButton : MonoBehaviour
         shrinkOnExit = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
         StartCoroutine(shrinkOnExit);
 
-        if (!StaticVariables.ConfirmationPanelActive)
+        if (!StaticVariables.OverlayPanelActive)
         {
             DisappearCross();
         }
