@@ -56,6 +56,9 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
             Destroy(gameObject);
         }
 
+        
+        PanelsConfig.CurrentManager = this;
+
         StaticVariables.ifInMainMenu = false;
     }
 

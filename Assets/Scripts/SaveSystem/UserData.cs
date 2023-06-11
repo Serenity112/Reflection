@@ -78,7 +78,11 @@ public class UserData : MonoBehaviour
 
     private const string _startingDayName = "Dream";
 
-    private void Start()
+    private static string SaveFileName;
+    private static string SaveFilesFolder;
+    private static string SaveFilesData;
+
+    private void Awake()
     {
         if (instance == null)
         {
@@ -95,6 +99,13 @@ public class UserData : MonoBehaviour
 
         CurrentBlock = null;
 
+        SaveFileName = SaveSystemUtils.SaveFileName;
+        SaveFilesFolder = SaveSystemUtils.SaveFilesFolder;
+        SaveFilesData = SaveSystemUtils.SaveFilesData;
+    }
+
+    private void Start()
+    {
         // Сейв, заданный в главном меню
         if (StaticVariables.StartingLoadSaveFile == -1)
         {
@@ -133,7 +144,7 @@ public class UserData : MonoBehaviour
         // Выборы
         ChoiceManager.instance.SaveChoices(saveNum);
 
-        ES3.Save<SaveData>("SaveFile" + saveNum, newSave, "SaveFiles.es3");
+        ES3.Save<SaveData>("SaveFile" + saveNum, newSave, $"{SaveFilesFolder}/{SaveFileName}{saveNum}.es3");
 
         //newSave.CurrentOst = audiomanager.currentOst;
         //
@@ -156,10 +167,10 @@ public class UserData : MonoBehaviour
             case SpecialEvent.none:
                 break;
             case SpecialEvent.DreamSnow:
-                ES3.Save<DreamSnowState>("DreamSnowSave" + saveNum, DreamSnow.instance.currentState, "SpecialEvents.es3");
+                ES3.Save<DreamSnowState>("DreamSnowSave" + saveNum, DreamSnow.instance.currentState, SaveFilesData);
                 break;
             case SpecialEvent.StationScroll:
-                ES3.Save<StationScrollState>("StationScrollSave" + saveNum, StationScroll.instance.currentState, "SpecialEvents.es3");
+                ES3.Save<StationScrollState>("StationScrollSave" + saveNum, StationScroll.instance.currentState, SaveFilesData);
                 break;
         }
     }
@@ -186,11 +197,11 @@ public class UserData : MonoBehaviour
             case SpecialEvent.none:
                 break;
             case SpecialEvent.DreamSnow:
-                DreamSnowState dreamSnowState = ES3.Load<DreamSnowState>("DreamSnowSave" + saveNum, "SpecialEvents.es3");
+                DreamSnowState dreamSnowState = ES3.Load<DreamSnowState>("DreamSnowSave" + saveNum, SaveFilesData);
                 yield return StartCoroutine(DreamSnow.instance.ILoadEventByState(dreamSnowState));
                 break;
             case SpecialEvent.StationScroll:
-                StationScrollState stationScrollState = ES3.Load<StationScrollState>("StationScrollSave" + saveNum, "SpecialEvents.es3");
+                StationScrollState stationScrollState = ES3.Load<StationScrollState>("StationScrollSave" + saveNum, SaveFilesData);
                 yield return StartCoroutine(StationScroll.instance.ILoadEventByState(stationScrollState));
                 break;
         }
@@ -200,7 +211,8 @@ public class UserData : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
 
-        SaveData newSave = ES3.Load<SaveData>("SaveFile" + saveNum, "SaveFiles.es3");
+        string fileName = $"{SaveFilesFolder}/{SaveFileName}{saveNum}.es3";
+        SaveData newSave = ES3.Load<SaveData>("SaveFile" + saveNum, fileName);
 
         Flowchart flowchart = PanelsManager.instance.flowchart;
 

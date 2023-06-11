@@ -1,4 +1,3 @@
-using Fungus;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -41,7 +40,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         PanelsConfig.CurrentManager = this;
 
-        SaveFilesData = ES3Utils.SaveFilesData;
+        SaveFilesData = SaveSystemUtils.SaveFilesData;
 
         StaticVariables.ifInMainMenu = true;
     }

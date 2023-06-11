@@ -13,18 +13,16 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
     private GameObject MainCanvas;
 
     [SerializeField]
+    private AudioMixer AudioMixer;
+
     private GameObject ActivePanels;
 
-    [SerializeField]
     private GameObject BlackPanel;
 
     [SerializeField]
-    private AudioMixer audioMixer;
+    private float FadingSpeed = 5f;
 
-    [SerializeField]
-    private float settingsSpeed = 5f;
-
-    private AsyncOperationHandle<GameObject> settingsPanelHandler;
+    private AsyncOperationHandle<GameObject> handler;
 
     private void Awake()
     {
@@ -36,6 +34,15 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
         {
             Destroy(gameObject);
         }
+
+        SettingsConfig.currentManager = this;
+    }
+
+    private void OnEnable()
+    {
+        ActivePanels = PanelsConfig.CurrentManager.GetActivePanelsParent();
+
+        BlackPanel = PanelsConfig.CurrentManager.GetBlackPanel();
     }
 
     void Start()
@@ -57,17 +64,15 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
 
     private IEnumerator IOpenSettings()
     {
-        SettingsConfig.currentManager = this.GetComponent<MMSettingsManager>();
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, settingsSpeed));
+        handler = Addressables.InstantiateAsync("SettingsGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
+        yield return handler;
 
-        settingsPanelHandler = Addressables.InstantiateAsync("SettingsGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
-        yield return settingsPanelHandler;
-
-        if (settingsPanelHandler.Status == AsyncOperationStatus.Succeeded)
+        if (handler.Status == AsyncOperationStatus.Succeeded)
         {
-            settingsPanelHandler.Result.name = "SettingsGui";
-            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, settingsSpeed));
+            handler.Result.name = "SettingsGuiPanel";
+            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
         }
         else
         {
@@ -76,11 +81,11 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
     }
     private IEnumerator ICloseSettings()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, settingsSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
-        Addressables.ReleaseInstance(settingsPanelHandler);
+        Addressables.ReleaseInstance(handler);
 
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, settingsSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
 
         Resources.UnloadUnusedAssets();
     }
@@ -99,13 +104,13 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
                 SettingsConfig.ChangeResoulution(value);
                 break;
             case Settings.masterVolume:
-                SettingsConfig.SetVolume(audioMixer, "MasterVol", data / 100); // Деление на 100 т.к. метод принимает числа от 0 до 1, а сейвах идут проценты от 0 до 100
+                SettingsConfig.SetVolume(AudioMixer, "MasterVol", data / 100); // Деление на 100 т.к. метод принимает числа от 0 до 1, а сейвах идут проценты от 0 до 100
                 break;
             case Settings.musicVolume:
-                SettingsConfig.SetVolume(audioMixer, "MusicVol", data / 100);
+                SettingsConfig.SetVolume(AudioMixer, "MusicVol", data / 100);
                 break;
             case Settings.soundVolume:
-                SettingsConfig.SetVolume(audioMixer, "SoundVol", data / 100);
+                SettingsConfig.SetVolume(AudioMixer, "SoundVol", data / 100);
                 break;
         }
     }
@@ -120,9 +125,9 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
 
             if (setting == Settings.masterVolume)
             {
-                audioMixer.SetFloat("MasterVol", 0);
+                AudioMixer.SetFloat("MasterVol", 0);
                 float targetVolume_db = Mathf.Log10(data / 100) * 20;
-                StartCoroutine(FadeVolume(audioMixer, "MasterVol", 3f, targetVolume_db));
+                StartCoroutine(FadeVolume(AudioMixer, "MasterVol", 3f, targetVolume_db));
             }
             else
             {
@@ -131,14 +136,14 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
         }
     }
 
-    private static IEnumerator FadeVolume(AudioMixer mixer, string exposedParam, float duration, float targetVolume)
+    private static IEnumerator FadeVolume(AudioMixer mixer, string exposedParam, float duration, float targetVolumeDB)
     {
         float currentTime = 0;
         mixer.GetFloat(exposedParam, out float currentVol);
         while (currentTime < duration)
         {
             currentTime += Time.deltaTime;
-            float newVol = Mathf.Lerp(currentVol, targetVolume, currentTime / duration);
+            float newVol = Mathf.Lerp(currentVol, targetVolumeDB, currentTime / duration);
             mixer.SetFloat(exposedParam, newVol);
             yield return null;
         }

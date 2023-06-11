@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using static StaticVariables;
+using System.Collections.Generic;
 
 public enum SavePageScroll
 {
@@ -40,8 +41,13 @@ public class SaveManager : MonoBehaviour
 
     [HideInInspector] public string[] saveDataTimes = new string[maxPages * savesPerPage];
 
-
     public int currentPage = 0;
+
+    private static string SaveFilesData;
+    private static string SaveFileName;
+
+    private static string ScreenshotsFolder;
+    private static string SaveFilesFolder;
 
     void Start()
     {
@@ -53,6 +59,11 @@ public class SaveManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        SaveFilesData = SaveSystemUtils.SaveFilesData;
+        SaveFilesFolder = SaveSystemUtils.SaveFilesFolder;
+        SaveFileName = SaveSystemUtils.SaveFileName;
+        ScreenshotsFolder = SaveSystemUtils.ScreenshotsFolder;
 
         GameObject Files = transform.GetChild(0).gameObject;
 
@@ -68,14 +79,14 @@ public class SaveManager : MonoBehaviour
             GameCamera = PanelsManager.instance.GameCamera;
         }
 
-        if (ES3.KeyExists("saveTaken", "SavesTaken.es3"))
+        if (ES3.FileExists(SaveFilesData) && ES3.KeyExists("saveTaken", SaveFilesData))
         {
-            savesTaken = ES3.Load<bool[]>("saveTaken", "SavesTaken.es3");
+            savesTaken = ES3.Load<bool[]>("saveTaken", SaveFilesData);
         }
 
-        if (ES3.KeyExists("saveDataTimes", "SaveFiles.es3"))
+        if (ES3.FileExists(SaveFilesData) && ES3.KeyExists("saveDataTimes", SaveFilesData))
         {
-            saveDataTimes = ES3.Load<string[]>("saveDataTimes", "SaveFiles.es3");
+            saveDataTimes = ES3.Load<string[]>("saveDataTimes", SaveFilesData);
         }
         else // Стартовая инициализация
         {
@@ -83,14 +94,13 @@ public class SaveManager : MonoBehaviour
             {
                 saveDataTimes[i] = string.Empty;
             }
-            ES3.Save<string[]>("saveDataTimes", saveDataTimes, "SaveFiles.es3");
+            ES3.Save<string[]>("saveDataTimes", saveDataTimes, SaveFilesData);
         }
 
         bottomPages = bottomPagesObj.GetComponent<BottomPages>();
 
         FirstLoad();
     }
-
 
     public void ClearCurrent()
     {
@@ -113,7 +123,6 @@ public class SaveManager : MonoBehaviour
             switch (side)
             {
                 case SavePageScroll.Left:
-
                     if (currentPage > 0)
                     {
                         StaticVariables.UIsystemDown = true;
@@ -170,7 +179,7 @@ public class SaveManager : MonoBehaviour
 
                 saveFileFields.overPanel.GetComponent<CanvasGroup>().alpha = 1f; // Overpanel
 
-                var texture = ES3.LoadImage("screenshots/screenshot" + saveNum + ".png");
+                var texture = ES3.LoadImage($"{ScreenshotsFolder}/screenshot{saveNum}.png");
                 texture.name = "screenshot" + saveNum;
                 currentTextures[saveNum] = texture;
 
@@ -250,7 +259,7 @@ public class SaveManager : MonoBehaviour
                 saveFileFields.datetime.GetComponent<Text>().text = saveDataTimes[actualSaveNum];
                 StartCoroutine(FadeManager.FadeOnly(saveFileFields.datetime, true, pagesScrollSpeed));
 
-                var texture = ES3.LoadImage("screenshots/screenshot" + actualSaveNum + ".png");
+                var texture = ES3.LoadImage($"{ScreenshotsFolder}/screenshot{actualSaveNum}.png");
                 texture.name = "screenshot" + actualSaveNum;
                 currentTextures[i] = texture;
                 allScreenshots[i].GetComponent<RawImage>().texture = texture;
@@ -266,15 +275,7 @@ public class SaveManager : MonoBehaviour
             yield return null;
         }
 
-        firstActiveSave = -1;
-        for (int i = 0; i < savesPerPage; i++)
-        {
-            if (savesTaken[pageToLoad * savesPerPage + i])
-            {
-                firstActiveSave = i;
-                break;
-            }
-        }
+        List<IEnumerator> enumerators = new List<IEnumerator>();
 
         // Вцветание новых скринов
         for (int i = 0; i < savesPerPage; i++)
@@ -292,8 +293,7 @@ public class SaveManager : MonoBehaviour
 
             if (savesTaken[saveNum])
             {
-                if (i != firstActiveSave)
-                    StartCoroutine(FadeManager.FadeOnly(allScreenshots[i], true, pagesScrollSpeed));
+                enumerators.Add(FadeManager.FadeOnly(allScreenshots[i], true, pagesScrollSpeed));
 
                 if (StaticVariables.ifInMainMenu)
                 {
@@ -328,8 +328,8 @@ public class SaveManager : MonoBehaviour
                 saveFileFields.AllowOverPanel = false;
             }
         }
-        if (firstActiveSave != -1)
-            yield return StartCoroutine(FadeManager.FadeOnly(allScreenshots[firstActiveSave], true, pagesScrollSpeed));
+
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators));
         //yield return new WaitForSeconds(0.5f);
 
         StaticVariables.UIsystemDown = false;
@@ -367,18 +367,18 @@ public class SaveManager : MonoBehaviour
         if (bufferTexture != null)
             Destroy(bufferTexture);
 
-        if (ES3.FileExists("screenshots/screenshot" + actualSaveNum + ".png"))
+        string fileName = $"{ScreenshotsFolder}/screenshot{actualSaveNum}.png";
+        if (ES3.FileExists(fileName))
         {
-            ES3.DeleteFile("screenshots/screenshot" + actualSaveNum + ".png");
+            ES3.DeleteFile(fileName);
         }
-
 
         currentTextures[saveNum] = texture;
 
-        ES3.SaveImage(texture, "screenshots/screenshot" + actualSaveNum + ".png");
+        ES3.SaveImage(texture, fileName);
 
         savesTaken[currentPage * savesPerPage + saveNum] = true;
-        ES3.Save<bool[]>("saveTaken", savesTaken, "SavesTaken.es3");
+        ES3.Save<bool[]>("saveTaken", savesTaken, SaveFilesData);
 
 
         screenshot.GetComponent<RawImage>().texture = texture;
@@ -419,39 +419,43 @@ public class SaveManager : MonoBehaviour
 
         currentTextures[saveNum] = texture;
 
-        ES3.SaveImage(texture, "screenshots/screenshot" + actualSaveNum + ".png");
+        string fileName = $"{ScreenshotsFolder}/screenshot{actualSaveNum}.png";
+        ES3.SaveImage(texture, fileName);
 
         // SetScreenshot вызывается только во время 1го сейва. Если до 1го сейва не было сейвов => триггер AppearAnimation
         if (!savesTaken.Contains(true))
         {
             StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.AppearAnimation;
-            ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.AppearAnimation, "SaveFiles.es3");
+            ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.AppearAnimation, SaveFilesData);
         }
 
         savesTaken[currentPage * savesPerPage + saveNum] = true;
-        ES3.Save<bool[]>("saveTaken", savesTaken, "SavesTaken.es3");
+        ES3.Save<bool[]>("saveTaken", savesTaken, SaveFilesData);
 
         StaticVariables.UIsystemDown = false;
     }
 
-    public void DeleteSave(int savenum)
+    public void DeleteSave(int pageNum)
     {
-        int actualSaveNum = currentPage * savesPerPage + savenum;
+        int saveNum = currentPage * savesPerPage + pageNum;
 
-        if (ES3.FileExists("screenshots/screenshot" + actualSaveNum + ".png"))
+        string screenshotFileName = $"{ScreenshotsFolder}/screenshot{saveNum}.png";
+        string fileName = $"{SaveFilesFolder}/{SaveFileName}{saveNum}.es3";
+
+        if (ES3.FileExists(fileName) && ES3.FileExists(screenshotFileName))
         {
-            ES3.DeleteFile("screenshots/screenshot" + actualSaveNum + ".png");
-            savesTaken[actualSaveNum] = false;
-            ES3.Save<bool[]>("saveTaken", savesTaken, "SavesTaken.es3");
+            ES3.DeleteFile(screenshotFileName);
+            savesTaken[saveNum] = false;
+            ES3.Save<bool[]>("saveTaken", savesTaken, SaveFilesData);
 
             // Если после УДАЛЕНИЯ не осталось true сейвов, значит удалён последний => триггер 0
             if (!savesTaken.Contains(true))
             {
-                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.HideAnimation, "SaveFiles.es3");
+                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.HideAnimation, SaveFilesData);
                 StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.HideAnimation;
             }
 
-            ES3.DeleteKey("SaveFile" + actualSaveNum, "SaveFiles.es3");
+            ES3.DeleteKey("SaveFile" + saveNum, fileName);
 
             // Добавить удаление спешл ивентов!
         }
@@ -460,24 +464,17 @@ public class SaveManager : MonoBehaviour
     public void SaveDateTime(int saveNum, string datetime)
     {
         saveDataTimes[currentPage * savesPerPage + saveNum] = datetime;
-        ES3.Save<string[]>("saveDataTimes", saveDataTimes, "SaveFiles.es3");
+        ES3.Save<string[]>("saveDataTimes", saveDataTimes, SaveFilesData);
     }
 
     public void RemoveDateTime(int saveNum)
     {
         saveDataTimes[currentPage * savesPerPage + saveNum] = string.Empty;
-        ES3.Save<string[]>("saveDataTimes", saveDataTimes, "SaveFiles.es3");
+        ES3.Save<string[]>("saveDataTimes", saveDataTimes, SaveFilesData);
     }
 
     public void CloseSave()
     {
-        if (StaticVariables.ifInMainMenu)
-        {
-            MMPanelsManager.instance.CloseSaveMenu();
-        }
-        else
-        {
-            PanelsManager.instance.CloseSaveMenu();
-        }
+        PanelsConfig.CurrentManager.CloseSaveMenu();
     }
 }

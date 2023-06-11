@@ -79,8 +79,12 @@ public class SettingsConfig
         }
     }
 
+    private static string GlobalSettings;
+
     public static void LoadSettingsFromMemory()
     {
+        GlobalSettings = SaveSystemUtils.GlobalSettings;
+
         LoadDefaultSettings();
 
         LoadUserSettings();
@@ -117,17 +121,17 @@ public class SettingsConfig
         {
             foreach (Settings setting in (Settings[])Enum.GetValues(typeof(Settings)))
             {
-                if (ES3.FileExists("PlayerSettings.es3") && ES3.KeyExists(setting.ToString(), "PlayerSettings.es3"))
+                if (ES3.FileExists(GlobalSettings) && ES3.KeyExists(setting.ToString(), GlobalSettings))
                 {
-                    SettingsOptionsData optiondata = ES3.Load<SettingsOptionsData>(setting.ToString(), "PlayerSettings.es3");
+                    SettingsOptionsData optiondata = ES3.Load<SettingsOptionsData>(setting.ToString(), GlobalSettings);
 
                     chosenOptions[setting] = optiondata;
                 }
             }
         }
-        catch (Exception) // Файл повреждён, настройки сбрасываются
+        catch (Exception)
         {
-            ES3Utils.FileRecovery("", "PlayerSettings.es3");
+            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
     }
 
@@ -140,7 +144,7 @@ public class SettingsConfig
     {
         try
         {
-            ES3.Save<SettingsOptionsData>(setting.ToString(), new SettingsOptionsData(value, data), "PlayerSettings.es3");
+            ES3.Save<SettingsOptionsData>(setting.ToString(), new SettingsOptionsData(value, data), GlobalSettings);
 
             if (chosenOptions.ContainsKey(setting))
             {
@@ -149,7 +153,6 @@ public class SettingsConfig
         }
         catch (Exception)
         {
-            ES3Utils.FileRecovery(setting.ToString(), "PlayerSettings.es3");
         }
     }
 
@@ -277,13 +280,15 @@ public class SettingsConfig
     }
 
     // Принимает громкость от 0 до 1, ставит громоксть миксера в децибельной шкале
-    public static void SetVolume(AudioMixer mixer, string exposedparam, float slider_vol)
+    public static void SetVolume(AudioMixer mixer, string exposedparam, float linearVolume)
     {
-        float dbVolume = Mathf.Log10(slider_vol) * 20;
-        if (slider_vol == 0.0f)
+        float dbVolume = Mathf.Log10(linearVolume) * 20;
+
+        if (linearVolume == 0.0f)
         {
             dbVolume = -80.0f;
         }
+
         mixer.SetFloat(exposedparam, dbVolume);
     }
 

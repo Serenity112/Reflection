@@ -2,7 +2,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.UI;
 
 public class ConfirmationPanel : MonoBehaviour
 {
@@ -22,7 +21,7 @@ public class ConfirmationPanel : MonoBehaviour
 
     private AsyncOperationHandle<GameObject> handler;
 
-    void Awake()
+    private void Awake()
     {
         if (instance == null)
         {
@@ -37,11 +36,6 @@ public class ConfirmationPanel : MonoBehaviour
     private void Start()
     {
         ActivePanels = PanelsConfig.CurrentManager.GetActivePanelsParent();
-    }
-
-    public void test()
-    {
-        StartCoroutine(CreateConfirmationPanel("Проверка", ClosePanel(), ClosePanel()));
     }
 
     public IEnumerator CreateConfirmationPanel(string title, IEnumerator YesAction, IEnumerator NoAction)
@@ -66,7 +60,7 @@ public class ConfirmationPanel : MonoBehaviour
 
                 Panel.GetComponent<Confirmation>().SetTitle(title);
 
-                yield return instance.StartCoroutine(FadeManager.FadeOnly(instance.Panel, true, FadingSpeed));
+                yield return instance.StartCoroutine(FadeManager.FadeOnly(Panel, true, FadingSpeed));
             }
             else
             {
@@ -77,7 +71,7 @@ public class ConfirmationPanel : MonoBehaviour
 
     public IEnumerator ClosePanel()
     {
-        yield return instance.StartCoroutine(FadeManager.FadeOnly(instance.Panel, false, FadingSpeed));
+        yield return instance.StartCoroutine(FadeManager.FadeOnly(Panel, false, FadingSpeed));
 
         _panelOpen = false;
 

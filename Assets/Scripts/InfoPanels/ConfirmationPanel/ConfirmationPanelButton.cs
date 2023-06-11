@@ -3,27 +3,25 @@ using UnityEngine;
 public class ConfirmationPanelButton : MonoBehaviour
 {
     [SerializeField]
-    private float speed;
+    private float FadingSpeed;
 
-    [HideInInspector]
-    public GameObject spacing;
+    private GameObject spacing;
 
-    void OnEnable()
+    private void OnEnable()
     {
         spacing = transform.GetChild(0).gameObject;
         spacing.GetComponent<CanvasGroup>().alpha = 0f;
-        spacing.SetActive(false);
     }
 
     private void OnMouseEnter()
     {
         StopAllCoroutines();
-        StartCoroutine(FadeManager.FadeObject(spacing, true, speed));
+        StartCoroutine(FadeManager.FadeOnly(spacing, true, FadingSpeed));
     }
 
     private void OnMouseExit()
     {
         StopAllCoroutines();
-        StartCoroutine(FadeManager.FadeObject(spacing, false, speed));
+        StartCoroutine(FadeManager.FadeOnly(spacing, false, FadingSpeed));
     }
 }

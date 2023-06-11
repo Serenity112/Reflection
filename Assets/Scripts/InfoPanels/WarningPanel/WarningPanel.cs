@@ -17,7 +17,7 @@ public class WarningPanel : MonoBehaviour
     public static string SavingErrorMessage =
        "В системе сохранений возникла ошибка!\n" +
        "Некоторые элементы игры могут быть сброшены и/или работать нестабильно.\n" +
-       "Если Вы не взаимодействовали с файлами игры, просим Вас сообщить об ошибке разработчикам.\n" +
+       "Если вы не взаимодействовали с файлами игры, просим вас сообщить об ошибке разработчикам.\n" +
        "Приносим извинения за доставленные неудобства!";
 
     private AsyncOperationHandle<GameObject> handler;
@@ -31,15 +31,17 @@ public class WarningPanel : MonoBehaviour
         else if (instance == this)
         {
             Destroy(gameObject);
-        } 
+        }
     }
 
-    private void Start()
+    private void OnEnable()
     {
         ActivePanels = PanelsConfig.CurrentManager.GetActivePanelsParent();
     }
 
-    public IEnumerator CreateWarningPanel(string title)
+    public void CreateWarningPanel(string title) => StartCoroutine(ICreateWarningPanel(title));
+
+    private IEnumerator ICreateWarningPanel(string title)
     {
         StaticVariables.OverlayPanelActive = true;
 
