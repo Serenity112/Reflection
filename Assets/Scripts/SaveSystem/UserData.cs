@@ -23,7 +23,8 @@ public struct SaveData
 
         LogBlocks = new List<string>();
 
-        specailEvent = SpecialEvent.none;
+        specialEvent = SpecialEvent.none;
+        specialEventState = 0;
     }
 
     int saveNum;
@@ -41,16 +42,10 @@ public struct SaveData
 
     public List<string> LogBlocks;
 
-    public SpecialEvent specailEvent;
+    public SpecialEvent specialEvent;
+    public int specialEventState;
 }
 
-public enum SpecialEvent
-{
-    none,
-    DreamSnow,
-    StationScroll,
-    TanyaCG,
-}
 
 public class UserData : MonoBehaviour
 {
@@ -74,7 +69,7 @@ public class UserData : MonoBehaviour
     public float AmbientSourceVolume { get; set; }
 
     // Events
-    public SpecialEvent specialEvent { get; set; }
+    // public SpecialEvent SpecialEvent { get; set; }
 
     private const string _startingDayName = "Dream";
 
@@ -94,8 +89,6 @@ public class UserData : MonoBehaviour
         }
 
         CurrentBG = null;
-
-        specialEvent = SpecialEvent.none;
 
         CurrentBlock = null;
 
@@ -138,18 +131,15 @@ public class UserData : MonoBehaviour
         newSave.AmbientSourceVolume = instance.AmbientSourceVolume;
 
         // Ивенты
-        newSave.specailEvent = instance.specialEvent;
-        SaveSpecialEvent(newSave.specailEvent, saveNum);
+        newSave.specialEvent = SpecialEventManager.instance.currentEventEnum;
+        newSave.specialEventState = newSave.specialEvent == SpecialEvent.none ? 0 : SpecialEventManager.instance.currentEvent.GetState();
 
         // Выборы
         ChoiceManager.instance.SaveChoices(saveNum);
 
         ES3.Save<SaveData>("SaveFile" + saveNum, newSave, $"{SaveFilesFolder}/{SaveFileName}{saveNum}.es3");
 
-        //newSave.CurrentOst = audiomanager.currentOst;
-        //
         //newSave.LogBlocks = LogBlocks;
-
     }
 
     private void LoadGameFromStart()
@@ -157,54 +147,6 @@ public class UserData : MonoBehaviour
         Flowchart flowchart = PanelsManager.instance.flowchart;
         Block targetBlock = flowchart.FindBlock(_startingDayName);
         flowchart.ExecuteBlock(targetBlock);
-    }
-
-    // При добавлении новых ивентов нужно обновить следующие 3 метода :)
-    private void SaveSpecialEvent(SpecialEvent specialEvent, int saveNum)
-    {
-        switch (specialEvent)
-        {
-            case SpecialEvent.none:
-                break;
-            case SpecialEvent.DreamSnow:
-                ES3.Save<DreamSnowState>("DreamSnowSave" + saveNum, DreamSnow.instance.currentState, SaveFilesData);
-                break;
-            case SpecialEvent.StationScroll:
-                ES3.Save<StationScrollState>("StationScrollSave" + saveNum, StationScroll.instance.currentState, SaveFilesData);
-                break;
-        }
-    }
-
-    private IEnumerator UnloadSpecialEvent(SpecialEvent specialEvent)
-    {
-        switch (specialEvent)
-        {
-            case SpecialEvent.none:
-                break;
-            case SpecialEvent.DreamSnow:
-                yield return StartCoroutine(DreamSnow.instance.IReleaseEvent());
-                break;
-            case SpecialEvent.StationScroll:
-                yield return StartCoroutine(StationScroll.instance.IReleaseEvent());
-                break;
-        }
-    }
-
-    private IEnumerator LoadSpecialEvent(SpecialEvent specialEvent, int saveNum)
-    {
-        switch (specialEvent)
-        {
-            case SpecialEvent.none:
-                break;
-            case SpecialEvent.DreamSnow:
-                DreamSnowState dreamSnowState = ES3.Load<DreamSnowState>("DreamSnowSave" + saveNum, SaveFilesData);
-                yield return StartCoroutine(DreamSnow.instance.ILoadEventByState(dreamSnowState));
-                break;
-            case SpecialEvent.StationScroll:
-                StationScrollState stationScrollState = ES3.Load<StationScrollState>("StationScrollSave" + saveNum, SaveFilesData);
-                yield return StartCoroutine(StationScroll.instance.ILoadEventByState(stationScrollState));
-                break;
-        }
     }
 
     public IEnumerator ILoadGame(int saveNum)
@@ -244,10 +186,10 @@ public class UserData : MonoBehaviour
 
         // Special Events
         // Отгрузка
-        yield return StartCoroutine(UnloadSpecialEvent(specialEvent));
+        yield return StartCoroutine(SpecialEventManager.instance.IReleaseCurrentEvent());
         // Загрузка
-        specialEvent = newSave.specailEvent;
-        yield return StartCoroutine(LoadSpecialEvent(specialEvent, saveNum));
+        SpecialEventManager.instance.currentEventEnum = newSave.specialEvent;
+        yield return StartCoroutine(SpecialEventManager.instance.ILoadCurrentEventByState(newSave.specialEventState));
 
 
         // Спрайты

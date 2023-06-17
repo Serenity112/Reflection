@@ -10,13 +10,10 @@ namespace Fungus
     public class FDreamSnow : Command
     {
         [SerializeField]
-        private DreamSnowState state;
+        private DreamSnowState State;
 
         [SerializeField]
-        private float speed = 6f;
-
-        [SerializeField]
-        private string new_bg;
+        private float Speed = 6f;
 
         public override void OnEnter()
         {
@@ -27,16 +24,18 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            switch (state)
+            switch (State)
             {
                 case DreamSnowState.Start:
-                    yield return StartCoroutine(DreamSnow.instance.IStartDreamSnow(speed));
+                    SpecialEventManager.instance.AddEvent(SpecialEvent.DreamSnow);
+                    yield return StartCoroutine(DreamSnow.instance.IStartDreamSnow(Speed));
                     break;
                 case DreamSnowState.Launch:
-                    yield return StartCoroutine(DreamSnow.instance.IRocketLaunch(speed));
+                    yield return StartCoroutine(DreamSnow.instance.IRocketLaunch(Speed));
                     break;
                 case DreamSnowState.End:
-                    yield return StartCoroutine(DreamSnow.instance.IEndDreamSnow(new_bg, speed));
+                    yield return StartCoroutine(DreamSnow.instance.IEndDreamSnow("AssemblyHall", Speed));
+                    SpecialEventManager.instance.DeleteEvent(SpecialEvent.DreamSnow);
                     break;
             }
 

@@ -71,7 +71,7 @@ public class ConfirmationPanel : MonoBehaviour
 
     public IEnumerator ClosePanel()
     {
-        yield return instance.StartCoroutine(FadeManager.FadeOnly(Panel, false, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeOnly(Panel, false, FadingSpeed));
 
         _panelOpen = false;
 

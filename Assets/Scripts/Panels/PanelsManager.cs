@@ -45,7 +45,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     [SerializeField]
     private float savesSpeed;
 
-    void Awake()
+    private void Awake()
     {
         if (instance == null)
         {
@@ -56,7 +56,6 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
             Destroy(gameObject);
         }
 
-        
         PanelsConfig.CurrentManager = this;
 
         StaticVariables.ifInMainMenu = false;

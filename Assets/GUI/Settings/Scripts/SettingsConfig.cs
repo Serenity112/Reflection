@@ -131,7 +131,7 @@ public class SettingsConfig
         }
         catch (Exception)
         {
-            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
     }
 

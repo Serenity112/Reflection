@@ -30,19 +30,17 @@ public class BackgroundManager : MonoBehaviour
     public static BackgroundManager instance = null;
 
     [SerializeField]
-    private GameObject BlackPanel;
-
-    [SerializeField]
-    private GameObject backgroundsPanel;
-
-    [SerializeField]
     private GameObject storytext;
+
+    private GameObject _backgroundsPanel;
+
+    private GameObject BlackPanel;
 
     private AsyncOperationHandle<GameObject> bg_handler;
 
     private Dictionary<string, TextBoxTheme> _textBoxThemes = new Dictionary<string, TextBoxTheme>();
 
-    void Awake()
+    private void Awake()
     {
         if (instance == null)
         {
@@ -53,8 +51,15 @@ public class BackgroundManager : MonoBehaviour
             Destroy(gameObject);
         }
 
+        _backgroundsPanel = gameObject;
+
         _textBoxThemes.Add("AssemblyHall", new TextBoxTheme(ThemeStyle.Light, 0.75f));
         _textBoxThemes.Add("Performance1", new TextBoxTheme(ThemeStyle.Dark, 0.9f));
+    }
+
+    private void Start()
+    {
+        BlackPanel = PanelsConfig.CurrentManager.GetBlackPanel();
     }
 
     public IEnumerator IReleaseBackground()
@@ -95,7 +100,7 @@ public class BackgroundManager : MonoBehaviour
 
         yield return StartCoroutine(SetTextBoxTheme(bg_adress));
 
-        bg_handler = Addressables.InstantiateAsync(bg_adress, backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
+        bg_handler = Addressables.InstantiateAsync(bg_adress, _backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
 
 
@@ -112,7 +117,7 @@ public class BackgroundManager : MonoBehaviour
     {
         AsyncOperationHandle<GameObject> old_handler = bg_handler;
 
-        bg_handler = Addressables.InstantiateAsync(bg_adress, backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
+        bg_handler = Addressables.InstantiateAsync(bg_adress, _backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
 
         if (bg_handler.Status != AsyncOperationStatus.Succeeded)
@@ -135,7 +140,7 @@ public class BackgroundManager : MonoBehaviour
     {
         AsyncOperationHandle<GameObject> old_handler = bg_handler;
 
-        bg_handler = Addressables.InstantiateAsync(bg_adress, backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
+        bg_handler = Addressables.InstantiateAsync(bg_adress, _backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
 
         if (bg_handler.Status != AsyncOperationStatus.Succeeded)
@@ -174,5 +179,10 @@ public class BackgroundManager : MonoBehaviour
         {
             yield return StartCoroutine(TextBoxController.instance.IChangeTheme(ThemeStyle.Light, 0.8f)); // Стандартный текстбокс
         }
+    }
+
+    public GameObject GetBackgroundPanel()
+    {
+        return _backgroundsPanel;
     }
 }

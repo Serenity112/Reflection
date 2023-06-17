@@ -11,7 +11,7 @@ public enum DreamSnowState
     End
 }
 
-public class DreamSnow : MonoBehaviour
+public class DreamSnow : MonoBehaviour, ISpecialEvent
 {
     public static DreamSnow instance = null;
 
@@ -19,13 +19,11 @@ public class DreamSnow : MonoBehaviour
 
     private AsyncOperationHandle<GameObject> snow_handler;
 
-    [SerializeField]
     private GameObject BlackPanel;
 
-    [SerializeField]
     private GameObject backgroundsPanel;
 
-    public DreamSnowState currentState;
+    private int currentState;
 
     private void Awake()
     {
@@ -38,34 +36,17 @@ public class DreamSnow : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    public IEnumerator ILoadEventByState(DreamSnowState state)
+
+    private void OnEnable()
     {
-        switch (state)
-        {
-            case DreamSnowState.Start:
-                bg_handler = Addressables.InstantiateAsync("SpaceportStart", backgroundsPanel.GetComponent<RectTransform>(), false, true);
-                yield return bg_handler;
-
-                snow_handler = Addressables.InstantiateAsync("Snow", backgroundsPanel.GetComponent<RectTransform>(), false, true);
-                yield return bg_handler;
-
-                break;
-            case DreamSnowState.Launch:
-                bg_handler = Addressables.InstantiateAsync("SpaceportLaunch", backgroundsPanel.GetComponent<RectTransform>(), false, true);
-                yield return bg_handler;
-
-                snow_handler = Addressables.InstantiateAsync("Snow", backgroundsPanel.GetComponent<RectTransform>(), false, true);
-                yield return bg_handler;
-
-                break;
-        }
+        BlackPanel = PanelsConfig.CurrentManager.GetBlackPanel();
+        backgroundsPanel = BackgroundManager.instance.GetBackgroundPanel();
     }
 
     public IEnumerator IStartDreamSnow(float speed)
     {
         UserData.instance.CurrentBG = null;
-        UserData.instance.specialEvent = SpecialEvent.DreamSnow;
-        currentState = DreamSnowState.Start;
+        currentState = (int)DreamSnowState.Start;
 
         FadeManager.FadeObject(BlackPanel, true);
 
@@ -81,8 +62,7 @@ public class DreamSnow : MonoBehaviour
     public IEnumerator IRocketLaunch(float speed)
     {
         UserData.instance.CurrentBG = null;
-
-        currentState = DreamSnowState.Launch;
+        currentState = (int)DreamSnowState.Launch;
 
         AsyncOperationHandle<GameObject> old_handler = bg_handler;
 
@@ -106,8 +86,8 @@ public class DreamSnow : MonoBehaviour
     public IEnumerator IEndDreamSnow(string new_bg, float speed)
     {
         UserData.instance.CurrentBG = new_bg;
-        UserData.instance.specialEvent = SpecialEvent.none;
-        currentState = DreamSnowState.End;
+        SpecialEventManager.instance.currentEvent = null;
+        SpecialEventManager.instance.currentEventEnum = SpecialEvent.none;
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
 
@@ -130,6 +110,35 @@ public class DreamSnow : MonoBehaviour
         if (snow_handler.IsValid())
         {
             yield return Addressables.ReleaseInstance(snow_handler);
+        }
+    }
+
+    public int GetState()
+    {
+        return currentState;
+    }
+
+    public IEnumerator ILoadEventByState(int state)
+    {
+        currentState = state;
+        switch ((DreamSnowState)state)
+        {
+            case DreamSnowState.Start:
+                bg_handler = Addressables.InstantiateAsync("SpaceportStart", backgroundsPanel.GetComponent<RectTransform>(), false, true);
+                yield return bg_handler;
+
+                snow_handler = Addressables.InstantiateAsync("Snow", backgroundsPanel.GetComponent<RectTransform>(), false, true);
+                yield return bg_handler;
+
+                break;
+            case DreamSnowState.Launch:
+                bg_handler = Addressables.InstantiateAsync("SpaceportLaunch", backgroundsPanel.GetComponent<RectTransform>(), false, true);
+                yield return bg_handler;
+
+                snow_handler = Addressables.InstantiateAsync("Snow", backgroundsPanel.GetComponent<RectTransform>(), false, true);
+                yield return bg_handler;
+
+                break;
         }
     }
 }

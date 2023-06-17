@@ -29,6 +29,7 @@ namespace Fungus
             switch (State)
             {
                 case StationScrollState.Start:
+                    SpecialEventManager.instance.AddEvent(SpecialEvent.StationScroll);
                     yield return StartCoroutine(StationScroll.instance.IAppearBg(Speed));
                     break;
                 case StationScrollState.Scroll:
@@ -36,6 +37,7 @@ namespace Fungus
                     break;
                 case StationScrollState.End:
                     yield return StartCoroutine(StationScroll.instance.IEndScroll(NewBackgroundName, Speed));
+                    SpecialEventManager.instance.DeleteEvent(SpecialEvent.StationScroll);
                     break;
             }
 

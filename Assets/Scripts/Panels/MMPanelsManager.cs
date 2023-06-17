@@ -66,7 +66,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         }
         catch (Exception)
         {
-            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
 
         switch (StaticVariables.MainMenuContinueButtonAnimationTrigger)
@@ -162,7 +162,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         }
         catch (Exception)
         {
-            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
     }
 

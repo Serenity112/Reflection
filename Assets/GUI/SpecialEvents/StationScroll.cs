@@ -12,22 +12,17 @@ public enum StationScrollState
     End
 }
 
-public class StationScroll : MonoBehaviour
+public class StationScroll : MonoBehaviour, ISpecialEvent
 {
     public static StationScroll instance = null;
 
     private AsyncOperationHandle<GameObject> bg_handler;
 
-    public StationScrollState currentState;
-
-    [SerializeField]
     private GameObject BlackPanel;
 
-    [SerializeField]
     private GameObject backgroundsPanel;
 
-    [SerializeField]
-    private GameObject ContinueButton;
+    private int currentState;
 
     private void Awake()
     {
@@ -41,28 +36,16 @@ public class StationScroll : MonoBehaviour
         }
     }
 
-    public IEnumerator ILoadEventByState(StationScrollState state)
+    private void OnEnable()
     {
-        switch (state)
-        {
-            case StationScrollState.Start:
-                bg_handler = Addressables.InstantiateAsync("MuseumCG", backgroundsPanel.GetComponent<RectTransform>(), false, true);
-                yield return bg_handler;
-                break;
-
-            case StationScrollState.Scroll:
-                bg_handler = Addressables.InstantiateAsync("MuseumCG", backgroundsPanel.GetComponent<RectTransform>(), false, true);
-                yield return bg_handler;
-                bg_handler.Result.transform.GetChild(0).gameObject.GetComponent<Animator>().Play("Scrolled");
-                break;
-        }
+        BlackPanel = PanelsConfig.CurrentManager.GetBlackPanel();
+        backgroundsPanel = BackgroundManager.instance.GetBackgroundPanel();
     }
 
     public IEnumerator IAppearBg(float speed)
     {
         UserData.instance.CurrentBG = null;
-        UserData.instance.specialEvent = SpecialEvent.StationScroll;
-        currentState = StationScrollState.Start;
+        currentState = (int)StationScrollState.Start;
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
         yield return StartCoroutine(BackgroundManager.instance.IReleaseBackground());
@@ -77,7 +60,7 @@ public class StationScroll : MonoBehaviour
     {
         UserData.instance.CurrentBG = null;
 
-        currentState = StationScrollState.Scroll;
+        currentState = (int)StationScrollState.Scroll;
 
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, false, speed));
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed));
@@ -93,13 +76,13 @@ public class StationScroll : MonoBehaviour
     public IEnumerator IEndScroll(string new_bg, float speed)
     {
         UserData.instance.CurrentBG = new_bg;
-        UserData.instance.specialEvent = SpecialEvent.none;
-        currentState = StationScrollState.End;
+        SpecialEventManager.instance.currentEvent = null;
+        SpecialEventManager.instance.currentEventEnum = SpecialEvent.none;
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
 
         yield return StartCoroutine(IReleaseEvent());
-
+ 
         Resources.UnloadUnusedAssets();
 
         yield return StartCoroutine(BackgroundManager.instance.ISwapBackground(new_bg));
@@ -112,6 +95,29 @@ public class StationScroll : MonoBehaviour
         if (bg_handler.IsValid())
         {
             yield return Addressables.ReleaseInstance(bg_handler);
+        }
+    }
+
+    public int GetState()
+    {
+        return currentState;
+    }
+
+    public IEnumerator ILoadEventByState(int state)
+    {
+        currentState = state;
+        switch ((StationScrollState)state)
+        {
+            case StationScrollState.Start:
+                bg_handler = Addressables.InstantiateAsync("MuseumCG", backgroundsPanel.GetComponent<RectTransform>(), false, true);
+                yield return bg_handler;
+                break;
+
+            case StationScrollState.Scroll:
+                bg_handler = Addressables.InstantiateAsync("MuseumCG", backgroundsPanel.GetComponent<RectTransform>(), false, true);
+                yield return bg_handler;
+                bg_handler.Result.transform.GetChild(0).gameObject.GetComponent<Animator>().Play("Scrolled");
+                break;
         }
     }
 }

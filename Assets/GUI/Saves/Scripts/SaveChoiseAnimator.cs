@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Collections.Generic;
 
 public enum Side
 {
@@ -126,7 +127,7 @@ public class SaveChoiseAnimator : MonoBehaviour
     }
 
     // Удаление сейва
-   
+
     public void DeleteAction()
     {
         if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.OverlayPanelActive)
@@ -141,13 +142,13 @@ public class SaveChoiseAnimator : MonoBehaviour
         yield return StartCoroutine(ConfirmationPanel.instance.CreateConfirmationPanel("Удалить сохранение?", IDeleteSave(), ICancelDelete()));
     }
     IEnumerator IDeleteSave()
-    {      
+    {
         StartCoroutine(FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed));
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         FadeManager.FadeObject(SavedPanel, false);
         FadeManager.FadeObject(UnSavedPanel, true);
         saveFileFields.CloseOverPanel();
-        
+
         StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed));
         SaveManager.instance.RemoveDateTime(saveNum);
 
@@ -166,11 +167,11 @@ public class SaveChoiseAnimator : MonoBehaviour
     {
         int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
 
-        StartCoroutine(ConfirmationPanel.instance.ClosePanel());
-
-        yield return StartCoroutine(PanelsManager.instance.ILoadGame(actualSaveNum));
-
-        saveFileFields.resetCassettePosition(IconRight);
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            ConfirmationPanel.instance.ClosePanel(),
+            PanelsManager.instance.ILoadGame(actualSaveNum)
+        });
     }
 
     IEnumerator CancelLoad()
@@ -180,9 +181,13 @@ public class SaveChoiseAnimator : MonoBehaviour
         DeleteCross.GetComponent<Button>().interactable = true;
 
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-        StartCoroutine(FadeManager.FadeObject(IconRight, false, SaveManager.instance.optionsGradientSpeed));
-        StartCoroutine(FadeManager.FadeObject(GradLeft, false, SaveManager.instance.optionsGradientSpeed));
-        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
+
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            FadeManager.FadeObject(IconRight, false, SaveManager.instance.optionsGradientSpeed),
+            FadeManager.FadeObject(GradLeft, false, SaveManager.instance.optionsGradientSpeed),
+            ConfirmationPanel.instance.ClosePanel()
+        });
 
         SaveAnimator.SetTrigger("StopLoad");
 
