@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using static StaticVariables;
 using System.Collections.Generic;
+using System.Threading;
 
 public enum SavePageScroll
 {
@@ -337,7 +338,7 @@ public class SaveManager : MonoBehaviour
 
     public IEnumerator OverrideScreenshot(int saveNum, GameObject screenshot, GameObject overscreenshot, float speed)
     {
-        int actualSaveNum = currentPage * savesPerPage + saveNum;
+        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
         yield return new WaitForEndOfFrame();
 
         var bufferTexture = currentTextures[saveNum];
@@ -377,7 +378,7 @@ public class SaveManager : MonoBehaviour
 
         ES3.SaveImage(texture, fileName);
 
-        savesTaken[currentPage * savesPerPage + saveNum] = true;
+        savesTaken[actualSaveNum] = true;
         ES3.Save<bool[]>("saveTaken", savesTaken, SaveFilesData);
 
 
@@ -391,20 +392,20 @@ public class SaveManager : MonoBehaviour
 
     public IEnumerator SetScreenshot(int saveNum, GameObject screenshot)
     {
-        int actualSaveNum = currentPage * savesPerPage + saveNum;
+        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
         yield return new WaitForEndOfFrame();
 
         var currentTexture = RenderTexture.active;
 
         var renderTexture = RenderTexture.GetTemporary(captureWidth, captureHeight, 24);
-        renderTexture.name = "Temprender" + actualSaveNum;
+        renderTexture.name = "Temprender" + saveNum;
 
         RenderTexture.active = renderTexture;
         GameCamera.targetTexture = renderTexture;
         GameCamera.Render();
 
         var texture = new Texture2D(captureWidth, captureHeight, TextureFormat.RGB24, false);
-        texture.name = "ScreenshotTex" + actualSaveNum;
+        texture.name = "ScreenshotTex" + saveNum;
         texture.ReadPixels(new Rect(0, 0, captureWidth, captureHeight), 0, 0);
         texture.Apply();
 
@@ -420,6 +421,7 @@ public class SaveManager : MonoBehaviour
         currentTextures[saveNum] = texture;
 
         string fileName = $"{ScreenshotsFolder}/screenshot{actualSaveNum}.png";
+
         ES3.SaveImage(texture, fileName);
 
         // SetScreenshot вызывается только во время 1го сейва. Если до 1го сейва не было сейвов => триггер AppearAnimation
@@ -429,23 +431,26 @@ public class SaveManager : MonoBehaviour
             ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.AppearAnimation, SaveFilesData);
         }
 
-        savesTaken[currentPage * savesPerPage + saveNum] = true;
-        ES3.Save<bool[]>("saveTaken", savesTaken, SaveFilesData);
+        savesTaken[actualSaveNum] = true;
+        new Thread(() =>
+        {
+            ES3.Save<bool[]>("saveTaken", savesTaken, SaveFilesData);
+        }).Start();
 
         StaticVariables.UIsystemDown = false;
     }
 
-    public void DeleteSave(int pageNum)
+    public void DeleteSave(int saveNum)
     {
-        int saveNum = currentPage * savesPerPage + pageNum;
+        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
 
-        string screenshotFileName = $"{ScreenshotsFolder}/screenshot{saveNum}.png";
-        string fileName = $"{SaveFilesFolder}/{SaveFileName}{saveNum}.es3";
+        string screenshotFileName = $"{ScreenshotsFolder}/screenshot{actualSaveNum}.png";
+        string fileName = $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3";
 
         if (ES3.FileExists(fileName) && ES3.FileExists(screenshotFileName))
         {
             ES3.DeleteFile(screenshotFileName);
-            savesTaken[saveNum] = false;
+            savesTaken[actualSaveNum] = false;
             ES3.Save<bool[]>("saveTaken", savesTaken, SaveFilesData);
 
             // Если после УДАЛЕНИЯ не осталось true сейвов, значит удалён последний => триггер 0
@@ -455,7 +460,7 @@ public class SaveManager : MonoBehaviour
                 StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.HideAnimation;
             }
 
-            ES3.DeleteKey("SaveFile" + saveNum, fileName);
+            ES3.DeleteKey("SaveFile" + actualSaveNum, fileName);
 
             // Добавить удаление спешл ивентов!
         }
@@ -463,13 +468,15 @@ public class SaveManager : MonoBehaviour
 
     public void SaveDateTime(int saveNum, string datetime)
     {
-        saveDataTimes[currentPage * savesPerPage + saveNum] = datetime;
+        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
+        saveDataTimes[actualSaveNum] = datetime;
         ES3.Save<string[]>("saveDataTimes", saveDataTimes, SaveFilesData);
     }
 
     public void RemoveDateTime(int saveNum)
     {
-        saveDataTimes[currentPage * savesPerPage + saveNum] = string.Empty;
+        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
+        saveDataTimes[actualSaveNum] = string.Empty;
         ES3.Save<string[]>("saveDataTimes", saveDataTimes, SaveFilesData);
     }
 

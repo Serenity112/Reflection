@@ -8,13 +8,16 @@ namespace Fungus
     public class AmbientEnd : Command
     {
         [SerializeField]
+        private string AmbientName;
+
+        [SerializeField]
         private float Duration = 1.5f;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.AmbientEnd(Duration);
+            AudioManager.instance.AmbientEnd(AmbientName, Duration);
             Continue();
         }
 

@@ -14,9 +14,6 @@ namespace Fungus
         [SerializeField]
         private float Speed = 3f;
 
-        [SerializeField]
-        private string NewBackgroundName;
-
         public override void OnEnter()
         {
             StartCoroutine(IOnEnter());
@@ -28,16 +25,8 @@ namespace Fungus
 
             switch (State)
             {
-                case StationScrollState.Start:
-                    SpecialEventManager.instance.AddEvent(SpecialEvent.StationScroll);
-                    yield return StartCoroutine(StationScroll.instance.IAppearBg(Speed));
-                    break;
                 case StationScrollState.Scroll:
-                    yield return StartCoroutine(StationScroll.instance.IScrollBg(Speed, DialogMod.skipping));
-                    break;
-                case StationScrollState.End:
-                    yield return StartCoroutine(StationScroll.instance.IEndScroll(NewBackgroundName, Speed));
-                    SpecialEventManager.instance.DeleteEvent(SpecialEvent.StationScroll);
+                    yield return StartCoroutine(((StationScroll)SpecialEventManager.instance.currentEvent).IScrollBg(Speed, DialogMod.skipping));
                     break;
             }
 

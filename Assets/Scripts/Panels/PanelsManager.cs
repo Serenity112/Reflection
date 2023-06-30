@@ -95,28 +95,28 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     }
     private IEnumerator IopenSaveMenu()
     {
+        FadeManager.FadeObject(blackPanelPanels, true);
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, savesSpeed));
+
         savePanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return savePanelHandler;
 
         if (savePanelHandler.Status == AsyncOperationStatus.Succeeded)
         {
-            FadeManager.FadeObject(blackPanelPanels, true);
-            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, savesSpeed));
-
             // Включаем игровое гуи и выключаем паузу для корректных скриншотов
 
             FadeManager.FadeObject(pausePanel, false);
             gameGuiPanel.GetComponent<CanvasGroup>().alpha = 1f;
             GameButtons.GetComponent<CanvasGroup>().alpha = 1f;
-            PanelsCamera.enabled = true;
-
-            FadeManager.FadeObject(BlackPanel, false);
-            StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, savesSpeed));
+            PanelsCamera.enabled = true;          
         }
         else
         {
             Debug.Log("Error loading");
         }
+
+        FadeManager.FadeObject(BlackPanel, false);
+        StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, savesSpeed));
     }
     private IEnumerator IcloseSaveMenu()
     {

@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 
 namespace Fungus
 {
@@ -10,8 +9,8 @@ namespace Fungus
     {
         public override void OnEnter()
         {
-            GameObject log = GameObject.Find("ChatLog");
-            log.GetComponent<LogManager>().DelLog();
+            UserData.instance.CurrentCommandIndex += 1;
+            LogManager.instance.DelLog();
             Continue();
         }
 

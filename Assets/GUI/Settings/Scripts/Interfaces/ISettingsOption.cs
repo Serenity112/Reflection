@@ -5,4 +5,6 @@ using UnityEngine;
 public interface ISettingsOption
 {
     void UpdateVisuals();
+
+    void InitialUpdateVisuals();
 }

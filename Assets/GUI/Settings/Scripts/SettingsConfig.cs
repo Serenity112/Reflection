@@ -17,7 +17,10 @@ public enum Settings
     ambientVolume,
     soundVolume,
 
-    textSpeed,
+    TextSpeed,
+    SpriteExpand,
+    GuiAnimation,
+    Language,
 }
 
 public enum SettingsOptions
@@ -37,8 +40,15 @@ public enum SettingsOptions
     r832x480,
     rAutomatic,
 
-    Volume, // Заглушка, влияет только enum Settings и data
-    Speed, // Заглушка, сейм
+    // Заглушки
+    Volume,
+    Speed,
+    Expand,
+    GuiAnimation,
+
+    // Язык
+    Russian,
+    English,
 }
 
 public struct SettingsOptionsData
@@ -112,7 +122,16 @@ public class SettingsConfig
         chosenOptions.Add(Settings.ambientVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
 
         // Скорость текста
-        chosenOptions.Add(Settings.textSpeed, new SettingsOptionsData(SettingsOptions.Speed, 50));
+        chosenOptions.Add(Settings.TextSpeed, new SettingsOptionsData(SettingsOptions.Speed, 50));
+
+        // Увеличениек спрайтов
+        chosenOptions.Add(Settings.SpriteExpand, new SettingsOptionsData(SettingsOptions.Expand, 1)); // 1 - true
+
+        // Анимация фонов
+        chosenOptions.Add(Settings.GuiAnimation, new SettingsOptionsData(SettingsOptions.GuiAnimation, 1)); // 1 - true
+
+        // Язык
+        chosenOptions.Add(Settings.Language, new SettingsOptionsData(SettingsOptions.Russian, 1));
     }
 
     private static void LoadUserSettings()
@@ -135,12 +154,12 @@ public class SettingsConfig
         }
     }
 
-    public static void SaveOption(Settings setting, SettingsOptions value)
+    public static void SaveOptionToFile(Settings setting, SettingsOptions value)
     {
-        SaveOption(setting, value, 0);
+        SaveOptionToFile(setting, value, 0);
     }
 
-    public static void SaveOption(Settings setting, SettingsOptions value, float data)
+    public static void SaveOptionToFile(Settings setting, SettingsOptions value, float data)
     {
         try
         {
@@ -162,7 +181,7 @@ public class SettingsConfig
         {
             if (value == SettingsOptions.FullScreen)
             {
-                SaveOption(Settings.Resolution, SettingsOptions.rAutomatic);
+                SaveOptionToFile(Settings.Resolution, SettingsOptions.rAutomatic);
             }
         }
 
@@ -170,7 +189,7 @@ public class SettingsConfig
         {
             if (value != chosenOptions[setting].settingsOption)
             {
-                SaveOption(Settings.FullScreenMode, SettingsOptions.WindowsScreen);
+                SaveOptionToFile(Settings.FullScreenMode, SettingsOptions.WindowsScreen);
             }
 
         }
@@ -198,6 +217,14 @@ public class SettingsConfig
         foreach (ISettingsOption setting in options)
         {
             setting.UpdateVisuals();
+        }
+    }
+
+    public static void InitialUpdateAllVisuals()
+    {
+        foreach (ISettingsOption setting in options)
+        {
+            setting.InitialUpdateVisuals();
         }
     }
 

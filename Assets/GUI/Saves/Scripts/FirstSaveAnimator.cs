@@ -64,6 +64,8 @@ public class FirstSaveAnimator : MonoBehaviour
 
     IEnumerator IFirstSaveIconClick()
     {
+        Resources.UnloadUnusedAssets();
+
         StaticVariables.UIsystemDown = true;
         ButtonUnsaved.interactable = false;
         saveFileFields.AllowOverPanel = false;
@@ -100,5 +102,5 @@ public class FirstSaveAnimator : MonoBehaviour
         saveFileFields.AllowSaveLoad = true;
         saveFileFields.resetCassettePosition(CassetteImg);
         ButtonUnsaved.interactable = true;
-    }  
+    }
 }

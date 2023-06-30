@@ -1,0 +1,31 @@
+using UnityEngine;
+using static SergeyRoom;
+
+namespace Fungus
+{
+    [CommandInfo("Ref",
+                   "FTrainWindow",
+                   "FTrainWindow")]
+    public class FTrainWindow : Command
+    {
+        [SerializeField]
+        private TrainNum Train = TrainNum.Far;
+
+        [SerializeField]
+        private float Delay = 20f;
+
+        public override void OnEnter()
+        {
+            UserData.instance.CurrentCommandIndex += 1;
+
+            StartCoroutine(((SergeyRoom)SpecialEventManager.instance.currentEvent).LaunchTrain(Train, Delay));
+
+            Continue();
+        }
+
+        public override Color GetButtonColor()
+        {
+            return new Color32(192, 192, 192, 255);
+        }
+    }
+}

@@ -116,7 +116,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     // Нажатие кнопки "Продолжиь игру"
     public void ContinueGame()
-    {
+    {       
         try
         {
             if (ES3.FileExists(SaveFilesData) && ES3.KeyExists("saveDataTimes", SaveFilesData))
@@ -218,7 +218,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         StaticVariables.ifInMainMenu = false;
 
-        var asyncLoadLevel = SceneManager.LoadSceneAsync("Game", LoadSceneMode.Single);
+        AsyncOperation asyncLoadLevel = SceneManager.LoadSceneAsync("Game", LoadSceneMode.Single);
 
         while (!asyncLoadLevel.isDone)
         {

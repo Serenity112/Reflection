@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Fungus;
 using System;
+using System.Threading;
 
 public struct SaveData
 {
@@ -16,15 +17,14 @@ public struct SaveData
 
         CurrentBlock = null;
 
-        CurrentMusic = null;
-        CurrentAmbient = null;
-        MusicSourceVolume = 1;
-        AmbientSourceVolume = 1;
+        CurrentMusic = (null, 1);
+        CurrentAmbient1 = (null, 1);
+        CurrentAmbient2 = (null, 1);
 
         LogBlocks = new List<string>();
 
         specialEvent = SpecialEvent.none;
-        specialEventState = 0;
+        specialEventData = null;
     }
 
     int saveNum;
@@ -35,15 +35,14 @@ public struct SaveData
     public string CurrentBlock;
 
     // Music
-    public string CurrentMusic;
-    public string CurrentAmbient;
-    public float MusicSourceVolume;
-    public float AmbientSourceVolume;
+    public (string Name, float Volume) CurrentMusic;
+    public (string Name, float Volume) CurrentAmbient1;
+    public (string Name, float Volume) CurrentAmbient2;
 
     public List<string> LogBlocks;
 
     public SpecialEvent specialEvent;
-    public int specialEventState;
+    public string specialEventData;
 }
 
 
@@ -60,16 +59,13 @@ public class UserData : MonoBehaviour
     public string CurrentBG { get; set; }
 
     // Music
-    public string CurrentMusic { get; set; }
+    public (string Name, float Volume) CurrentMusic { get; set; }
 
-    public string CurrentAmbient { get; set; }
+    public (string Name, float Volume) CurrentAmbient1 { get; set; }
 
-    public float MusicSourceVolume { get; set; }
-
-    public float AmbientSourceVolume { get; set; }
+    public (string Name, float Volume) CurrentAmbient2 { get; set; }
 
     // Events
-    // public SpecialEvent SpecialEvent { get; set; }
 
     private const string _startingDayName = "Dream";
 
@@ -112,7 +108,8 @@ public class UserData : MonoBehaviour
 
     public void SavePlayer(int saveNum)
     {
-        SaveData newSave = new SaveData(saveNum);
+        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
+        SaveData newSave = new SaveData(actualSaveNum);
 
         // Фоны
         newSave.Background = instance.CurrentBG;
@@ -126,19 +123,21 @@ public class UserData : MonoBehaviour
 
         // Музыка
         newSave.CurrentMusic = instance.CurrentMusic;
-        newSave.CurrentAmbient = instance.CurrentAmbient;
-        newSave.MusicSourceVolume = instance.MusicSourceVolume;
-        newSave.AmbientSourceVolume = instance.AmbientSourceVolume;
+        newSave.CurrentAmbient1 = instance.CurrentAmbient1;
+        newSave.CurrentAmbient2 = instance.CurrentAmbient2;
 
         // Ивенты
         newSave.specialEvent = SpecialEventManager.instance.currentEventEnum;
-        newSave.specialEventState = newSave.specialEvent == SpecialEvent.none ? 0 : SpecialEventManager.instance.currentEvent.GetState();
+        newSave.specialEventData = newSave.specialEvent == SpecialEvent.none ? null : SpecialEventManager.instance.currentEvent.GetData();
 
         // Выборы
-        ChoiceManager.instance.SaveChoices(saveNum);
+        ChoiceManager.instance.SaveChoices(actualSaveNum);
 
-        ES3.Save<SaveData>("SaveFile" + saveNum, newSave, $"{SaveFilesFolder}/{SaveFileName}{saveNum}.es3");
-
+        new Thread(() =>
+        {
+            ES3.Save<SaveData>("SaveFile" + actualSaveNum, newSave, $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3");
+        }).Start();
+      
         //newSave.LogBlocks = LogBlocks;
     }
 
@@ -149,12 +148,12 @@ public class UserData : MonoBehaviour
         flowchart.ExecuteBlock(targetBlock);
     }
 
-    public IEnumerator ILoadGame(int saveNum)
+    public IEnumerator ILoadGame(int actualSaveNum)
     {
         yield return new WaitForSeconds(0.5f);
 
-        string fileName = $"{SaveFilesFolder}/{SaveFileName}{saveNum}.es3";
-        SaveData newSave = ES3.Load<SaveData>("SaveFile" + saveNum, fileName);
+        string fileName = $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3";
+        SaveData newSave = ES3.Load<SaveData>("SaveFile" + actualSaveNum, fileName);
 
         Flowchart flowchart = PanelsManager.instance.flowchart;
 
@@ -175,22 +174,17 @@ public class UserData : MonoBehaviour
         CurrentCommandIndex = newSave.CurrentCommandIndex;
 
         // Background
+        yield return StartCoroutine(SpecialEventManager.instance.IReleaseCurrentEvent());
         yield return StartCoroutine(BackgroundManager.instance.IReleaseBackground());
 
         CurrentBG = newSave.Background;
         if (CurrentBG != null)
         {
-            StartCoroutine(BackgroundManager.instance.ISwapBackground(CurrentBG));
+            yield return StartCoroutine(BackgroundManager.instance.ILoadBackground(CurrentBG));
         }
 
-
         // Special Events
-        // Отгрузка
-        yield return StartCoroutine(SpecialEventManager.instance.IReleaseCurrentEvent());
-        // Загрузка
-        SpecialEventManager.instance.currentEventEnum = newSave.specialEvent;
-        yield return StartCoroutine(SpecialEventManager.instance.ILoadCurrentEventByState(newSave.specialEventState));
-
+        yield return StartCoroutine(SpecialEventManager.instance.ILoadCurrentEventByState(newSave.specialEvent, newSave.specialEventData));
 
         // Спрайты
         // Отгрузка
@@ -198,8 +192,8 @@ public class UserData : MonoBehaviour
         SpriteController.instance.UnloadSprites();
         // Загрузка
         SpriteController.instance.GameSpriteData = newSave.SpriteData;
-        SpriteController.instance.AutoConnectPackages();
-        SpriteController.instance.LoadSprites();
+        yield return StartCoroutine(SpriteController.instance.AutoConnectPackages());
+        yield return StartCoroutine(SpriteController.instance.LoadSprites());
 
         //GameObject.Find("ChatLog").GetComponent<LogManager>().DelLog();
         //LogBlocks = newSave.LogBlocks;
@@ -210,23 +204,31 @@ public class UserData : MonoBehaviour
 
         // Загрузка
         CurrentMusic = newSave.CurrentMusic;
-        CurrentAmbient = newSave.CurrentAmbient;
-        MusicSourceVolume = newSave.MusicSourceVolume;
-        AmbientSourceVolume = newSave.AmbientSourceVolume;
-        if (CurrentMusic != null)
+        CurrentAmbient1 = newSave.CurrentAmbient1;
+        CurrentAmbient2 = newSave.CurrentAmbient2;
+
+        if (CurrentMusic.Name != null)
         {
-            AudioManager.instance.MusicStart(CurrentMusic, 3f, MusicSourceVolume);
+            AudioManager.instance.MusicStart(CurrentMusic.Name, 3f, CurrentMusic.Volume);
         }
-        if (CurrentAmbient != null)
+        if (CurrentAmbient1.Name != null)
         {
-            AudioManager.instance.AmbientStart(CurrentAmbient, 3f, AmbientSourceVolume);
+            AudioManager.instance.AmbientStart(CurrentAmbient1.Name, 3f, CurrentAmbient1.Volume, false);
         }
+        if (CurrentAmbient2.Name != null)
+        {
+            AudioManager.instance.AmbientStart(CurrentAmbient2.Name, 3f, CurrentAmbient2.Volume, true);
+        }
+
         DialogMod.denyNextDialog = false;
+
+        // Лог
+        LogManager.instance.DelLog();
 
         // Выборы игрока
         StartCoroutine(ChoiceManager.instance.HideOptionsBox(20f));
         ChoiceManager.instance.ReleaseChoiceBox();
-        ChoiceManager.instance.LoadSavedChoices(saveNum);
+        ChoiceManager.instance.LoadSavedChoices(actualSaveNum);
 
         flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex, null);
         CurrentCommandIndex--;

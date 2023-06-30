@@ -36,6 +36,7 @@ public class SpritesSwapper : MonoBehaviour
         if (ChangePose)
         {
             int sprite2 = SpriteController.instance.GetAvaliableSpriteNum(spriteName);
+            //SpriteController.instance.GameSpriteData[sprite2].prevSprite = sprite1;
 
             SpriteController.instance.SaveSpriteData(sprite1, 0f);
             SpriteController.instance.SaveSpriteData(sprite2, spriteName, pose, emotion);
@@ -66,7 +67,7 @@ public class SpritesSwapper : MonoBehaviour
             yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Current2, sprite2, spriteName, pose, emotion));
 
             bool move = false;
-            if (newPosition == Vector3.zero) // Если 0й вектор, спрайт не двигается
+            if (newPosition.x == -1) // Если 0й вектор, спрайт не двигается
             {
                 SpriteController.instance.SaveSpriteData(sprite2, Current1.transform.localPosition);
             }
@@ -130,7 +131,7 @@ public class SpritesSwapper : MonoBehaviour
             yield return StartCoroutine(SpriteController.instance.ILoadSpriteOfSpecificObject(Face1, sprite1, spriteName, pose, emotion, SpritePart.FACE1));
 
             bool move = false;
-            if (newPosition != Vector3.zero) // Если 0й вектор, спрайт не двигается
+            if (newPosition.x != -1) // Если 0й вектор, спрайт не двигается
             {
                 move = true;
                 SpriteController.instance.SaveSpriteData(sprite1, newPosition);

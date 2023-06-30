@@ -28,6 +28,9 @@ public class NameChanger : MonoBehaviour
         _localizedNames.Add("Tumanov", "Туманов");
         _localizedNames.Add("Raketnikov", "Ракетников");
         _localizedNames.Add("Sergey", "Сергей");
+        _localizedNames.Add("Stranger", "Незнакомка");
+        _localizedNames.Add("Speakers", "Выступающие");
+        _localizedNames.Add("Students", "Студенты");
     }
 
     public void SetName(string name)

@@ -1,5 +1,5 @@
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 namespace Fungus
 {
@@ -18,16 +18,16 @@ namespace Fungus
         private int Emotion;
 
         [SerializeField]
-        private Vector3 newPosition = Vector3.zero;
+        private Vector3 newPosition = new Vector3(-1, 0, 0);
 
         [SerializeField]
-        private float appearSpeed = 3f;
+        private float AppearSpeed = 3f;
 
         [SerializeField]
-        private float disappearSpeed = 5f;
+        private float DisappearSpeed = 5f;
 
         [SerializeField]
-        private float movementTime = 0f;
+        private float MovementTime = 0.1f;
 
         [SerializeField]
         private bool waitForFinished = false;
@@ -43,7 +43,7 @@ namespace Fungus
         {
             DialogMod.denyNextDialog = true; // разрешение будет в конце выполнения SwapSprites.
 
-            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, disappearSpeed, appearSpeed, movementTime, DialogMod.skipping, waitForFinished));
+            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, DialogMod.skipping, waitForFinished));
 
             Continue();
         }

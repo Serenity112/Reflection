@@ -1,15 +1,14 @@
+using System;
 using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 public enum SpecialEvent
 {
     none,
-    DreamSnow,
+    SpacePort,
     StationScroll,
     TanyaCG,
-    RoomClock,
+    SergeyRoom
 }
 
 public class SpecialEventManager : MonoBehaviour
@@ -32,42 +31,22 @@ public class SpecialEventManager : MonoBehaviour
         }
     }
 
-    public void AddEvent(SpecialEvent specialEvent)
+    public void SetEventInstance(ISpecialEvent specialEvent)
+    {
+        currentEvent = specialEvent;
+    }
+
+    public void SetEventEnum(SpecialEvent specialEvent)
     {
         currentEventEnum = specialEvent;
-
-        switch (specialEvent)
-        {
-            case SpecialEvent.none:
-                break;
-            case SpecialEvent.DreamSnow:
-                gameObject.AddComponent<DreamSnow>();
-                currentEvent = GetComponent<DreamSnow>();
-                break;
-            case SpecialEvent.StationScroll:
-                gameObject.AddComponent<StationScroll>();
-                currentEvent = GetComponent<StationScroll>();
-                break;
-        }
     }
 
     public void DeleteEvent(SpecialEvent specialEvent)
     {
         currentEventEnum = SpecialEvent.none;
         currentEvent = null;
-
-        switch (specialEvent)
-        {
-            case SpecialEvent.none:
-                break;
-            case SpecialEvent.DreamSnow:
-                Destroy(gameObject.GetComponent<DreamSnow>());
-                break;
-            case SpecialEvent.StationScroll:
-                Destroy(gameObject.GetComponent<StationScroll>());
-                break;
-        }
     }
+
     public IEnumerator IReleaseCurrentEvent()
     {
         if (currentEventEnum == SpecialEvent.none)
@@ -79,14 +58,21 @@ public class SpecialEventManager : MonoBehaviour
         DeleteEvent(currentEventEnum);
     }
 
-    public IEnumerator ILoadCurrentEventByState(int state)
+    public IEnumerator ILoadCurrentEventByState(SpecialEvent specialEvent, string data)
     {
+        SetEventEnum(specialEvent);
         if (currentEventEnum == SpecialEvent.none)
         {
             yield break;
         }
 
-        AddEvent(currentEventEnum);
-        yield return StartCoroutine(currentEvent.ILoadEventByState(state));
+        if (currentEvent != null)
+        {
+            yield return StartCoroutine(currentEvent.ILoadEventByData(data));
+        }
+        else
+        {
+            Debug.Log($"Event {specialEvent} was null");
+        }
     }
 }

@@ -35,7 +35,7 @@ public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, I
 
     private void Awake()
     {
-        SettingsConfig.subscribeOption(GetComponent<VolumeSlider>());
+        SettingsConfig.subscribeOption(this);
 
         slider = GetComponent<Slider>();
         text = TextObj.GetComponent<Text>();
@@ -56,7 +56,7 @@ public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, I
                 break;
         }
 
-        SettingsConfig.SaveOption(setting, option, slider.value);
+        SettingsConfig.SaveOptionToFile(setting, option, slider.value);
 
         SettingsConfig.ApplySetting(setting, option, slider.value);
     }
@@ -120,14 +120,8 @@ public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, I
 
         if (!dragging)
         {
-            if (SettingsConfig.chosenOptions[setting].data == 0)
-            {
-                HideMutedImg();
-            }
-            else
-            {
-                HideText();
-            }
+            HideMutedImg();
+            HideText();
         }
     }
 
@@ -184,7 +178,14 @@ public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, I
             mutedAnimator.Play("UnMute");
         }
 
+        StopAllCoroutines();
+
         MutedImage.GetComponent<CanvasGroup>().alpha = 0f;
         TextObj.GetComponent<CanvasGroup>().alpha = 0f;
+    }
+
+    public void InitialUpdateVisuals()
+    {
+        UpdateVisuals();
     }
 }

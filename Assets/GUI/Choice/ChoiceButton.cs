@@ -29,7 +29,7 @@ public class ChoiceButton : MonoBehaviour
 
     public void LoadBlock()
     {
-        StartCoroutine(ChoiceManager.instance.GetComponent<ChoiceManager>().LoadChoise(_blockName));
+        StartCoroutine(ChoiceManager.instance.LoadChoise(_blockName));
     }
 
     private void OnMouseEnter()

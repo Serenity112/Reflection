@@ -1,5 +1,4 @@
 using Fungus;
-using Mono.Cecil;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,13 +9,20 @@ public class AudioManager : MonoBehaviour
     public static AudioManager instance = null;
 
     public AudioSource musicSource;
-    public AudioSource musicBuffSource;
+    public AudioSource musicBufferSource;
+
     public AudioSource ambientSource;
+    public AudioSource ambientBufferSource;
+
     public AudioSource soundSource;
 
     private Dictionary<string, AudioClip> Music;
     private Dictionary<string, AudioClip> Ambient;
     private Dictionary<string, AudioClip> Sound;
+
+    // Нужны для определения дорожек
+    private string _ambient1name;
+    private string _ambient2name;
 
     [Serializable]
     public struct AudioArr
@@ -38,7 +44,9 @@ public class AudioManager : MonoBehaviour
     // Два иенумератора нужны т.к. не всегда идёт одна анимация, а объединить их в один вариант пока не найден
     private IEnumerator _IMusic1;
     private IEnumerator _IMusic2;
-    private IEnumerator _IAmbient;
+
+    private IEnumerator _IAmbient1;
+    private IEnumerator _IAmbient2;
 
     void Awake()
     {
@@ -74,15 +82,16 @@ public class AudioManager : MonoBehaviour
     }
 
     // Music
-
+    // Метод для отгрузки при загрузкит сейв файла
     public IEnumerator FadeOutCurrent()
     {
         float time = 0.4f;
         yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
             LinearFade(musicSource, time, 0),
-            LinearFade(musicBuffSource, time, 0),
+            LinearFade(musicBufferSource, time, 0),
             LinearFade(ambientSource, time, 0),
+            LinearFade(ambientBufferSource, time, 0),
             LinearFade(soundSource, time, 0),
         });
         ClearCurrent();
@@ -93,26 +102,28 @@ public class AudioManager : MonoBehaviour
         musicSource.Stop();
         musicSource.clip = null;
 
-        musicBuffSource.Stop();
-        musicBuffSource.clip = null;
+        musicBufferSource.Stop();
+        musicBufferSource.clip = null;
 
         ambientSource.Stop();
         ambientSource.clip = null;
+
+        ambientBufferSource.Stop();
+        ambientBufferSource.clip = null;
 
         soundSource.Stop();
         soundSource.clip = null;
     }
 
     // Включает музыку с 0й громкости до громкости настроек
-    public void MusicStart(string name, float duration, float volume = 1)
+    public void MusicStart(string name, float duration, float volume)
     {
         if (!Music.ContainsKey(name))
         {
             return;
         }
 
-        UserData.instance.CurrentMusic = name;
-        UserData.instance.MusicSourceVolume = volume;
+        UserData.instance.CurrentMusic = (name, volume);
 
         musicSource.volume = 0;
         musicSource.clip = Music[name];
@@ -142,8 +153,7 @@ public class AudioManager : MonoBehaviour
 
     private IEnumerator IMusicEnd(float duration)
     {
-        UserData.instance.CurrentMusic = null;
-        UserData.instance.MusicSourceVolume = 0;
+        UserData.instance.CurrentMusic = (null, 0);
 
         if (_IMusic1 != null)
         {
@@ -159,19 +169,22 @@ public class AudioManager : MonoBehaviour
             musicSource.volume = 0;
             musicSource.Stop();
 
-            musicBuffSource.volume = 0;
-            musicBuffSource.Stop();
+            musicBufferSource.volume = 0;
+            musicBufferSource.Stop();
         }
         else
         {
             _IMusic1 = LinearFade(musicSource, duration, 0);
-            _IMusic2 = LinearFade(musicBuffSource, duration, 0);
+            _IMusic2 = LinearFade(musicBufferSource, duration, 0);
 
-            StartCoroutine(_IMusic1);
-            yield return StartCoroutine(_IMusic2);
+            yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+            {
+                _IMusic1,
+                _IMusic2,
+            });
 
             musicSource.Stop();
-            musicBuffSource.Stop();
+            musicBufferSource.Stop();
         }
     }
 
@@ -185,12 +198,12 @@ public class AudioManager : MonoBehaviour
             yield break;
         }
 
-        UserData.instance.CurrentMusic = name;
+        float curr_vol = UserData.instance.CurrentMusic.Volume;
 
-        AudioSource oldSource = musicSource.isPlaying ? musicSource : musicBuffSource;
-        AudioSource newSource = musicSource.isPlaying ? musicBuffSource : musicSource;
+        UserData.instance.CurrentMusic = (name, curr_vol);
 
-        float curr_vol = UserData.instance.MusicSourceVolume;
+        AudioSource oldSource = musicSource.isPlaying ? musicSource : musicBufferSource;
+        AudioSource newSource = musicSource.isPlaying ? musicBufferSource : musicSource;
 
         newSource.volume = 0;
         newSource.clip = Music[name];
@@ -216,8 +229,11 @@ public class AudioManager : MonoBehaviour
             _IMusic1 = LinearFade(newSource, duration, curr_vol);
             _IMusic2 = LinearFade(oldSource, duration, 0);
 
-            StartCoroutine(_IMusic1);
-            yield return StartCoroutine(_IMusic2);
+            yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+            {
+                _IMusic1,
+                _IMusic2,
+            });
 
             oldSource.Stop();
         }
@@ -233,11 +249,11 @@ public class AudioManager : MonoBehaviour
             yield break;
         }
 
-        UserData.instance.CurrentMusic = name;
-
-        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
+        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBufferSource;
 
         float curr_vol = activeSource.volume;
+
+        UserData.instance.CurrentMusic = (name, curr_vol);
 
         if (_IMusic1 != null)
         {
@@ -275,9 +291,9 @@ public class AudioManager : MonoBehaviour
 
     public void MusicVolChange(float duration, float volume) // volume от 0 до 1
     {
-        UserData.instance.MusicSourceVolume = volume;
+        UserData.instance.CurrentMusic = (UserData.instance.CurrentMusic.Name, volume);
 
-        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
+        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBufferSource;
 
         if (_IMusic1 != null)
         {
@@ -299,50 +315,114 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    public void MusicVolDefault(float duration)
-    {
-        UserData.instance.MusicSourceVolume = 1;
+    public void MusicVolDefault(float duration) => MusicVolChange(duration, 1);
 
-        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBuffSource;
-
-        if (_IMusic1 != null)
-        {
-            StopCoroutine(_IMusic1);
-        }
-        if (_IMusic2 != null)
-        {
-            StopCoroutine(_IMusic2);
-        }
-
-        if (duration == 0 || DialogMod.skipping)
-        {
-            activeSource.volume = 1;
-        }
-        else
-        {
-            _IMusic1 = LinearFade(activeSource, duration, 1);
-            StartCoroutine(_IMusic1);
-        }
-    }
 
     // Ambient
-    public void AmbientStart(string name, float duration, float volume = 1)
+    public void AmbientStart(string name, float duration, float volume = 1, bool newLine = false)
     {
         if (!Ambient.ContainsKey(name))
         {
             return;
         }
 
-        UserData.instance.CurrentAmbient = name;
-        UserData.instance.AmbientSourceVolume = volume;
-
-        ambientSource.volume = 0;
-        ambientSource.clip = Ambient[name];
-        ambientSource.Play();
-
-        if (_IAmbient != null)
+        AudioSource sourceToPlay;
+        if (newLine)
         {
-            StopCoroutine(_IAmbient);
+            _ambient2name = name;
+            UserData.instance.CurrentAmbient2 = (name, volume);
+            sourceToPlay = ambientSource.isPlaying ? ambientBufferSource : ambientSource;
+        }
+        else
+        {
+            _ambient1name = name;
+            UserData.instance.CurrentAmbient1 = (name, volume);
+            sourceToPlay = ambientSource.isPlaying ? ambientSource : ambientBufferSource;
+        }
+
+        sourceToPlay.volume = 0;
+        sourceToPlay.clip = Ambient[name];
+        sourceToPlay.Play();
+
+        if (_IAmbient1 != null)
+        {
+            StopCoroutine(_IAmbient1);
+        }
+        if (_IAmbient2 != null)
+        {
+            StopCoroutine(_IAmbient2);
+        }
+
+        if (duration == 0 || DialogMod.skipping)
+        {
+            sourceToPlay.volume = volume;
+        }
+        else
+        {
+            IEnumerator play = LinearFade(sourceToPlay, duration, volume);
+            if (newLine)
+            {
+                _IAmbient2 = play;
+                StartCoroutine(_IAmbient2);
+            }
+            else
+            {
+                _IAmbient1 = play;
+                StartCoroutine(_IAmbient1);
+            }
+        }
+    }
+
+    public void AmbientEnd(string name, float duration) => StartCoroutine(IAmbientEnd(name, duration));
+
+    private IEnumerator IAmbientEnd(string name, float duration)
+    {
+        if (!Ambient.ContainsKey(name))
+        {
+            yield break;
+        }
+
+        AudioSource sourceToEnd;
+        if (name == _ambient1name)
+        {
+            sourceToEnd = ambientSource;
+            UserData.instance.CurrentAmbient1 = (null, 0);
+        }
+        else
+        {
+            sourceToEnd = ambientBufferSource;
+            UserData.instance.CurrentAmbient2 = (null, 0);
+        }
+
+        if (_IAmbient1 != null)
+        {
+            StopCoroutine(_IAmbient1);
+        }
+        if (_IAmbient2 != null)
+        {
+            StopCoroutine(_IAmbient2);
+        }
+
+        if (duration == 0 || DialogMod.skipping)
+        {
+            sourceToEnd.volume = 0;
+            sourceToEnd.Stop();
+        }
+        else
+        {
+            _IAmbient1 = LinearFade(sourceToEnd, duration, 0);
+            yield return StartCoroutine(_IAmbient1);
+            sourceToEnd.Stop();
+        }
+    }
+
+    public void AmbientVolChange(string name, float duration, float volume) // 0 to 1
+    {
+        //UserData.instance.AmbientSourceVolume = volume;
+
+        if (_IAmbient1 != null)
+        {
+            StopCoroutine(_IAmbient1);
         }
 
         if (duration == 0 || DialogMod.skipping)
@@ -351,118 +431,16 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
-            _IAmbient = LinearFade(ambientSource, duration, volume);
-            StartCoroutine(_IAmbient);
+            _IAmbient1 = LinearFade(ambientSource, duration, volume);
+            StartCoroutine(_IAmbient1);
         }
     }
 
-    public void AmbientEnd(float duration) => StartCoroutine(IAmbientEnd(duration));
+    public void AmbientVolDefault(string name, float duration) => AmbientVolChange(name, duration, 1);
 
-    private IEnumerator IAmbientEnd(float duration)
+    public void AmbientTransition(string name, float duration)
     {
-        if (!Ambient.ContainsKey(name))
-        {
-            yield break;
-        }
 
-        UserData.instance.CurrentAmbient = null;
-        UserData.instance.AmbientSourceVolume = 0;
-
-        if (_IAmbient != null)
-        {
-            StopCoroutine(_IAmbient);
-        }
-
-        if (duration == 0 || DialogMod.skipping)
-        {
-            ambientSource.volume = 0;
-            ambientSource.Stop();
-        }
-        else
-        {
-            _IAmbient = LinearFade(ambientSource, duration, 0);
-            yield return StartCoroutine(_IAmbient);
-            ambientSource.Stop();
-        }
-    }
-
-    public void AmbientChange(string name, float duration) => StartCoroutine(IAmbientChange(name, duration));
-
-    private IEnumerator IAmbientChange(string name, float duration)
-    {
-        if (!Ambient.ContainsKey(name))
-        {
-            yield break;
-        }
-
-        UserData.instance.CurrentAmbient = name;
-
-        float curr_vol = ambientSource.volume;
-
-        if (_IAmbient != null)
-        {
-            StopCoroutine(_IAmbient);
-        }
-
-        if (duration == 0 || DialogMod.skipping)
-        {
-            ambientSource.clip = Ambient[name];
-            ambientSource.Play();
-        }
-        else
-        {
-            _IAmbient = LinearFade(ambientSource, duration, 0);
-            yield return StartCoroutine(_IAmbient);
-            ambientSource.Stop();
-
-            yield return new WaitForSeconds(0f); // Задержка между треками
-
-            ambientSource.clip = Ambient[name];
-            ambientSource.Play();
-
-            _IAmbient = LinearFade(ambientSource, duration, curr_vol);
-            StartCoroutine(_IAmbient);
-        }
-    }
-
-    public void AmbientVolChange(float duration, float volume) // 0 to 1
-    {
-        UserData.instance.AmbientSourceVolume = volume;
-
-        if (_IAmbient != null)
-        {
-            StopCoroutine(_IAmbient);
-        }
-
-        if (duration == 0 || DialogMod.skipping)
-        {
-            ambientSource.volume = volume;
-        }
-        else
-        {
-            _IAmbient = LinearFade(ambientSource, duration, volume);
-            StartCoroutine(_IAmbient);
-        }
-    }
-
-    public void AmbientVolDefault(float duration)
-    {
-        UserData.instance.AmbientSourceVolume = 1;
-
-        if (_IAmbient != null)
-        {
-            StopCoroutine(_IAmbient);
-        }
-
-        if (duration == 0 || DialogMod.skipping)
-        {
-            ambientSource.volume = 1;
-        }
-        else
-        {
-            _IAmbient = LinearFade(ambientSource, duration, 1);
-            StartCoroutine(_IAmbient);
-        }
     }
 
     // Sound
@@ -478,14 +456,14 @@ public class AudioManager : MonoBehaviour
         soundSource.Play();
     }
 
-    public IEnumerator LinearFade(AudioSource source, float duration, float targetVolume_linear)
+    public IEnumerator LinearFade(AudioSource source, float fadeTime, float targetVolume_linear)
     {
         float currentTime = 0;
         float currentVolume_linear = source.volume;
-        while (currentTime < duration)
+        while (currentTime < fadeTime)
         {
             currentTime += Time.deltaTime;
-            source.volume = Mathf.Lerp(currentVolume_linear, targetVolume_linear, currentTime / duration);
+            source.volume = Mathf.Lerp(currentVolume_linear, targetVolume_linear, currentTime / fadeTime);
             yield return null;
         }
 

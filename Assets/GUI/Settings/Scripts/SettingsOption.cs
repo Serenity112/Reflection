@@ -14,34 +14,34 @@ public class SettingsOption : MonoBehaviour, ISettingsOption
 
     private Text text;
 
-    IEnumerator spacingOn;
-    IEnumerator spacingOff;
+    private IEnumerator spacingOn;
+    private IEnumerator spacingOff;
 
-    IEnumerator colorsOn;
-    IEnumerator colorsOff;
+    private IEnumerator colorsOn;
+    private IEnumerator colorsOff;
 
     void Awake()
     {
         spacing = transform.GetChild(0).gameObject;
         text = gameObject.GetComponent<Text>();
 
-        SettingsConfig.subscribeOption(GetComponent<SettingsOption>());
+        SettingsConfig.subscribeOption(this);
     }
 
     public void OnClick()
     {
         SettingsConfig.ApplySetting(setting, option);
 
-        SettingsConfig.SaveOption(setting, option);
+        SettingsConfig.SaveOptionToFile(setting, option);
 
         SettingsConfig.UpdateAllVisuals();
     }
 
-    void OnMouseEnter()
+    private void OnMouseEnter()
     {
         ToWhite();
     }
-    void OnMouseExit()
+    private void OnMouseExit()
     {
         if (!SettingsConfig.isOptionEnabled(setting, option))
         {
@@ -90,5 +90,10 @@ public class SettingsOption : MonoBehaviour, ISettingsOption
             SpacingOff();
             ToGray();
         }
+    }
+
+    public void InitialUpdateVisuals()
+    {
+        UpdateVisuals();
     }
 }

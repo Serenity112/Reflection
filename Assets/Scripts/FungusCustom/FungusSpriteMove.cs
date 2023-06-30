@@ -8,13 +8,13 @@ namespace Fungus
     public class FungusSpriteMove : Command
     {
         [SerializeField]
-        private string characterName;
+        private string CharacterName;
 
         [SerializeField]
-        private Vector3 position;
+        private Vector3 Position;
 
         [SerializeField]
-        private float time = 0.1f;
+        private float MovementTime = 0.1f;
 
         public override void OnEnter()
         {
@@ -26,13 +26,13 @@ namespace Fungus
 
             DialogMod.denyNextDialog = true; // Запрет отключтся в конце выполнения SetMovementSprites
 
-            int spriteNum = SpriteController.instance.GetSpriteByName(characterName);
+            int spriteNum = SpriteController.instance.GetSpriteByName(CharacterName);
 
-            SpriteController.instance.SaveSpriteData(spriteNum, position);
+            SpriteController.instance.SaveSpriteData(spriteNum, Position);
 
             GameObject sprite = SpriteController.instance.GetSprite(spriteNum);
 
-            SpriteMove.instance.SetMovementSprites(sprite, position, time, DialogMod.skipping);
+            SpriteMove.instance.SetMovementSprites(sprite, Position, MovementTime, DialogMod.skipping);
 
             Continue();
         }

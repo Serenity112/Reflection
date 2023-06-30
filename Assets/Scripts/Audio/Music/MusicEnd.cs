@@ -8,6 +8,9 @@ namespace Fungus
     public class MusicEnd : Command
     {
         [SerializeField]
+        private string MusicName;
+
+        [SerializeField]
         private float Duration = 1.5f;
 
         public override void OnEnter()

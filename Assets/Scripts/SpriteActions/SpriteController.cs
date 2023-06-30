@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -264,19 +263,21 @@ public class SpriteController : MonoBehaviour
         return Sprites.transform.GetChild(num).gameObject;
     }
 
-    public void SkipSpriteActions_Expand()
+    public void LoadSpritesExpandings()
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             GameObject sprite = GetSprite(i);
 
-            if (GameSpriteData[i].name != null)
-            {
-                Vector3 scale = CharactersScales[GameSpriteData[i].name];
+            SpriteData data = GameSpriteData[i];
 
-                if (GameSpriteData[i].expanded)
+            if (data.name != null)
+            {
+                Vector3 scale = CharactersScales[data.name];
+
+                if (data.expanded)
                 {
-                    scale = scale * SpriteExpand.instance.expand_coefficient;
+                    scale *= SpriteExpand.instance.expand_coefficient;
                 }
 
                 sprite.transform.localScale = scale;
@@ -284,33 +285,36 @@ public class SpriteController : MonoBehaviour
         }
     }
 
+    // Доводит состояния спрайтов до актуального состояния
     public void SkipSpriteActions()
     {
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < maxSpritesOnScreen; i++)
         {
-            GameObject sprite = Sprites.transform.GetChild(i).gameObject;
+            GameObject sprite = GetSprite(i);
 
-            if (GameSpriteData[i].name != null)
+            SpriteData data = GameSpriteData[i];
+
+            if (data.name != null)
             {
-                sprite.transform.localPosition = GameSpriteData[i].postion;
+                sprite.transform.localPosition = data.postion;
 
-                Vector3 scale = CharactersScales[GameSpriteData[i].name];
+                Vector3 scale = CharactersScales[data.name];
 
-                if (GameSpriteData[i].expanded)
+                if (data.expanded)
                 {
-                    scale = scale * SpriteExpand.instance.expand_coefficient;
+                    scale *= SpriteExpand.instance.expand_coefficient;
                 }
 
                 sprite.transform.localScale = scale;
-                sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, GameSpriteData[i].alpha);
+                sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, data.alpha);
 
-                sprite.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, GameSpriteData[i].alpha);
+                sprite.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, data.alpha);
                 sprite.transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
 
             }
             else
             {
-                if (GameSpriteData[i].alpha == 0f)
+                if (data.alpha == 0f)
                 {
                     sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0f);
                     sprite.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0f);
@@ -320,59 +324,50 @@ public class SpriteController : MonoBehaviour
         }
     }
 
-    public void LoadSprites()
+    // Загрузка спрайтов для сейв системы
+    public IEnumerator LoadSprites()
     {
-        //Debug.Log("Called LOAD_SPRITES");
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < maxSpritesOnScreen; i++)
         {
-            var data = GameSpriteData[i];
+            GameObject sprite = GetSprite(i);
+
+            SpriteData data = GameSpriteData[i];
 
             if (data.name != null)
             {
-                GameObject sprite = Sprites.transform.GetChild(i).gameObject;
-
                 // Position
                 sprite.transform.localPosition = data.postion;
 
                 // Color
-                float alpha = data.alpha;
-                sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, alpha);
-                sprite.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, alpha);
+                sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, data.alpha);
+                sprite.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, data.alpha);
                 sprite.transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
 
                 // Scale
                 Vector3 scale = CharactersScales[data.name];
-                if (GameSpriteData[i].expanded)
+                if (data.expanded)
                 {
-                    float coefficient = 1.035f;
-                    float x = scale.x * coefficient;
-                    float y = scale.y * coefficient;
-                    float z = scale.z * coefficient;
-                    scale = new Vector3(x, y, z);
+                    scale *= SpriteExpand.instance.expand_coefficient;
                 }
                 sprite.transform.localScale = scale;
 
-                // Pose, emo, name
-                int pose = data.pose;
-                int emotion = data.emotion;
-                string name = data.name;
-
                 // Loading
-                LoadCurrSprite(sprite, i, name, pose, emotion);
+                yield return LoadCurrSprite(sprite, i, data.name, data.pose, data.emotion);
             }
         }
     }
 
-    public void AutoConnectPackages()
+    public IEnumerator AutoConnectPackages()
     {
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             if (GameSpriteData[i].name != null)
             {
-                PackageConntector.instance.ConnectPackage(GameSpriteData[i].name);
+                yield return StartCoroutine(PackageConntector.instance.IConnectPackage(GameSpriteData[i].name));
             }
         }
     }
+
     public void UnloadSprites()
     {
         for (int i = 0; i < 4; i++)
@@ -391,18 +386,20 @@ public class SpriteController : MonoBehaviour
         }
     }
 
-    public void LoadCurrSprite(GameObject currSprite, int spriteNum, string character, int pose, int emotion)
+    // Загрузка текстур в данный спрайт
+    public IEnumerator LoadCurrSprite(GameObject currSprite, int spriteNum, string character, int pose, int emotion)
     {
-        StartCoroutine(LoadSpriteByParts(currSprite, spriteNum, character, pose, emotion));
+        yield return StartCoroutine(LoadSpriteByParts(currSprite, spriteNum, character, pose, emotion));
     }
 
     public IEnumerator LoadSpriteByParts(GameObject spriteToLoad, int spriteNum, string character, int pose, int emotion)
     {
-        StartCoroutine(ILoadSpriteOfSpecificObject(spriteToLoad, spriteNum, character, pose, 0, SpritePart.BASE));
-
         GameObject Face = spriteToLoad.transform.GetChild(0).gameObject;
-
-        yield return StartCoroutine(ILoadSpriteOfSpecificObject(Face, spriteNum, character, pose, emotion, SpritePart.FACE1));
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            ILoadSpriteOfSpecificObject(spriteToLoad, spriteNum, character, pose, 0, SpritePart.BASE),
+            ILoadSpriteOfSpecificObject(Face, spriteNum, character, pose, emotion, SpritePart.FACE1)
+        });
     }
 
     public IEnumerator ILoadSpriteOfSpecificObject(GameObject obj, int spriteNum, string characterName, int pose, int emotion, SpritePart part)

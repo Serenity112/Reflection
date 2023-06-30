@@ -110,36 +110,40 @@ public class SkipButton : MonoBehaviour
 
     private IEnumerator IClick()
     {
-        GetComponent<Button>().interactable = false;
+        //GetComponent<Button>().interactable = false;
 
         switch (state)
         {
             case State.ReturnSkip:
                 DialogMod.autoSkip = true;
+                buttonParent.GetComponent<RectTransform>().localScale = new Vector3(0.85f, 0.85f, 0.85f);
                 EnableSkip();
                 break;
             case State.DoSkip:
                 DialogMod.autoSkip = false;
+                buttonParent.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
                 DisableSkip();
                 break;
         }
 
+        StopAllCoroutines();
+        
         Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
 
-        GetComponent<Button>().interactable = true;
+        //GetComponent<Button>().interactable = true;
     }
 
     public void EnableSkip()
     {
         animator.Play("DoSkip");
-        state = State.DoSkip;        
+        state = State.DoSkip;
     }
 
     public void DisableSkip()
     {
         animator.Play("ReturnSkip");
-        state = State.ReturnSkip;        
+        state = State.ReturnSkip;
     }
 }

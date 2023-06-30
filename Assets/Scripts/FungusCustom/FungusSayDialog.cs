@@ -17,7 +17,7 @@ namespace Fungus
 
         [SerializeField]
         private string speaker = null;
-       
+
         [SerializeField]
         private bool extendPrevious = false;
 
@@ -54,7 +54,7 @@ namespace Fungus
 
             SpriteExpand.instance.StopPrev();
             SpriteExpand.instance.SetExpanding(speaker, DialogMod.skipping);
-
+            
             LogManager.instance.NewMessage(storyText, speaker);
 
             NameChanger.instance.SetName(speaker);
@@ -129,6 +129,6 @@ namespace Fungus
             }
 
             sayDialog.Stop();
-        }          
+        }
     }
 }

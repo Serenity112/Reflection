@@ -14,6 +14,9 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
     [SerializeField]
     private GameObject TextObj;
 
+    [SerializeField]
+    private GameObject InfinityObj;
+
     private Text text;
 
     private Slider slider;
@@ -23,6 +26,9 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
 
     private IEnumerator speedIn;
     private IEnumerator speedOut;
+
+    private IEnumerator infinityIn;
+    private IEnumerator infinityOut;
 
     private void Awake()
     {
@@ -34,9 +40,20 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
 
     public void OnValueChanged()
     {
-        text.text = Convert.ToInt32(slider.value).ToString();
+        if (slider.value == slider.maxValue)
+        {
+            text.text = "";
+            HideSpeed();
+            ShowInfinity();
+        }
+        else
+        {
+            text.text = Convert.ToInt32(slider.value).ToString();
+            ShowSpeed();
+            HideInfinity();      
+        }
 
-        SettingsConfig.SaveOption(setting, option, slider.value);
+        SettingsConfig.SaveOptionToFile(setting, option, slider.value);
 
         SettingsConfig.ApplySetting(setting, option, slider.value);
     }
@@ -53,6 +70,7 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
         if (!enter)
         {
             HideSpeed();
+            HideInfinity();
         }
     }
 
@@ -62,7 +80,14 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
 
         if (!dragging)
         {
-            ShowSped();
+            if (SettingsConfig.chosenOptions[setting].data == slider.maxValue)
+            {
+                ShowInfinity();
+            }
+            else
+            {
+                ShowSpeed();
+            }
         }
     }
 
@@ -72,11 +97,12 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
 
         if (!dragging)
         {
+            HideInfinity();
             HideSpeed();
         }
     }
 
-    private void ShowSped()
+    private void ShowSpeed()
     {
         if (speedOut != null)
             StopCoroutine(speedOut);
@@ -94,14 +120,39 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
         StartCoroutine(speedOut);
     }
 
-    public void UpdateVisuals()
+    private void ShowInfinity()
     {
+        if (infinityOut != null)
+            StopCoroutine(infinityOut);
+
+        infinityIn = FadeManager.FadeOnly(InfinityObj, true, SettingsConfig.sliderGuiSpeed);
+        StartCoroutine(infinityIn);
+    }
+
+
+    private void HideInfinity()
+    {
+        if (infinityIn != null)
+            StopCoroutine(infinityIn);
+
+        infinityOut = FadeManager.FadeOnly(InfinityObj, false, SettingsConfig.sliderGuiSpeed);
+        StartCoroutine(infinityOut);
+    }
+
+    public void UpdateVisuals()
+    {        
         float speed = SettingsConfig.chosenOptions[setting].data;
-
         slider.value = speed;
-
         text.text = Convert.ToInt32(speed).ToString();
 
+        StopAllCoroutines();
+
         TextObj.GetComponent<CanvasGroup>().alpha = 0f;
+        InfinityObj.GetComponent<CanvasGroup>().alpha = 0f;
+    }
+
+    public void InitialUpdateVisuals()
+    {
+        UpdateVisuals();
     }
 }

@@ -17,7 +17,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.AmbientChange(AmbientName, Duration);
+            //AudioManager.instance.AmbientChange(AmbientName, Duration);
             Continue();
         }
 

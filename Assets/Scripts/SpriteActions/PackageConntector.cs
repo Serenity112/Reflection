@@ -6,7 +6,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class PackageConntector : MonoBehaviour
 {
-    // ѕотр€сающий класс, нужен дл€ предзагрузки пакета с ассетами. ≈сли его не примен€ть, будет зажержка пару мсп перед загрузкой первого ассета из пакета
+    // ѕотр€сающий класс, нужен дл€ предзагрузки пакета с ассетами. ≈сли его не примен€ть, будет зажержка пару мс перед загрузкой первого ассета из пакета
 
     public static PackageConntector instance = null;
 
@@ -25,6 +25,7 @@ public class PackageConntector : MonoBehaviour
 
         handlers = new Dictionary<string, AsyncOperationHandle<Sprite>>();
     }
+
     public void ConnectPackage(string PackageName)
     {
         StartCoroutine(IConnectPackage(PackageName));
@@ -33,9 +34,17 @@ public class PackageConntector : MonoBehaviour
     public void DisconnectPackage(string PackageName)
     {
         string address = PackageName += "_connector";
-        Addressables.Release(handlers[address]);
-        handlers.Remove(address);
+
+        if (handlers.ContainsKey(address))
+        {
+            Addressables.Release(handlers[address]);
+            handlers.Remove(address);
+        } else
+        {
+            Debug.Log($"Key {address} was not in dictionary!");
+        }        
     }
+
     public void DisconnectAllPackages()
     {
         foreach(KeyValuePair<string, AsyncOperationHandle<Sprite>> handler in handlers)
@@ -45,9 +54,10 @@ public class PackageConntector : MonoBehaviour
 
         handlers.Clear();
     }
-    private IEnumerator IConnectPackage(string PackageName)
+
+    public IEnumerator IConnectPackage(string packageName)
     {
-        string address = PackageName += "_connector";
+        string address = packageName += "_connector";
         AsyncOperationHandle<Sprite> handler = Addressables.LoadAssetAsync<Sprite>(address);
         yield return handler;
 

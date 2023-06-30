@@ -84,8 +84,7 @@ public class MainMenuLoad : MonoBehaviour
         StartCoroutine(FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed));
         StartCoroutine(ConfirmationPanel.instance.ClosePanel());
 
-        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
-        yield return StartCoroutine(MMPanelsManager.instance.ILoadGame(actualSaveNum));
+        yield return StartCoroutine(MMPanelsManager.instance.ILoadGame(saveNum));
 
         cassetteAnimator.SetTrigger("StopLoad");
     }
@@ -122,13 +121,15 @@ public class MainMenuLoad : MonoBehaviour
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         FadeManager.FadeObject(MainMenuPanel, false);
         saveFileFields.CloseOverPanel();
-        
+
+        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
+
         StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed));
-        SaveManager.instance.RemoveDateTime(saveNum);
+        SaveManager.instance.RemoveDateTime(actualSaveNum);
 
         yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
 
-        SaveManager.instance.DeleteSave(saveNum);
+        SaveManager.instance.DeleteSave(actualSaveNum);
     }
 
     IEnumerator ICancelDelete()

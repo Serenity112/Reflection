@@ -98,7 +98,8 @@ public class ChoiceManager : MonoBehaviour
                 }
                 else
                 {
-                    _saveFileChoices.Add(_currentChoiceCode, i);
+                    // Пофиксить )))
+                    //_saveFileChoices.Add(_currentChoiceCode, i);
                 }
             }
         }

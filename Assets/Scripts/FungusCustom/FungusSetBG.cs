@@ -12,15 +12,15 @@ namespace Fungus
         private string BackgroundName;
 
         [SerializeField]
-        private float AppearSpeed = 6f;
+        private float AppearSpeed = 2.5f;
+
+        [SerializeField]
+        private float Delay = 0.5f;
 
         [SerializeField]
         private bgSwapType FadeType;
 
-        public override void OnEnter()
-        {
-            StartCoroutine(IOnEnter());
-        }
+        public override void OnEnter() => StartCoroutine(IOnEnter());
 
         private IEnumerator IOnEnter()
         {
@@ -28,7 +28,7 @@ namespace Fungus
 
             UserData.instance.CurrentBG = BackgroundName;
 
-            yield return StartCoroutine(BackgroundManager.instance.ISwap(BackgroundName, FadeType, AppearSpeed));
+            yield return StartCoroutine(BackgroundManager.instance.ISwap(BackgroundName, FadeType, AppearSpeed, Delay));
 
             Continue();
         }

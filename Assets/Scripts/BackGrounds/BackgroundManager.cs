@@ -70,12 +70,12 @@ public class BackgroundManager : MonoBehaviour
         }
     }
 
-    public IEnumerator ISwap(string bg_adress, bgSwapType type, float speed)
+    public IEnumerator ISwap(string bg_adress, bgSwapType type, float speed, float delay)
     {
         switch (type)
         {
             case bgSwapType.BlackFade:
-                yield return IBlackFadeBackground(bg_adress, speed);
+                yield return IBlackFadeBackground(bg_adress, speed, delay);
                 break;
             case bgSwapType.Instant:
                 yield return ISwapBackground(bg_adress);
@@ -87,7 +87,7 @@ public class BackgroundManager : MonoBehaviour
     }
 
     // Фон -> чёрный экран -> фон
-    public IEnumerator IBlackFadeBackground(string bg_adress, float speed)
+    public IEnumerator IBlackFadeBackground(string bg_adress, float speed, float delay)
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
         TextBoxController.instance.SetStoryText("");
@@ -98,11 +98,13 @@ public class BackgroundManager : MonoBehaviour
             Addressables.ReleaseInstance(bg_handler);
         }
 
+        yield return SpecialEventManager.instance.IReleaseCurrentEvent();
         yield return StartCoroutine(SetTextBoxTheme(bg_adress));
 
         bg_handler = Addressables.InstantiateAsync(bg_adress, _backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
 
+        yield return new WaitForSeconds(delay);
 
         if (bg_handler.Status != AsyncOperationStatus.Succeeded)
         {
@@ -129,6 +131,7 @@ public class BackgroundManager : MonoBehaviour
         {
             Addressables.ReleaseInstance(old_handler);
         }
+        yield return SpecialEventManager.instance.IReleaseCurrentEvent();
 
         yield return StartCoroutine(SetTextBoxTheme(bg_adress));
 
@@ -161,6 +164,28 @@ public class BackgroundManager : MonoBehaviour
         if (old_handler.IsValid())
         {
             Addressables.ReleaseInstance(old_handler);
+        }
+
+        yield return SpecialEventManager.instance.IReleaseCurrentEvent();
+        yield return StartCoroutine(SetTextBoxTheme(bg_adress));
+
+        Resources.UnloadUnusedAssets();
+    }
+
+    // Для сейвов
+    public IEnumerator ILoadBackground(string bg_adress)
+    {
+        if (bg_handler.IsValid())
+        {
+            Addressables.ReleaseInstance(bg_handler);
+        }
+
+        bg_handler = Addressables.InstantiateAsync(bg_adress, _backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
+        yield return bg_handler;
+
+        if (bg_handler.Status != AsyncOperationStatus.Succeeded)
+        {
+            Debug.Log("Error loading " + bg_adress);
         }
 
         yield return StartCoroutine(SetTextBoxTheme(bg_adress));

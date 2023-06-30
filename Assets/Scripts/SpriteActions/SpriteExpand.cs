@@ -16,7 +16,7 @@ public class SpriteExpand : MonoBehaviour
 
     public float expand_coefficient = 1.035f;
 
-    private float expand_time = 0.2f;
+    private float expand_time = 0.1f;
 
     void Awake()
     {
@@ -43,11 +43,13 @@ public class SpriteExpand : MonoBehaviour
 
         StopAllCoroutines();
 
-        SpriteController.instance.SkipSpriteActions_Expand();
+        SpriteController.instance.LoadSpritesExpandings();
     }
 
     public void SetExpanding(string characterName, bool skip)
     {
+        bool allowExpand = SettingsConfig.chosenOptions[Settings.SpriteExpand].data == 1;
+
         int spriteNum = SpriteController.instance.GetSpriteByName(characterName);
 
         if (spriteNum != -1)
@@ -55,17 +57,26 @@ public class SpriteExpand : MonoBehaviour
             if (lastExpandedSpriteName != characterName)
             {
                 GameObject newSprite = SpriteController.instance.GetSprite(spriteNum);
-                Vector3 newScale = newSprite.transform.localScale * expand_coefficient;
+                Vector3 newScale = SpriteController.instance.CharactersScales[characterName] * expand_coefficient;
 
-                SpriteController.instance.SaveSpriteData(spriteNum, true);
+                if (!skip)
+                {
+                    SpriteController.instance.SaveSpriteData(spriteNum, true);
+                }
 
                 int linkedSprite = SpriteController.instance.GameSpriteData[spriteNum].prevSprite;
                 if (linkedSprite != -1)
                 {
-                    StartCoroutine(Expand(SpriteController.instance.GetSprite(linkedSprite), newScale, expand_time, skip));
+                    if (allowExpand && !skip)
+                    {
+                        StartCoroutine(Expand(SpriteController.instance.GetSprite(linkedSprite), newScale, expand_time));
+                    }
                 }
 
-                StartCoroutine(Expand(newSprite, newScale, expand_time, skip));
+                if (allowExpand && !skip)
+                {
+                    StartCoroutine(Expand(newSprite, newScale, expand_time));
+                }
 
                 if (lastExpandedSpriteName != null)
                 {
@@ -99,41 +110,43 @@ public class SpriteExpand : MonoBehaviour
             int linkedSprite = SpriteController.instance.GameSpriteData[oldSpriteNum].prevSprite;
             if (linkedSprite != -1)
             {
-                StartCoroutine(Expand(SpriteController.instance.GetSprite(linkedSprite), SpriteController.instance.CharactersScales[lastExpandedSpriteName], expand_time, skip));
+                StartCoroutine(Expand(SpriteController.instance.GetSprite(linkedSprite), SpriteController.instance.CharactersScales[lastExpandedSpriteName], expand_time));
             }
 
-            StartCoroutine(Expand(oldSprite, SpriteController.instance.CharactersScales[lastExpandedSpriteName], expand_time, skip));
+            StartCoroutine(Expand(oldSprite, SpriteController.instance.CharactersScales[lastExpandedSpriteName], expand_time));
         }
     }
 
 
-    private IEnumerator Expand(GameObject Sprite, Vector3 newScale, float smoothTime, bool skip)
+    private IEnumerator Expand(GameObject sprite, Vector3 newScale, float smoothTime)
     {
         isExecuting = true;
 
-        if (skip)
+        /*if (skip)
         {
-            Sprite.transform.localScale = newScale;
+            sprite.transform.localScale = newScale;
             isExecuting = false;
             yield break;
-        }
-        else
+        }*/
+
+        Vector3 velocity = Vector3.zero;
+
+        bool targetGstart = newScale.x > sprite.transform.localPosition.x;
+
+        while (sprite.transform.localScale != newScale)
         {
-            Vector3 velocity1 = Vector3.zero;
+            float diff = targetGstart ? newScale.x - sprite.transform.localPosition.x : sprite.transform.localPosition.x - newScale.x;
 
-            while (Sprite.transform.localScale != newScale)
+            if (Math.Abs(diff) < 0.01)
             {
-                if (Math.Abs(Math.Abs(Sprite.transform.localScale.x) - Math.Abs(newScale.x)) < 0.001)
-                {
-                    Sprite.transform.localScale = newScale;
-                    isExecuting = false;
-                    yield break;
-                }
-
-                Sprite.transform.localScale = Vector3.SmoothDamp(Sprite.transform.localScale, newScale, ref velocity1, smoothTime);
-
-                yield return null;
+                sprite.transform.localScale = newScale;
+                isExecuting = false;
+                yield break;
             }
+
+            sprite.transform.localScale = Vector3.SmoothDamp(sprite.transform.localScale, newScale, ref velocity, smoothTime);
+
+            yield return null;
         }
     }
 }

@@ -101,9 +101,12 @@ public class SaveChoiseAnimator : MonoBehaviour
         UserData.instance.SavePlayer(saveNum);
 
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-        StartCoroutine(FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed));
-        StartCoroutine(FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed));
-        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed),
+            FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed),
+            ConfirmationPanel.instance.ClosePanel()
+        });
 
         SaveAnimator.SetTrigger("StopSave");
 
@@ -116,9 +119,12 @@ public class SaveChoiseAnimator : MonoBehaviour
     IEnumerator ICancelSave()
     {
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-        StartCoroutine(FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed));
-        StartCoroutine(FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed));
-        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed),
+            FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed),
+            ConfirmationPanel.instance.ClosePanel()
+        });
 
         SaveAnimator.SetTrigger("StopSave");
 
@@ -143,16 +149,18 @@ public class SaveChoiseAnimator : MonoBehaviour
     }
     IEnumerator IDeleteSave()
     {
-        StartCoroutine(FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed));
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         FadeManager.FadeObject(SavedPanel, false);
         FadeManager.FadeObject(UnSavedPanel, true);
         saveFileFields.CloseOverPanel();
-
-        StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed));
         SaveManager.instance.RemoveDateTime(saveNum);
 
-        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed),
+            FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed),
+            ConfirmationPanel.instance.ClosePanel()
+        });
 
         SaveManager.instance.DeleteSave(saveNum);
     }

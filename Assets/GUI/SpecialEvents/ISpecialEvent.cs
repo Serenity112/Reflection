@@ -2,9 +2,9 @@ using System.Collections;
 
 public interface ISpecialEvent
 {
-    int GetState();
+    string GetData();
 
-    IEnumerator ILoadEventByState(int state);
+    IEnumerator ILoadEventByData(string data);
 
     IEnumerator IReleaseEvent();
 }

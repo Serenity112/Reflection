@@ -62,7 +62,7 @@ public class LogManager : MonoBehaviour
             { "Katya", "Катя" },
             { "Nastya", "Настя" },
             { "Evelina", "Эвелина" },
-            { "Tanua", "Таня" },
+            { "Tanya", "Таня" },
             { "Sergey", "Сергей" }
         };
     }
@@ -160,6 +160,10 @@ public class LogManager : MonoBehaviour
 
         Resources.UnloadUnusedAssets();
     }
+
+
+
+
 
     // Не используется, старый метод
     public void NewMessage2(string MyMessage, string speakerName)
