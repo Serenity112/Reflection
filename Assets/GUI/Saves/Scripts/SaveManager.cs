@@ -12,21 +12,20 @@ public enum SavePageScroll
     Left,
     Right,
 }
+
 public class SaveManager : MonoBehaviour
 {
     public static SaveManager instance = null;
 
-    [SerializeField] private float pagesScrollSpeed;
+    [HideInInspector] public float pagesScrollSpeed = 4f;
 
-    public float optionsGradientSpeed;
+    [HideInInspector] public float optionsGradientSpeed = 4f;
 
-    [SerializeField] private int captureWidth;
+    private (int width, int height) CaptureRes = (1280, 720);
 
-    [SerializeField] private int captureHeight;
+    [HideInInspector] public const int savesPerPage = 6;
 
-    public const int savesPerPage = 6;
-
-    public const int maxPages = 12;
+    [HideInInspector] public const int maxPages = 12;
 
     [SerializeField] private GameObject bottomPagesObj;
     private BottomPages bottomPages;
@@ -75,10 +74,7 @@ public class SaveManager : MonoBehaviour
             allScreenshots[i] = file.GetComponent<SaveFileFields>().screenshot;
         }
 
-        if (!StaticVariables.ifInMainMenu)
-        {
-            GameCamera = PanelsManager.instance.GameCamera;
-        }
+        GameCamera = PanelsConfig.CurrentManager.GetGameCamera();
 
         if (ES3.FileExists(SaveFilesData) && ES3.KeyExists("saveTaken", SaveFilesData))
         {
@@ -100,7 +96,7 @@ public class SaveManager : MonoBehaviour
 
         bottomPages = bottomPagesObj.GetComponent<BottomPages>();
 
-        FirstLoad();
+        LoadFirstPage();
     }
 
     public void ClearCurrent()
@@ -153,7 +149,7 @@ public class SaveManager : MonoBehaviour
         bottomPages.Activate(pageToLoad);
     }
 
-    public void FirstLoad()
+    public void LoadFirstPage()
     {
         for (int saveNum = 0; saveNum < savesPerPage; saveNum++)
         {
@@ -162,7 +158,12 @@ public class SaveManager : MonoBehaviour
             GameObject savedPanel = saveFileFields.SavedPanel;
             GameObject unsavedPanel = saveFileFields.UnSavedPanel;
             GameObject MainMenuPanel = saveFileFields.MainMenuPanel;
+
             GameObject screenshot = allScreenshots[saveNum];
+
+            GameObject noImage = saveFileFields.NoImage;
+            GameObject frame = saveFileFields.Frame;
+            GameObject overPanel = saveFileFields.overPanel;
 
             if (savesTaken[saveNum])
             {
@@ -178,20 +179,30 @@ public class SaveManager : MonoBehaviour
                 saveFileFields.datetime.GetComponent<Text>().text = saveDataTimes[saveNum];
                 saveFileFields.datetime.GetComponent<CanvasGroup>().alpha = 1f;
 
-                saveFileFields.overPanel.GetComponent<CanvasGroup>().alpha = 1f; // Overpanel
-
                 var texture = ES3.LoadImage($"{ScreenshotsFolder}/screenshot{saveNum}.png");
                 texture.name = "screenshot" + saveNum;
                 currentTextures[saveNum] = texture;
 
                 screenshot.GetComponent<RawImage>().texture = texture;
-
                 screenshot.GetComponent<CanvasGroup>().alpha = 1f;
+
+                FadeManager.FadeObject(overPanel, true);
+                FadeManager.FadeObject(frame, true);
+                FadeManager.FadeObject(noImage, false);
+                FadeManager.FadeObject(unsavedPanel, false);
+
                 saveFileFields.AllowSaveLoad = true;
                 saveFileFields.AllowOverPanel = true;
             }
             else
             {
+                FadeManager.FadeObject(overPanel, false);
+                FadeManager.FadeObject(frame, false);
+                FadeManager.FadeObject(noImage, true);
+
+                FadeManager.FadeObject(MainMenuPanel, false);
+                FadeManager.FadeObject(savedPanel, false);
+
                 saveFileFields.datetime.GetComponent<CanvasGroup>().alpha = 0f;
 
                 screenshot.GetComponent<RawImage>().texture = null;
@@ -210,56 +221,109 @@ public class SaveManager : MonoBehaviour
 
         bottomPagesObj.GetComponent<BottomPages>().StartingLoad();
     }
-    public IEnumerator LoadPictures(int prevPage, int pageToLoad)
+
+    public IEnumerator LoadPictures(int currentPage, int pageToLoad)
     {
         // Выцветание скринов
-        int firstActiveSave = -1;
+        List<IEnumerator> enumerators_prev = new List<IEnumerator>();
+        List<IEnumerator> enumerators_next = new List<IEnumerator>();
 
         for (int i = 0; i < savesPerPage; i++)
         {
-            if (savesTaken[prevPage * savesPerPage + i])
-            {
-                firstActiveSave = i;
-                break;
-            }
-        }
+            int a_prev = currentPage * savesPerPage + i;
+            int a_next = pageToLoad * savesPerPage + i;
 
-        for (int i = 0; i < savesPerPage; i++)
-        {
             SaveFileFields saveFileFields = allFiles[i].GetComponent<SaveFileFields>();
             GameObject savedPanel = saveFileFields.SavedPanel;
             GameObject unsavedPanel = saveFileFields.UnSavedPanel;
+            GameObject MainMenuPanel = saveFileFields.MainMenuPanel;
+
+            GameObject noImage = saveFileFields.NoImage;
+            GameObject frame = saveFileFields.Frame;
             GameObject overPanel = saveFileFields.overPanel;
 
-            StartCoroutine(FadeManager.FadeOnly(saveFileFields.datetime, false, pagesScrollSpeed));
-            StartCoroutine(FadeManager.FadeObject(overPanel, false, pagesScrollSpeed)); // Overpanel
-            StartCoroutine(FadeManager.FadeObject(savedPanel, false, pagesScrollSpeed));
-            FadeManager.FadeObject(unsavedPanel, false);
+            //
+            if (savesTaken[a_next])
+            {
+                if (StaticVariables.ifInMainMenu)
+                {
+                    FadeManager.FadeObject(MainMenuPanel, true);
+                }
+                else
+                {
+                    FadeManager.FadeObject(savedPanel, true);
+                }
 
-            if (i != firstActiveSave)
-                StartCoroutine(FadeManager.FadeObject(allScreenshots[i], false, pagesScrollSpeed));
+                FadeManager.FadeObject(unsavedPanel, false);
+            }
+
+            //
+            if (!savesTaken[a_next])
+            {
+                if (!StaticVariables.ifInMainMenu)
+                {
+                    FadeManager.FadeObject(unsavedPanel, true);
+                }
+
+                FadeManager.FadeObject(MainMenuPanel, false);
+                FadeManager.FadeObject(savedPanel, false);
+            }
+
+
+            // Переход [Занятый] => [Занятый]
+            if (savesTaken[a_prev] && savesTaken[a_next])
+            {
+                enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, pagesScrollSpeed));
+                enumerators_prev.Add(FadeManager.FadeOnly(saveFileFields.datetime, false, pagesScrollSpeed));
+
+                enumerators_next.Add(SetDateTime(saveFileFields.datetime.GetComponent<Text>(), saveDataTimes[a_next]));
+                enumerators_next.Add(FadeManager.FadeOnly(saveFileFields.datetime, true, pagesScrollSpeed));
+                enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, pagesScrollSpeed));
+            }
+
+            // Переход [Занятый] => [Пустой]
+            if (savesTaken[a_prev] && !savesTaken[a_next])
+            {
+                enumerators_prev.Add(FadeManager.FadeOnly(saveFileFields.datetime, false, pagesScrollSpeed));
+                enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, pagesScrollSpeed));
+                enumerators_prev.Add(FadeManager.FadeOnly(overPanel, false, pagesScrollSpeed));
+                enumerators_prev.Add(FadeManager.FadeOnly(noImage, true, pagesScrollSpeed));
+
+                enumerators_next.Add(FadeManager.FadeOnly(frame, false, pagesScrollSpeed));
+            }
+
+            // Переход [Пустой] => [Занятый]
+            if (!savesTaken[a_prev] && savesTaken[a_next])
+            {
+                enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, pagesScrollSpeed));
+
+                enumerators_next.Add(SetDateTime(saveFileFields.datetime.GetComponent<Text>(), saveDataTimes[a_next]));
+                enumerators_next.Add(FadeManager.FadeOnly(saveFileFields.datetime, true, pagesScrollSpeed));
+                enumerators_next.Add(FadeManager.FadeOnly(overPanel, true, pagesScrollSpeed));
+                enumerators_next.Add(FadeManager.FadeOnly(noImage, false, pagesScrollSpeed));
+                enumerators_next.Add(FadeManager.FadeOnly(frame, true, pagesScrollSpeed));
+                enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, pagesScrollSpeed));
+            }
+
+            // Переход [Пустой] => [Пустой]
+            if (!savesTaken[a_prev] && !savesTaken[a_next])
+            {
+                // Ничего
+            }
         }
 
-        if (firstActiveSave != -1)
-        {
-            yield return StartCoroutine(FadeManager.FadeObject(allScreenshots[firstActiveSave], false, pagesScrollSpeed));
-        }
-
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators_prev));
 
         // Очистка текущих скринов
         ClearCurrent();
 
-        // Загрузка новых скринов
+        // Загрузка текстур новых скринов
         for (int i = 0; i < savesPerPage; i++)
         {
             int actualSaveNum = pageToLoad * savesPerPage + i;
-            SaveFileFields saveFileFields = allFiles[i].GetComponent<SaveFileFields>();
 
             if (savesTaken[actualSaveNum])
             {
-                saveFileFields.datetime.GetComponent<Text>().text = saveDataTimes[actualSaveNum];
-                StartCoroutine(FadeManager.FadeOnly(saveFileFields.datetime, true, pagesScrollSpeed));
-
                 var texture = ES3.LoadImage($"{ScreenshotsFolder}/screenshot{actualSaveNum}.png");
                 texture.name = "screenshot" + actualSaveNum;
                 currentTextures[i] = texture;
@@ -267,8 +331,6 @@ public class SaveManager : MonoBehaviour
             }
             else
             {
-                StartCoroutine(FadeManager.FadeOnly(saveFileFields.datetime, false, pagesScrollSpeed));
-
                 allScreenshots[i].GetComponent<RawImage>().texture = null;
                 currentTextures[i] = null;
             }
@@ -276,64 +338,15 @@ public class SaveManager : MonoBehaviour
             yield return null;
         }
 
-        List<IEnumerator> enumerators = new List<IEnumerator>();
-
-        // Вцветание новых скринов
-        for (int i = 0; i < savesPerPage; i++)
-        {
-            int saveNum = pageToLoad * savesPerPage + i;
-
-            SaveFileFields saveFileFields = allFiles[i].GetComponent<SaveFileFields>();
-
-            GameObject savedPanel = saveFileFields.SavedPanel;
-            GameObject unsavedPanel = saveFileFields.UnSavedPanel;
-            GameObject MainMenuPanel = saveFileFields.MainMenuPanel;
-
-            saveFileFields.exitLeft = true;
-            saveFileFields.exitRight = true;
-
-            if (savesTaken[saveNum])
-            {
-                enumerators.Add(FadeManager.FadeOnly(allScreenshots[i], true, pagesScrollSpeed));
-
-                if (StaticVariables.ifInMainMenu)
-                {
-                    StartCoroutine(FadeManager.FadeObject(MainMenuPanel, true, pagesScrollSpeed));
-                }
-                else
-                {
-                    StartCoroutine(FadeManager.FadeObject(savedPanel, true, pagesScrollSpeed));
-                }
-
-                FadeManager.FadeObject(unsavedPanel, false);
-
-                StartCoroutine(FadeManager.FadeObject(saveFileFields.overPanel, true, pagesScrollSpeed)); // Overpanel
-                saveFileFields.AllowSaveLoad = true;
-                saveFileFields.AllowOverPanel = true;
-            }
-            else
-            {
-                allScreenshots[i].GetComponent<CanvasGroup>().alpha = 0f;
-                if (StaticVariables.ifInMainMenu)
-                {
-                    FadeManager.FadeObject(MainMenuPanel, false);
-                }
-                else
-                {
-                    FadeManager.FadeObject(savedPanel, false);
-                    FadeManager.FadeObject(unsavedPanel, true);
-                }
-
-                saveFileFields.overPanel.GetComponent<CanvasGroup>().alpha = 0f; // Overpanel
-                saveFileFields.AllowSaveLoad = false;
-                saveFileFields.AllowOverPanel = false;
-            }
-        }
-
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators));
-        //yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators_next));
 
         StaticVariables.UIsystemDown = false;
+    }
+
+    private IEnumerator SetDateTime(Text text, string datetime)
+    {
+        text.text = datetime;
+        yield return null;
     }
 
     public IEnumerator OverrideScreenshot(int saveNum, GameObject screenshot, GameObject overscreenshot, float speed)
@@ -344,16 +357,16 @@ public class SaveManager : MonoBehaviour
         var bufferTexture = currentTextures[saveNum];
         var currentTexture = RenderTexture.active;
 
-        var overRenderTexture = RenderTexture.GetTemporary(captureWidth, captureHeight, 24);
+        var overRenderTexture = RenderTexture.GetTemporary(CaptureRes.width, CaptureRes.height, 24);
         overRenderTexture.name = "OverTemprender" + saveNum;
 
         RenderTexture.active = overRenderTexture;
         GameCamera.targetTexture = overRenderTexture;
         GameCamera.Render();
 
-        var texture = new Texture2D(captureWidth, captureHeight, TextureFormat.RGB24, false);
+        var texture = new Texture2D(CaptureRes.width, CaptureRes.height, TextureFormat.RGB24, false);
         texture.name = "OverScreenshotTex" + saveNum;
-        texture.ReadPixels(new Rect(0, 0, captureWidth, captureHeight), 0, 0);
+        texture.ReadPixels(new Rect(0, 0, CaptureRes.width, CaptureRes.height), 0, 0);
         texture.Apply();
 
         overscreenshot.GetComponent<RawImage>().texture = texture;
@@ -397,16 +410,16 @@ public class SaveManager : MonoBehaviour
 
         var currentTexture = RenderTexture.active;
 
-        var renderTexture = RenderTexture.GetTemporary(captureWidth, captureHeight, 24);
+        var renderTexture = RenderTexture.GetTemporary(CaptureRes.width, CaptureRes.height, 24);
         renderTexture.name = "Temprender" + saveNum;
 
         RenderTexture.active = renderTexture;
         GameCamera.targetTexture = renderTexture;
         GameCamera.Render();
 
-        var texture = new Texture2D(captureWidth, captureHeight, TextureFormat.RGB24, false);
+        var texture = new Texture2D(CaptureRes.width, CaptureRes.height, TextureFormat.RGB24, false);
         texture.name = "ScreenshotTex" + saveNum;
-        texture.ReadPixels(new Rect(0, 0, captureWidth, captureHeight), 0, 0);
+        texture.ReadPixels(new Rect(0, 0, CaptureRes.width, CaptureRes.height), 0, 0);
         texture.Apply();
 
         screenshot.GetComponent<RawImage>().texture = texture;

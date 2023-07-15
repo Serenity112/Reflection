@@ -36,12 +36,12 @@ public class SpriteFade : MonoBehaviour
     {
         if (skip)
         {
-            FadeManager.ColorFadeObject(obj, fadein);
+            FadeManager.ColorAlphaFadeObject(obj, fadein);
             yield return null;
         }
         else
         {
-            yield return StartCoroutine(FadeManager.ColorFadeObject(obj, fadein, speed));
+            yield return StartCoroutine(FadeManager.ColorAlphaFadeObject(obj, fadein, speed));
         }
     }
 
@@ -51,14 +51,14 @@ public class SpriteFade : MonoBehaviour
 
         if (skip)
         {
-            FadeManager.ColorFadeObject(Body, true);
-            FadeManager.ColorFadeObject(Face1, true);
+            FadeManager.ColorAlphaFadeObject(Body, true);
+            FadeManager.ColorAlphaFadeObject(Face1, true);
             yield return null;
         }
         else
         {
-            StartCoroutine(FadeManager.ColorFadeObject(Body, true, speed));
-            yield return StartCoroutine(FadeManager.ColorFadeObject(Face1, true, speed));
+            StartCoroutine(FadeManager.ColorAlphaFadeObject(Body, true, speed));
+            yield return StartCoroutine(FadeManager.ColorAlphaFadeObject(Face1, true, speed));
         }
     }
 }

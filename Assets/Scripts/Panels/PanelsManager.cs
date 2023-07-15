@@ -108,7 +108,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
             FadeManager.FadeObject(pausePanel, false);
             gameGuiPanel.GetComponent<CanvasGroup>().alpha = 1f;
             GameButtons.GetComponent<CanvasGroup>().alpha = 1f;
-            PanelsCamera.enabled = true;          
+            PanelsCamera.enabled = true;
         }
         else
         {
@@ -161,4 +161,6 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     public GameObject GetBlackPanel() => BlackPanel;
 
     public GameObject GetActivePanelsParent() => ActivePanels;
+
+    public Camera GetGameCamera() => GameCamera;
 }

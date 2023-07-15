@@ -1,3 +1,4 @@
+using ChristinaCreatesGames.Typography.Typewriter;
 using Fungus;
 using System.Collections;
 using System.Collections.Generic;
@@ -26,6 +27,7 @@ public class PauseButton : MonoBehaviour
         origScale = gameObject.GetComponent<RectTransform>().localScale;
         expandedScale = origScale * 1.1f;
     }
+
     private void OnMouseEnter()
     {
         if (shrinkOnExit != null)
@@ -46,14 +48,15 @@ public class PauseButton : MonoBehaviour
 
     public void OnClick()
     {
-        DialogMod.denyNextDialog = true;
+        gameObject.GetComponent<Button>().interactable = false;
+
+        Typewriter.denyNextDialog = true;
 
         StartCoroutine(IOnClick());
     }
+
     private IEnumerator IOnClick()
     {
-        gameObject.GetComponent<Button>().interactable = false;
-  
         animator.Play("pauseanim");
         ButtonsManager.instance.unlinePauseButtons();
 
@@ -68,19 +71,19 @@ public class PauseButton : MonoBehaviour
         GetComponent<Button>().interactable = true;
     }
 
-    public void continueGame()
-    {
-        StartCoroutine(IContinue());
-    }
+    public void ContinueGame() => StartCoroutine(IContinue());
 
     private IEnumerator IContinue()
     {
         ButtonsManager.instance.unlinePauseButtons();
 
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, true, speed));
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed * 0.5f));
-        yield return StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.pausePanel, false, speed));
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, true, speed),
+            FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed * 0.5f),
+            FadeManager.FadeObject(PanelsManager.instance.pausePanel, false, speed)
+        });
 
-        DialogMod.denyNextDialog = false;
+        Typewriter.denyNextDialog = false;
     }
 }

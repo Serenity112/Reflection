@@ -122,7 +122,7 @@ public class SettingsConfig
         chosenOptions.Add(Settings.ambientVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
 
         // Скорость текста
-        chosenOptions.Add(Settings.TextSpeed, new SettingsOptionsData(SettingsOptions.Speed, 50));
+        chosenOptions.Add(Settings.TextSpeed, new SettingsOptionsData(SettingsOptions.Speed, 80));
 
         // Увеличениек спрайтов
         chosenOptions.Add(Settings.SpriteExpand, new SettingsOptionsData(SettingsOptions.Expand, 1)); // 1 - true
@@ -150,7 +150,7 @@ public class SettingsConfig
         }
         catch (Exception)
         {
-            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
     }
 
@@ -172,10 +172,16 @@ public class SettingsConfig
         }
         catch (Exception)
         {
+            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
     }
 
-    public static void ApplySetting(Settings setting, SettingsOptions value, float data = 0)
+    public static void UpdatedLinkedVisuals()
+    {
+
+    }
+
+    public static void FilterAndApplySpecificSetting(Settings setting, SettingsOptions value, float data = 0)
     {
         if (setting == Settings.FullScreenMode)
         {
@@ -191,10 +197,9 @@ public class SettingsConfig
             {
                 SaveOptionToFile(Settings.FullScreenMode, SettingsOptions.WindowsScreen);
             }
-
         }
 
-        currentManager.ApplySetting(setting, value, data);
+        currentManager.InstantApplySpecificSetting(setting, value, data);
     }
 
     public static bool isOptionEnabled(Settings setting, SettingsOptions option)
@@ -256,7 +261,8 @@ public class SettingsConfig
                     rect.anchorMin = new Vector2(0.5f, 0.5f);
                     rect.anchorMax = new Vector2(0.5f, 0.5f);
                     rect.pivot = new Vector2(0.5f, 0.5f);
-                    rect.sizeDelta = new Vector2(1920f, 1080f);
+
+                    rect.sizeDelta = new Vector2(Screen.currentResolution.width, Screen.currentResolution.height);
                 }
                 break;
             case SettingsOptions.Zoom:
@@ -286,7 +292,7 @@ public class SettingsConfig
         switch (value)
         {
             case SettingsOptions.r2560x1440:
-                Screen.SetResolution(2560, 1440, FullScreenMode.Windowed, 60);
+                Screen.SetResolution(2560, 1440, FullScreenMode.Windowed, 144);
                 break;
             case SettingsOptions.r1920x1080:
                 Screen.SetResolution(1920, 1080, FullScreenMode.Windowed, 60);

@@ -18,8 +18,9 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     public GameObject AboutUs;
 
-    [SerializeField]
     private float FadingSpeed = 5f;
+
+    [SerializeField] Camera GameCamera;
 
     private AsyncOperationHandle<GameObject> savesPanelHandler;
 
@@ -40,19 +41,25 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         PanelsConfig.CurrentManager = this;
 
-        SaveFilesData = SaveSystemUtils.SaveFilesData;
-
         StaticVariables.ifInMainMenu = true;
+
+        // Иначе нет гарантии, что ActivePanels внутри WarningPanel проиницализируется раньше, чем скрипт обратится к ней
+
+        SaveFilesData = SaveSystemUtils.SaveFilesData;
     }
 
     private void Start()
     {
+        ConfirmationPanel.instance.ActivePanels = ActivePanels;
+        WarningPanel.instance.ActivePanels = ActivePanels;
         UpdateContinueButtonState();
     }
 
     public GameObject GetBlackPanel() => BlackPanel;
 
     public GameObject GetActivePanelsParent() => ActivePanels;
+
+    public Camera GetGameCamera() => GameCamera;
 
     // Состояние кнопки "Продолжить"
     private void UpdateContinueButtonState()
@@ -66,7 +73,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         }
         catch (Exception)
         {
-            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
 
         switch (StaticVariables.MainMenuContinueButtonAnimationTrigger)
@@ -116,14 +123,14 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     // Нажатие кнопки "Продолжиь игру"
     public void ContinueGame()
-    {       
+    {
         try
         {
             if (ES3.FileExists(SaveFilesData) && ES3.KeyExists("saveDataTimes", SaveFilesData))
             {
                 string[] dates = ES3.Load<string[]>("saveDataTimes", SaveFilesData);
 
-                int last_index = 0;
+                int last_index = -1;
                 DateTime last_dt = new DateTime();
 
                 // Определение первого last_dt, чтобы далее с ним сравнивать
@@ -152,7 +159,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
                     }
                 }
 
-                StartCoroutine(ILoadGame(last_index));
+                StartCoroutine(ILoadGameFromMainMenu(last_index));
             }
             else
             {
@@ -162,12 +169,12 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         }
         catch (Exception)
         {
-            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
     }
 
     // Новая игра
-    public void StartNewGame() => StartCoroutine(ILoadGame(-1));
+    public void StartNewGame() => StartCoroutine(ILoadGameFromMainMenu(-1));
 
     // Сейвы
     public void OpenSaveMenu() => StartCoroutine(IOpenSaveMenu());
@@ -177,8 +184,8 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
     private IEnumerator IOpenSaveMenu()
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
-        MMButtonsManager.instance.unlineButtons();
-        MainMenuButtons.SetActive(false);
+        MMButtonsManager.instance.UnlineButtons();
+        MMButtonsManager.instance.DisableColliders();
 
         savesPanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return savesPanelHandler;
@@ -201,7 +208,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         Addressables.ReleaseInstance(savesPanelHandler);
 
-        MainMenuButtons.SetActive(true);
+        MMButtonsManager.instance.EnableColliders();
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
 
@@ -210,7 +217,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         UpdateContinueButtonState();
     }
 
-    public IEnumerator ILoadGame(int actualSaveNum)
+    public IEnumerator ILoadGameFromMainMenu(int actualSaveNum)
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 

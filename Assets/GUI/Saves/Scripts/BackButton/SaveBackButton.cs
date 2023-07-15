@@ -14,8 +14,10 @@ public class SaveBackButton : MonoBehaviour
     private Vector3 origScale;
     private Vector3 expandedScale;
 
-    void Start()
+    void Awake()
     {
+        GetComponent<Button>().interactable = true;
+
         animator = GetComponent<Animator>();
 
         buttonParent = transform.parent.gameObject;
@@ -54,7 +56,6 @@ public class SaveBackButton : MonoBehaviour
 
         Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
-
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
 
         GetComponent<Button>().interactable = true;

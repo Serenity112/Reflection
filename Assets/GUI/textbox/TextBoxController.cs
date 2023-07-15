@@ -63,7 +63,7 @@ public class TextBoxController : MonoBehaviour
 
     public void SetStoryText(string text)
     {
-        StoryText.GetComponent<Text>().text = text;
+        //StoryText.GetComponent<Text>().text = text;
     }
 
     public void SetTextBoxStyle(TextBoxStyle style)

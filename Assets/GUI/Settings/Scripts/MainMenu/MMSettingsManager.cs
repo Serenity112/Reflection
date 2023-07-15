@@ -13,7 +13,7 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
     private GameObject MainCanvas;
 
     [SerializeField]
-    private AudioMixer AudioMixer;
+    private AudioMixer audioMixer;
 
     private GameObject ActivePanels;
 
@@ -38,32 +38,25 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
         SettingsConfig.currentManager = this;
     }
 
-    private void OnEnable()
+    void Start()
     {
         ActivePanels = PanelsConfig.CurrentManager.GetActivePanelsParent();
 
         BlackPanel = PanelsConfig.CurrentManager.GetBlackPanel();
-    }
 
-    void Start()
-    {
         SettingsConfig.LoadSettingsFromMemory();
 
-        InitSettingsOnStart();
+        ApplySettingsOnStart(); 
     }
 
-    public void OpenSettings()
-    {
-        StartCoroutine(IOpenSettings());
-    }
+    public void OpenSettings() => StartCoroutine(IOpenSettings());
 
-    public void CloseSettings()
-    {
-        StartCoroutine(ICloseSettings());
-    }
+    public void CloseSettings() => StartCoroutine(ICloseSettings());
 
     private IEnumerator IOpenSettings()
     {
+        MMButtonsManager.instance.DisableColliders();
+
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
         handler = Addressables.InstantiateAsync("SettingsGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
@@ -81,6 +74,8 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
     }
     private IEnumerator ICloseSettings()
     {
+        MMButtonsManager.instance.EnableColliders();
+
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
         Addressables.ReleaseInstance(handler);
@@ -90,7 +85,7 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
         Resources.UnloadUnusedAssets();
     }
 
-    public void ApplySetting(Settings setting, SettingsOptions value, float data)
+    public void InstantApplySpecificSetting(Settings setting, SettingsOptions value, float data)
     {
         switch (setting)
         {
@@ -104,46 +99,63 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
                 SettingsConfig.ChangeResoulution(value);
                 break;
             case Settings.masterVolume:
-                SettingsConfig.SetVolume(AudioMixer, "MasterVol", data / 100); // Деление на 100 т.к. метод принимает числа от 0 до 1, а сейвах идут проценты от 0 до 100
+                SettingsConfig.SetVolume(audioMixer, "MasterVol", data / 100); // Деление на 100 т.к. метод принимает числа от 0 до 1, а сейвах идут проценты от 0 до 100
                 break;
             case Settings.musicVolume:
-                SettingsConfig.SetVolume(AudioMixer, "MusicVol", data / 100);
+                SettingsConfig.SetVolume(audioMixer, "MusicVol", data / 100);
                 break;
             case Settings.soundVolume:
-                SettingsConfig.SetVolume(AudioMixer, "SoundVol", data / 100);
+                SettingsConfig.SetVolume(audioMixer, "SoundVol", data / 100);
+                break;
+            case Settings.Language:
                 break;
         }
     }
 
-    private void InitSettingsOnStart()
+    private void ApplySettingsOnStart()
     {
+        audioMixer.SetFloat("MasterVol", 0);
+        audioMixer.SetFloat("MusicVol", 0);
+        audioMixer.SetFloat("SoundVol", 0);
+
         foreach (Settings setting in (Settings[])Enum.GetValues(typeof(Settings)))
         {
             SettingsOptions value = SettingsConfig.chosenOptions[setting].settingsOption;
-
             float data = SettingsConfig.chosenOptions[setting].data;
 
-            if (setting == Settings.masterVolume)
+            switch (setting)
             {
-                AudioMixer.SetFloat("MasterVol", 0);
-                float targetVolume_db = Mathf.Log10(data / 100) * 20;
-                StartCoroutine(FadeVolume(AudioMixer, "MasterVol", 3f, targetVolume_db));
-            }
-            else
-            {
-                ApplySetting(setting, value, data);
+                case Settings.masterVolume:
+                    SmoothMusicOnStart("MasterVol", data);
+                    break;
+                case Settings.musicVolume:
+                    SmoothMusicOnStart("MusicVol", data);
+                    break;
+                case Settings.soundVolume:
+                    SmoothMusicOnStart("SoundVol", data);
+                    break;
+                default:
+                    InstantApplySpecificSetting(setting, value, data);
+                    break;
             }
         }
     }
 
-    private static IEnumerator FadeVolume(AudioMixer mixer, string exposedParam, float duration, float targetVolumeDB)
+    private void SmoothMusicOnStart(string exposedParam, float data)
+    {
+        audioMixer.SetFloat(exposedParam, 0);
+        float targetVolume_db = Mathf.Log10(data / 100) * 20;
+        StartCoroutine(FadeVolume(audioMixer, exposedParam, 3f, targetVolume_db));
+    }
+
+    private IEnumerator FadeVolume(AudioMixer mixer, string exposedParam, float duration, float targetVolume_db)
     {
         float currentTime = 0;
         mixer.GetFloat(exposedParam, out float currentVol);
         while (currentTime < duration)
         {
             currentTime += Time.deltaTime;
-            float newVol = Mathf.Lerp(currentVol, targetVolumeDB, currentTime / duration);
+            float newVol = Mathf.Lerp(currentVol, targetVolume_db, currentTime / duration);
             mixer.SetFloat(exposedParam, newVol);
             yield return null;
         }

@@ -15,7 +15,8 @@ public class ConfirmationPanel : MonoBehaviour
 
     private bool _panelOpen = false;
 
-    private GameObject ActivePanels;
+    [HideInInspector]
+    public GameObject ActivePanels;
 
     private GameObject Panel;
 
@@ -35,7 +36,6 @@ public class ConfirmationPanel : MonoBehaviour
 
     private void Start()
     {
-        ActivePanels = PanelsConfig.CurrentManager.GetActivePanelsParent();
     }
 
     public IEnumerator CreateConfirmationPanel(string title, IEnumerator YesAction, IEnumerator NoAction)

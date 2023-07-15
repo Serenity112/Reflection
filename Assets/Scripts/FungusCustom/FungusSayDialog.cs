@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using System;
+using ChristinaCreatesGames.Typography.Typewriter;
 
 namespace Fungus
 {
@@ -25,24 +26,6 @@ namespace Fungus
 
         public bool wasRead;
 
-        [Tooltip("Voiceover audio to play when writing the text")]
-        private AudioClip voiceOverClip;
-
-        [Tooltip("Fade out the dialog box when writing has finished and not waiting for input.")]
-        public bool fadeWhenDone = false;
-
-        [Tooltip("Wait for player to click before continuing.")]
-        private bool waitForClick = true;
-
-        [Tooltip("Stop playing voiceover when text finishes writing.")]
-        private bool stopVoiceover = true;
-
-        [Tooltip("Wait for the Voice Over to complete before continuing")]
-        private bool waitForVO1 = false;
-
-        [Tooltip("Sets the active Say dialog with a reference to a Say Dialog object in the scene. All story text will now display using this Say Dialog.")]
-        protected SayDialog setSayDialog;
-
         public override void OnEnter()
         {
             StartCoroutine(IOnEnter());
@@ -54,7 +37,7 @@ namespace Fungus
 
             SpriteExpand.instance.StopPrev();
             SpriteExpand.instance.SetExpanding(speaker, DialogMod.skipping);
-            
+
             LogManager.instance.NewMessage(storyText, speaker);
 
             NameChanger.instance.SetName(speaker);
@@ -63,37 +46,16 @@ namespace Fungus
 
             if (ES3.KeyExists(saveString, "DialogSaves.es3"))
             {
-                DialogMod.wasCurrentDialogRead = true;
+                Typewriter.Instance.wasCurrentDialogRead = true;
             }
             else
             {
-                DialogMod.wasCurrentDialogRead = false;
+                Typewriter.Instance.wasCurrentDialogRead = true;
 
                 ES3.Save<bool>(saveString, true, "DialogSaves.es3");
             }
 
-            var sayDialog = SayDialog.GetSayDialog();
-            sayDialog.SetActive(true);
-
-            var flowchart = GetFlowchart();
-
-            string displayText = storyText;
-
-            var activeCustomTags = CustomTag.activeCustomTags;
-            for (int i = 0; i < activeCustomTags.Count; i++)
-            {
-                var ct = activeCustomTags[i];
-                displayText = displayText.Replace(ct.TagStartSymbol, ct.ReplaceTagStartWith);
-                if (ct.TagEndSymbol != "" && ct.ReplaceTagEndWith != "")
-                {
-                    displayText = displayText.Replace(ct.TagEndSymbol, ct.ReplaceTagEndWith);
-                }
-            }
-
-            string subbedText = flowchart.SubstituteVariables(displayText);
-
-            yield return StartCoroutine(sayDialog.DoSay(subbedText, !extendPrevious, waitForClick, fadeWhenDone, stopVoiceover, waitForVO1, voiceOverClip, delegate { }));
-
+            yield return StartCoroutine(Typewriter.Instance.Say(storyText, extendPrevious));
             Continue();
         }
 
@@ -118,17 +80,6 @@ namespace Fungus
         public override Color GetButtonColor()
         {
             return new Color32(184, 210, 235, 255);
-        }
-
-        public override void OnStopExecuting()
-        {
-            var sayDialog = SayDialog.GetSayDialog();
-            if (sayDialog == null)
-            {
-                return;
-            }
-
-            sayDialog.Stop();
         }
     }
 }

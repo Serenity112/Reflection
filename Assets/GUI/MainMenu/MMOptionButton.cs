@@ -1,24 +1,32 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MMOptionButton : MonoBehaviour
 {
-    [SerializeField]
-    private float speed;
+    private float speed = 10f;
 
     [HideInInspector]
     public GameObject spacing;
 
-    void Start()
+    [SerializeField] private AudioSource ScrollSource;
+    [SerializeField] private AudioSource ClickSource;
+
+    private void Awake()
     {
         spacing = transform.GetChild(0).gameObject;
+        //GetComponent<Button>().onClick.AddListener(() => ClickSource.Play());
+    }
 
-        MMButtonsManager.instance.underlinedButtons.Add(gameObject);
+    void Start()
+    {
+        MMButtonsManager.instance.MainMenuOptionButtons.Add(gameObject);
     }
 
     private void OnMouseEnter()
     {
         if (!StaticVariables.OverlayPanelActive)
         {
+            //ScrollSource.Play();
             StopAllCoroutines();
             StartCoroutine(FadeManager.FadeObject(spacing, true, speed));
         }

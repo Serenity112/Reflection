@@ -18,6 +18,9 @@ public class SaveFileFields : MonoBehaviour
     public GameObject IconLeft;
     public GameObject IconRight;
 
+    public GameObject NoImage;
+    public GameObject Frame;
+
     public GameObject datetime;
 
     public bool AllowSaveLoad;
@@ -29,11 +32,12 @@ public class SaveFileFields : MonoBehaviour
     private IEnumerator overPanelIn;
     private IEnumerator overPanelOut;
 
-    void Start()
+    void Awake()
     {
         exitLeft = true;
         exitRight = true;
     }
+
     public void OpenOverPanel()
     {
         if (!StaticVariables.OverlayPanelActive)
@@ -43,7 +47,6 @@ public class SaveFileFields : MonoBehaviour
 
             if (overPanelOut != null)
                 StopCoroutine(overPanelOut);
-
         }
     }
 

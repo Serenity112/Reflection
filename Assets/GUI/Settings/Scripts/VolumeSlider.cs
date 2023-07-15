@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System;
+
 public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, ISettingsOption
 {
     [SerializeField]
@@ -58,7 +59,7 @@ public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, I
 
         SettingsConfig.SaveOptionToFile(setting, option, slider.value);
 
-        SettingsConfig.ApplySetting(setting, option, slider.value);
+        SettingsConfig.FilterAndApplySpecificSetting(setting, option, slider.value);
     }
 
     void Mute()

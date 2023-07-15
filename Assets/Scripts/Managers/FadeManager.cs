@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+
 public class FadeManager : MonoBehaviour
 {
     public static FadeManager instance = null;
@@ -17,6 +18,7 @@ public class FadeManager : MonoBehaviour
                 obj.GetComponent<CanvasGroup>().alpha = i;
                 yield return null;
             }
+            obj.GetComponent<CanvasGroup>().alpha = 1;
         }
         else
         {
@@ -25,6 +27,7 @@ public class FadeManager : MonoBehaviour
                 obj.GetComponent<CanvasGroup>().alpha = i;
                 yield return null;
             }
+            obj.GetComponent<CanvasGroup>().alpha = 0;
             obj.SetActive(false);
         }
     }
@@ -41,6 +44,7 @@ public class FadeManager : MonoBehaviour
                 obj.GetComponent<CanvasGroup>().alpha = i;
                 yield return null;
             }
+            obj.GetComponent<CanvasGroup>().alpha = 1;
         }
         else
         {
@@ -49,24 +53,23 @@ public class FadeManager : MonoBehaviour
                 obj.GetComponent<CanvasGroup>().alpha = i;
                 yield return null;
             }
-
+            obj.GetComponent<CanvasGroup>().alpha = 0;
         }
     }
 
     public static void FadeObject(GameObject obj, bool fadein)
-    {   
+    {
         if (fadein)
         {
             obj.SetActive(true);
             obj.GetComponent<CanvasGroup>().alpha = 1;
-            
+
         }
         else
         {
             obj.GetComponent<CanvasGroup>().alpha = 0;
             obj.SetActive(false);
         }
-
     }
 
     public static IEnumerator FadeImageToColor(GameObject obj, Color newColor, float speed)
@@ -77,8 +80,9 @@ public class FadeManager : MonoBehaviour
         {
             obj.GetComponent<Image>().color = Color.Lerp(objectColor, newColor, i);
             yield return null;
-           
         }
+
+        obj.GetComponent<Image>().color = newColor;
     }
 
     public static IEnumerator FadeTextToColor(Text text, Color newColor, float speed)
@@ -90,32 +94,36 @@ public class FadeManager : MonoBehaviour
             text.color = Color.Lerp(textColor, newColor, i);
             yield return null;
         }
+
+        text.color = newColor;
     }
 
-    public static IEnumerator ColorFadeObject(GameObject obj, bool fadein, float speed)
+    public static IEnumerator ColorAlphaFadeObject(GameObject obj, bool fadein, float speed)
     {
         obj.SetActive(true);
-        float color = obj.GetComponent<SpriteRenderer>().color.a;
+        float alpha = obj.GetComponent<SpriteRenderer>().color.a;
 
         if (fadein)
         {
-            for (float i = color; i <= 1 + 0.05; i += speed * Time.deltaTime)
+            for (float i = alpha; i <= 1 + 0.05; i += speed * Time.deltaTime)
             {
                 obj.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, i);
                 yield return null;
             }
+            obj.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
         }
         else
         {
-            for (float i = color; i >= 0 - 0.05; i -= speed * Time.deltaTime)
+            for (float i = alpha; i >= 0 - 0.05; i -= speed * Time.deltaTime)
             {
                 obj.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, i);
                 yield return null;
             }
+            obj.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
         }
     }
 
-    public static void ColorFadeObject(GameObject obj, bool fadein)
+    public static void ColorAlphaFadeObject(GameObject obj, bool fadein)
     {
         obj.SetActive(true);
 

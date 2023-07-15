@@ -9,10 +9,9 @@ public class WarningPanel : MonoBehaviour
 {
     public static WarningPanel instance = null;
 
-    [SerializeField]
-    private float FadingSpeed;
+    [HideInInspector] public GameObject ActivePanels;
 
-    private GameObject ActivePanels;
+    private float FadingSpeed = 5f;
 
     public static string SavingErrorMessage =
        "В системе сохранений возникла ошибка!\n" +
@@ -34,15 +33,19 @@ public class WarningPanel : MonoBehaviour
         }
     }
 
-    private void OnEnable()
+    private void Start()
     {
-        ActivePanels = PanelsConfig.CurrentManager.GetActivePanelsParent();
     }
 
     public void CreateWarningPanel(string title) => StartCoroutine(ICreateWarningPanel(title));
 
     private IEnumerator ICreateWarningPanel(string title)
     {
+        if (StaticVariables.OverlayPanelActive)
+        {
+            yield break;
+        }
+
         StaticVariables.OverlayPanelActive = true;
 
         handler = Addressables.InstantiateAsync("WarningPanel", ActivePanels.GetComponent<RectTransform>(), false, true);

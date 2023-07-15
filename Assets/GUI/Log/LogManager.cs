@@ -63,7 +63,9 @@ public class LogManager : MonoBehaviour
             { "Nastya", "Настя" },
             { "Evelina", "Эвелина" },
             { "Tanya", "Таня" },
-            { "Sergey", "Сергей" }
+            { "Sergey", "Сергей" },
+
+
         };
     }
 

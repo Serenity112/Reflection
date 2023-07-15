@@ -32,7 +32,7 @@ public class CheckBox : MonoBehaviour, ISettingsOption
     private IEnumerator IOnClick()
     {
         float newData = (SettingsConfig.chosenOptions[setting].data + 1) % 2;
-        SettingsConfig.ApplySetting(setting, option, newData);
+        SettingsConfig.FilterAndApplySpecificSetting(setting, option, newData);
         SettingsConfig.SaveOptionToFile(setting, option, newData);
 
         Vector3 origScale = CircleIn.transform.localScale;

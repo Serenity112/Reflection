@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System;
+
 public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, ISettingsOption
 {
     [SerializeField]
@@ -50,12 +51,12 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
         {
             text.text = Convert.ToInt32(slider.value).ToString();
             ShowSpeed();
-            HideInfinity();      
+            HideInfinity();
         }
 
         SettingsConfig.SaveOptionToFile(setting, option, slider.value);
 
-        SettingsConfig.ApplySetting(setting, option, slider.value);
+        SettingsConfig.FilterAndApplySpecificSetting(setting, option, slider.value);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -129,7 +130,6 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
         StartCoroutine(infinityIn);
     }
 
-
     private void HideInfinity()
     {
         if (infinityIn != null)
@@ -140,7 +140,7 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
     }
 
     public void UpdateVisuals()
-    {        
+    {
         float speed = SettingsConfig.chosenOptions[setting].data;
         slider.value = speed;
         text.text = Convert.ToInt32(speed).ToString();

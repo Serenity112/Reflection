@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+
 public class SettingsOption : MonoBehaviour, ISettingsOption
 {
     [SerializeField]
@@ -30,7 +31,7 @@ public class SettingsOption : MonoBehaviour, ISettingsOption
 
     public void OnClick()
     {
-        SettingsConfig.ApplySetting(setting, option);
+        SettingsConfig.FilterAndApplySpecificSetting(setting, option);
 
         SettingsConfig.SaveOptionToFile(setting, option);
 
@@ -39,8 +40,12 @@ public class SettingsOption : MonoBehaviour, ISettingsOption
 
     private void OnMouseEnter()
     {
-        ToWhite();
+        if (!SettingsConfig.isOptionEnabled(setting, option))
+        {
+            ToWhite();
+        }
     }
+
     private void OnMouseExit()
     {
         if (!SettingsConfig.isOptionEnabled(setting, option))

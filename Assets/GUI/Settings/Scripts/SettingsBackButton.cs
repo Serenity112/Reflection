@@ -18,6 +18,7 @@ public class SettingsBackButton : MonoBehaviour
     {
         animator = GetComponent<Animator>();
 
+        animator.Play("Idle");
         buttonParent = transform.parent.gameObject;
 
         origScale = gameObject.GetComponent<RectTransform>().localScale;
@@ -40,10 +41,7 @@ public class SettingsBackButton : MonoBehaviour
         StartCoroutine(shrinkOnEnter);
     }
 
-    public void Click()
-    {
-        StartCoroutine(IClick());
-    }
+    public void Click() => StartCoroutine(IClick());
 
     public IEnumerator IClick()
     {
@@ -55,7 +53,6 @@ public class SettingsBackButton : MonoBehaviour
 
         Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
-
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
 
         GetComponent<Button>().interactable = true;

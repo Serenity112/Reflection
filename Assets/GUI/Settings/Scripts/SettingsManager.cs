@@ -52,7 +52,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     {
         SettingsConfig.LoadSettingsFromMemory();
 
-        InitSettingsOnStart();
+        ApplySettingsOnStart();
     }
 
     public void OpenSettings()
@@ -104,17 +104,38 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     }
 
     // Не все настрйоки нужно просто включить. Например музыку надо плавно вцвести
-    private void InitSettingsOnStart()
+    private void ApplySettingsOnStart()
     {
+        audioMixer.SetFloat("MasterVol", 0);
+        audioMixer.SetFloat("MusicVol", 0);
+        audioMixer.SetFloat("SoundVol", 0);
+
         foreach (Settings setting in (Settings[])Enum.GetValues(typeof(Settings)))
         {
             SettingsOptions value = SettingsConfig.chosenOptions[setting].settingsOption;
             float data = SettingsConfig.chosenOptions[setting].data;
-            ApplySetting(setting, value, data);
+
+            switch (setting)
+            {
+                case Settings.masterVolume:
+                    SmoothMusicOnStart("MasterVol", data);
+                    break;
+                case Settings.musicVolume:
+                    SmoothMusicOnStart("MusicVol", data);
+                    break;
+                case Settings.soundVolume:
+                    SmoothMusicOnStart("SoundVol", data);
+                    break;
+                default:
+                    InstantApplySpecificSetting(setting, value, data);
+                    break;
+            }
+
         }
     }
 
-    public void ApplySetting(Settings setting, SettingsOptions value, float data)
+
+    public void InstantApplySpecificSetting(Settings setting, SettingsOptions value, float data)
     {
         switch (setting)
         {
@@ -141,10 +162,31 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
                 SettingsConfig.SetVolume(audioMixer, "AmbientVol", data / 100);
                 break;
             case Settings.TextSpeed:
-                SettingsConfig.changeTextSpeed(PanelsCanvas.GetComponent<Writer>(), data);
+                //SettingsConfig.changeTextSpeed(PanelsCanvas.GetComponent<Writer>(), data);
                 break;
             case Settings.Language:
                 break;
         }
+    }
+
+    private void SmoothMusicOnStart(string exposedParam, float data)
+    {
+        audioMixer.SetFloat(exposedParam, 0);
+        float targetVolume_db = Mathf.Log10(data / 100) * 20;
+        StartCoroutine(FadeVolume(audioMixer, exposedParam, 3f, targetVolume_db));
+    }
+
+    private IEnumerator FadeVolume(AudioMixer mixer, string exposedParam, float duration, float targetVolume_db)
+    {
+        float currentTime = 0;
+        mixer.GetFloat(exposedParam, out float currentVol);
+        while (currentTime < duration)
+        {
+            currentTime += Time.deltaTime;
+            float newVol = Mathf.Lerp(currentVol, targetVolume_db, currentTime / duration);
+            mixer.SetFloat(exposedParam, newVol);
+            yield return null;
+        }
+        yield break;
     }
 }

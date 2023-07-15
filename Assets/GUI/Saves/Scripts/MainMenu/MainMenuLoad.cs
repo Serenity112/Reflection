@@ -2,13 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+
 public class MainMenuLoad : MonoBehaviour
 {
     [SerializeField] private GameObject Cassette;
     [SerializeField] private Button ButtonLoad;
     [SerializeField] private Animator cassetteAnimator;
     public GameObject DeleteCross;
-
 
     private int saveNum;
     private GameObject screenshot;
@@ -17,8 +17,10 @@ public class MainMenuLoad : MonoBehaviour
     private IEnumerator CassetteFadeIn;
     private IEnumerator CassetteFadeOut;
 
-
     private SaveFileFields saveFileFields;
+
+    [HideInInspector] public bool onEnter = false;
+
     void Start()
     {
         saveFileFields = GetComponent<SaveFileFields>();
@@ -69,10 +71,9 @@ public class MainMenuLoad : MonoBehaviour
     {
         StaticVariables.OverlayPanelActive = true;
 
-        Vector3 currScale = Cassette.transform.localScale;
-
         cassetteAnimator.SetTrigger("DoLoad");
 
+        Vector3 currScale = Cassette.transform.localScale;
         yield return StartCoroutine(ExpandManager.ExpandObject(Cassette, 0.9f, 0.05f));
         yield return StartCoroutine(ExpandManager.ExpandObject(Cassette, currScale, 0.05f));
 
@@ -81,16 +82,25 @@ public class MainMenuLoad : MonoBehaviour
 
     IEnumerator LoadFile()
     {
-        StartCoroutine(FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed));
-        StartCoroutine(ConfirmationPanel.instance.ClosePanel());
-
-        yield return StartCoroutine(MMPanelsManager.instance.ILoadGame(saveNum));
+        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed),
+            ConfirmationPanel.instance.ClosePanel(),
+            MMPanelsManager.instance.ILoadGameFromMainMenu(saveNum)
+        });
 
         cassetteAnimator.SetTrigger("StopLoad");
     }
 
     IEnumerator CancelLoad()
     {
+        if (!onEnter)
+        {
+            //
+        }
+
+        StartCoroutine(FadeManager.FadeObject(saveFileFields.overPanel, true, SaveManager.instance.optionsGradientSpeed));
+
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         StartCoroutine(FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed));
         yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
@@ -101,7 +111,7 @@ public class MainMenuLoad : MonoBehaviour
     }
 
 
-    // Удаление сейва
+    // Удаление сейва, активируется крестиком
     public void DeleteAction()
     {
         if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.OverlayPanelActive)
@@ -135,6 +145,6 @@ public class MainMenuLoad : MonoBehaviour
     IEnumerator ICancelDelete()
     {
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());         
+        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
     }
 }
