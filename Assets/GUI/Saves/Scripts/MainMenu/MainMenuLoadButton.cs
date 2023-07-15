@@ -19,7 +19,8 @@ public class MainMenuLoadButton : MonoBehaviour
         if (!StaticVariables.OverlayPanelActive)
         {
             DeleteCross.GetComponent<DeleteCrossButton>().AppearCross();
-            mainMenuLoad.AppearCassette();
+            StartCoroutine(mainMenuLoad.AppearCassette());
+            StartCoroutine(mainMenuLoad.saveFileFields.CloseOverPanel());
         }
     }
 
@@ -30,7 +31,8 @@ public class MainMenuLoadButton : MonoBehaviour
         if (!StaticVariables.OverlayPanelActive)
         {
             DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-            mainMenuLoad.DisappearCassette();
+            StartCoroutine(mainMenuLoad.DisappearCassette());
+            StartCoroutine(mainMenuLoad.saveFileFields.OpenOverPanel());
         }
     }
 }

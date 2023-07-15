@@ -17,7 +17,7 @@ public class MainMenuLoad : MonoBehaviour
     private IEnumerator CassetteFadeIn;
     private IEnumerator CassetteFadeOut;
 
-    private SaveFileFields saveFileFields;
+    public SaveFileFields saveFileFields;
 
     [HideInInspector] public bool onEnter = false;
 
@@ -31,7 +31,7 @@ public class MainMenuLoad : MonoBehaviour
         ButtonLoad.interactable = true;
     }
 
-    public void AppearCassette()
+    public IEnumerator AppearCassette()
     {
         if (ButtonLoad.interactable)
         {
@@ -39,13 +39,13 @@ public class MainMenuLoad : MonoBehaviour
                 StopCoroutine(CassetteFadeOut);
 
             CassetteFadeIn = FadeManager.FadeObject(Cassette, true, SaveManager.instance.optionsGradientSpeed);
-            StartCoroutine(CassetteFadeIn);
-
-            saveFileFields.CloseOverPanel();
+            yield return StartCoroutine(CassetteFadeIn);
         }
+
+        yield return null;
     }
 
-    public void DisappearCassette()
+    public IEnumerator DisappearCassette()
     {
         if (ButtonLoad.interactable)
         {
@@ -53,10 +53,10 @@ public class MainMenuLoad : MonoBehaviour
                 StopCoroutine(CassetteFadeIn);
 
             CassetteFadeOut = FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed);
-            StartCoroutine(CassetteFadeOut);
-
-            saveFileFields.OpenOverPanel();
+            yield return StartCoroutine(CassetteFadeOut);
         }
+
+        yield return null;
     }
 
     public void Click()
@@ -70,7 +70,6 @@ public class MainMenuLoad : MonoBehaviour
     IEnumerator IClick()
     {
         StaticVariables.OverlayPanelActive = true;
-
         cassetteAnimator.SetTrigger("DoLoad");
 
         Vector3 currScale = Cassette.transform.localScale;
@@ -94,15 +93,12 @@ public class MainMenuLoad : MonoBehaviour
 
     IEnumerator CancelLoad()
     {
-        if (!onEnter)
-        {
-            //
-        }
+        StaticVariables.OverlayPanelActive = false;
 
-        StartCoroutine(FadeManager.FadeObject(saveFileFields.overPanel, true, SaveManager.instance.optionsGradientSpeed));
-
+        StartCoroutine(DisappearCassette());
+        StartCoroutine(saveFileFields.OpenOverPanel());
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-        StartCoroutine(FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed));
+
         yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
 
         cassetteAnimator.SetTrigger("StopLoad");
@@ -130,7 +126,7 @@ public class MainMenuLoad : MonoBehaviour
         StartCoroutine(FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed));
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         FadeManager.FadeObject(MainMenuPanel, false);
-        saveFileFields.CloseOverPanel();
+        StartCoroutine(saveFileFields.CloseOverPanel());
 
         int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
 
@@ -144,7 +140,12 @@ public class MainMenuLoad : MonoBehaviour
 
     IEnumerator ICancelDelete()
     {
+        StaticVariables.OverlayPanelActive = false;
+
+        StartCoroutine(DisappearCassette());
+        StartCoroutine(saveFileFields.OpenOverPanel());
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+
         yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
     }
 }

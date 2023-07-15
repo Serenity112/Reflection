@@ -91,7 +91,9 @@ public class FirstSaveAnimator : MonoBehaviour
         saveFileFields.AllowOverPanel = true;
 
         if (saveFileFields.exitLeft && saveFileFields.exitRight)
-            saveFileFields.OpenOverPanel();
+        {
+            StartCoroutine(saveFileFields.OpenOverPanel());
+        }
 
         yield return new WaitForSeconds(0.3f);
 

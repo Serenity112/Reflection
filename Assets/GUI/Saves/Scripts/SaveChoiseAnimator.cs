@@ -113,7 +113,7 @@ public class SaveChoiseAnimator : MonoBehaviour
         yield return StartCoroutine(SaveManager.instance.OverrideScreenshot(saveNum, screenshot, overscreenshot, SaveManager.instance.optionsGradientSpeed));
 
         saveFileFields.resetCassettePosition(IconLeft);
-        saveFileFields.OpenOverPanel();
+        StartCoroutine(saveFileFields.OpenOverPanel());
     }
 
     IEnumerator ICancelSave()
@@ -129,7 +129,7 @@ public class SaveChoiseAnimator : MonoBehaviour
         SaveAnimator.SetTrigger("StopSave");
 
         saveFileFields.resetCassettePosition(IconLeft);
-        saveFileFields.OpenOverPanel();
+        StartCoroutine(saveFileFields.OpenOverPanel());
     }
 
     // Удаление сейва
@@ -152,7 +152,7 @@ public class SaveChoiseAnimator : MonoBehaviour
         DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
         FadeManager.FadeObject(SavedPanel, false);
         FadeManager.FadeObject(UnSavedPanel, true);
-        saveFileFields.CloseOverPanel();
+        StartCoroutine(saveFileFields.CloseOverPanel());
         SaveManager.instance.RemoveDateTime(saveNum);
 
         yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
@@ -200,6 +200,6 @@ public class SaveChoiseAnimator : MonoBehaviour
         SaveAnimator.SetTrigger("StopLoad");
 
         saveFileFields.resetCassettePosition(IconRight);
-        saveFileFields.OpenOverPanel();
+        StartCoroutine(saveFileFields.OpenOverPanel());
     }
 }

@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using static StaticVariables;
 using System.Collections.Generic;
 using System.Threading;
+using Unity.VisualScripting;
 
 public enum SavePageScroll
 {
@@ -236,39 +237,50 @@ public class SaveManager : MonoBehaviour
             SaveFileFields saveFileFields = allFiles[i].GetComponent<SaveFileFields>();
             GameObject savedPanel = saveFileFields.SavedPanel;
             GameObject unsavedPanel = saveFileFields.UnSavedPanel;
-            GameObject MainMenuPanel = saveFileFields.MainMenuPanel;
+            GameObject mainMenuPanel = saveFileFields.MainMenuPanel;
 
             GameObject noImage = saveFileFields.NoImage;
             GameObject frame = saveFileFields.Frame;
             GameObject overPanel = saveFileFields.overPanel;
 
-            //
+            // [До]
+            if (StaticVariables.ifInMainMenu)
+            {
+                enumerators_prev.Add(allFiles[i].GetComponent<MainMenuLoad>().DisappearCassette());
+            }
+
+            if (savesTaken[a_prev])
+            {
+                if (StaticVariables.ifInMainMenu)
+                {
+                    enumerators_prev.Add(FadeManager.FadeObject(mainMenuPanel, false, optionsGradientSpeed));
+                }
+                else
+                {
+                    enumerators_prev.Add(FadeManager.FadeObject(savedPanel, false, optionsGradientSpeed));
+                }
+            }
+
+            if (!savesTaken[a_prev])
+            {
+                if (!StaticVariables.ifInMainMenu)
+                {
+                    enumerators_prev.Add(FadeManager.FadeObject(unsavedPanel, false, optionsGradientSpeed));
+                }
+            }
+
+            // [После]
             if (savesTaken[a_next])
             {
                 if (StaticVariables.ifInMainMenu)
                 {
-                    FadeManager.FadeObject(MainMenuPanel, true);
+                    enumerators_next.Add(FadeManager.FadeObject(mainMenuPanel, true, optionsGradientSpeed));
                 }
                 else
                 {
-                    FadeManager.FadeObject(savedPanel, true);
+                    enumerators_next.Add(FadeManager.FadeObject(savedPanel, true, optionsGradientSpeed));
                 }
-
-                FadeManager.FadeObject(unsavedPanel, false);
             }
-
-            //
-            if (!savesTaken[a_next])
-            {
-                if (!StaticVariables.ifInMainMenu)
-                {
-                    FadeManager.FadeObject(unsavedPanel, true);
-                }
-
-                FadeManager.FadeObject(MainMenuPanel, false);
-                FadeManager.FadeObject(savedPanel, false);
-            }
-
 
             // Переход [Занятый] => [Занятый]
             if (savesTaken[a_prev] && savesTaken[a_next])
@@ -286,20 +298,22 @@ public class SaveManager : MonoBehaviour
             {
                 enumerators_prev.Add(FadeManager.FadeOnly(saveFileFields.datetime, false, pagesScrollSpeed));
                 enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, pagesScrollSpeed));
-                enumerators_prev.Add(FadeManager.FadeOnly(overPanel, false, pagesScrollSpeed));
+                enumerators_prev.Add(FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, 0), pagesScrollSpeed));
                 enumerators_prev.Add(FadeManager.FadeOnly(noImage, true, pagesScrollSpeed));
+                enumerators_prev.Add(FadeManager.FadeOnly(frame, false, pagesScrollSpeed));
 
-                enumerators_next.Add(FadeManager.FadeOnly(frame, false, pagesScrollSpeed));
+                enumerators_next.Add(FadeManager.FadeOnly(overPanel, false, pagesScrollSpeed));
             }
 
             // Переход [Пустой] => [Занятый]
             if (!savesTaken[a_prev] && savesTaken[a_next])
             {
                 enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, pagesScrollSpeed));
+                enumerators_prev.Add(FadeManager.FadeOnly(overPanel, true, pagesScrollSpeed));
 
                 enumerators_next.Add(SetDateTime(saveFileFields.datetime.GetComponent<Text>(), saveDataTimes[a_next]));
                 enumerators_next.Add(FadeManager.FadeOnly(saveFileFields.datetime, true, pagesScrollSpeed));
-                enumerators_next.Add(FadeManager.FadeOnly(overPanel, true, pagesScrollSpeed));
+                enumerators_next.Add(FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, 0.4f), pagesScrollSpeed));
                 enumerators_next.Add(FadeManager.FadeOnly(noImage, false, pagesScrollSpeed));
                 enumerators_next.Add(FadeManager.FadeOnly(frame, true, pagesScrollSpeed));
                 enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, pagesScrollSpeed));
@@ -340,6 +354,7 @@ public class SaveManager : MonoBehaviour
 
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators_next));
 
+        Debug.Log("UIsystemDown = false");
         StaticVariables.UIsystemDown = false;
     }
 

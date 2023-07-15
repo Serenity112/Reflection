@@ -64,7 +64,7 @@ public class SaveChoiseIconAnimator : MonoBehaviour
 
         if (saveFileFields.AllowOverPanel)
         {
-            saveFileFields.CloseOverPanel();
+            StartCoroutine(saveFileFields.CloseOverPanel());
         }
     }
 
@@ -83,7 +83,7 @@ public class SaveChoiseIconAnimator : MonoBehaviour
 
         if (saveFileFields.AllowOverPanel)
         {
-            saveFileFields.CloseOverPanel();
+            StartCoroutine(saveFileFields.CloseOverPanel());
         }
     }
 
@@ -108,7 +108,7 @@ public class SaveChoiseIconAnimator : MonoBehaviour
         {
             if (saveFileFields.exitRight)
             {
-                saveFileFields.OpenOverPanel();
+                StartCoroutine(saveFileFields.OpenOverPanel());
             }
         }
     }
@@ -133,7 +133,7 @@ public class SaveChoiseIconAnimator : MonoBehaviour
         {
             if (saveFileFields.exitLeft)
             {
-                saveFileFields.OpenOverPanel();
+                StartCoroutine(saveFileFields.OpenOverPanel());
             }
         }
     }

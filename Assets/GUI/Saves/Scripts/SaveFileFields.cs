@@ -32,36 +32,67 @@ public class SaveFileFields : MonoBehaviour
     private IEnumerator overPanelIn;
     private IEnumerator overPanelOut;
 
+    private IEnumerator overPanelInColor;
+    private IEnumerator overPanelOutColor;
+
+    private float op_alpha = 0.4f;
+
     void Awake()
     {
         exitLeft = true;
         exitRight = true;
     }
 
-    public void OpenOverPanel()
+    public IEnumerator OpenOverPanelColor()
     {
         if (!StaticVariables.OverlayPanelActive)
         {
-            overPanelIn = FadeManager.FadeObject(overPanel, true, SaveManager.instance.optionsGradientSpeed);
-            StartCoroutine(overPanelIn);
+            if (overPanelOutColor != null)
+                StopCoroutine(overPanelOutColor);
 
-            if (overPanelOut != null)
-                StopCoroutine(overPanelOut);
+            overPanelInColor = FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, op_alpha), SaveManager.instance.optionsGradientSpeed);
+            yield return StartCoroutine(overPanelInColor);
         }
     }
 
-    public void CloseOverPanel()
+    public IEnumerator CloseOverPanelColor()
     {
-        overPanelOut = FadeManager.FadeObject(overPanel, false, SaveManager.instance.optionsGradientSpeed);
-        StartCoroutine(overPanelOut);
+        if (!StaticVariables.OverlayPanelActive)
+        {
+            if (overPanelInColor != null)
+                StopCoroutine(overPanelInColor);
 
+            overPanelOutColor = FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, 0), SaveManager.instance.optionsGradientSpeed);
+            yield return StartCoroutine(overPanelOutColor);
+        }
+    }
+
+    public IEnumerator OpenOverPanel()
+    {
+        if (!StaticVariables.OverlayPanelActive)
+        {
+            if (overPanelOut != null)
+                StopCoroutine(overPanelOut);
+
+            overPanelIn = FadeManager.FadeOnly(overPanel, true, SaveManager.instance.optionsGradientSpeed);
+            yield return StartCoroutine(overPanelIn);
+        }
+
+        yield return null;
+    }
+
+    public IEnumerator CloseOverPanel()
+    {
         if (overPanelIn != null)
             StopCoroutine(overPanelIn);
+
+        overPanelOut = FadeManager.FadeOnly(overPanel, false, SaveManager.instance.optionsGradientSpeed);
+        yield return StartCoroutine(overPanelOut);
     }
 
     public void resetCassettePosition(GameObject cassette)
     {
-        cassette.GetComponent<CanvasGroup>().alpha = 0f;
+        //cassette.GetComponent<CanvasGroup>().alpha = 0f;
         GameObject circle1 = cassette.transform.Find("Circle1").gameObject;
         GameObject circle2 = cassette.transform.Find("Circle2").gameObject;
         circle1.GetComponent<RectTransform>().rotation = new Quaternion(0, 0, 0, 0);
