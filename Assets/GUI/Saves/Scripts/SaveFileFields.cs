@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class SaveFileFields : MonoBehaviour
@@ -23,8 +24,7 @@ public class SaveFileFields : MonoBehaviour
 
     public GameObject datetime;
 
-    public bool AllowSaveLoad;
-    public bool AllowOverPanel;
+    public bool OnMouseEnter;
 
     public bool exitLeft;
     public bool exitRight;
@@ -39,6 +39,7 @@ public class SaveFileFields : MonoBehaviour
 
     void Awake()
     {
+        OnMouseEnter = false;
         exitLeft = true;
         exitRight = true;
     }
@@ -50,7 +51,7 @@ public class SaveFileFields : MonoBehaviour
             if (overPanelOutColor != null)
                 StopCoroutine(overPanelOutColor);
 
-            overPanelInColor = FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, op_alpha), SaveManager.instance.optionsGradientSpeed);
+            overPanelInColor = FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, op_alpha), SaveManager.instance.speed);
             yield return StartCoroutine(overPanelInColor);
         }
     }
@@ -62,7 +63,7 @@ public class SaveFileFields : MonoBehaviour
             if (overPanelInColor != null)
                 StopCoroutine(overPanelInColor);
 
-            overPanelOutColor = FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, 0), SaveManager.instance.optionsGradientSpeed);
+            overPanelOutColor = FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, 0), SaveManager.instance.speed);
             yield return StartCoroutine(overPanelOutColor);
         }
     }
@@ -74,7 +75,7 @@ public class SaveFileFields : MonoBehaviour
             if (overPanelOut != null)
                 StopCoroutine(overPanelOut);
 
-            overPanelIn = FadeManager.FadeOnly(overPanel, true, SaveManager.instance.optionsGradientSpeed);
+            overPanelIn = FadeManager.FadeOnly(overPanel, true, SaveManager.instance.speed);
             yield return StartCoroutine(overPanelIn);
         }
 
@@ -86,7 +87,7 @@ public class SaveFileFields : MonoBehaviour
         if (overPanelIn != null)
             StopCoroutine(overPanelIn);
 
-        overPanelOut = FadeManager.FadeOnly(overPanel, false, SaveManager.instance.optionsGradientSpeed);
+        overPanelOut = FadeManager.FadeOnly(overPanel, false, SaveManager.instance.speed);
         yield return StartCoroutine(overPanelOut);
     }
 

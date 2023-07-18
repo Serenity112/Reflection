@@ -17,13 +17,19 @@ public class SaveChoiseButton : MonoBehaviour
         saveChoiseIconAnimator = File.GetComponent<SaveChoiseIconAnimator>();
         saveChoiseAnimator = File.GetComponent<SaveChoiseAnimator>();
         DeleteCross = saveChoiseAnimator.DeleteCross;
+
+        if (!File.GetComponent<SaveFileFields>().OnMouseEnter)
+        {
+            DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross(2);
+        }
     }
+
     private void OnMouseEnter()
     {
         if (!StaticVariables.OverlayPanelActive)
         {
             DeleteCross.GetComponent<DeleteCrossButton>().AppearCross();
-            saveChoiseIconAnimator.appearSide(side);
+            saveChoiseIconAnimator.AppearSide(side);
         }
     }
 
@@ -31,8 +37,8 @@ public class SaveChoiseButton : MonoBehaviour
     {
         if (!StaticVariables.OverlayPanelActive)
         {
-            saveChoiseIconAnimator.removeSide(side);
-            DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+            saveChoiseIconAnimator.RemoveSide(side);
+            DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross(2);
         }
     }
 

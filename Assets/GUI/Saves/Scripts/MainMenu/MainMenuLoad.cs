@@ -19,8 +19,6 @@ public class MainMenuLoad : MonoBehaviour
 
     public SaveFileFields saveFileFields;
 
-    [HideInInspector] public bool onEnter = false;
-
     void Start()
     {
         saveFileFields = GetComponent<SaveFileFields>();
@@ -31,6 +29,11 @@ public class MainMenuLoad : MonoBehaviour
         ButtonLoad.interactable = true;
     }
 
+    public void InstantHideCassette()
+    {
+        Cassette.GetComponent<CanvasGroup>().alpha = 0f;
+    }
+
     public IEnumerator AppearCassette()
     {
         if (ButtonLoad.interactable)
@@ -38,7 +41,7 @@ public class MainMenuLoad : MonoBehaviour
             if (CassetteFadeOut != null)
                 StopCoroutine(CassetteFadeOut);
 
-            CassetteFadeIn = FadeManager.FadeObject(Cassette, true, SaveManager.instance.optionsGradientSpeed);
+            CassetteFadeIn = FadeManager.FadeObject(Cassette, true, SaveManager.instance.speed);
             yield return StartCoroutine(CassetteFadeIn);
         }
 
@@ -52,7 +55,7 @@ public class MainMenuLoad : MonoBehaviour
             if (CassetteFadeIn != null)
                 StopCoroutine(CassetteFadeIn);
 
-            CassetteFadeOut = FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed);
+            CassetteFadeOut = FadeManager.FadeObject(Cassette, false, SaveManager.instance.speed);
             yield return StartCoroutine(CassetteFadeOut);
         }
 
@@ -83,7 +86,7 @@ public class MainMenuLoad : MonoBehaviour
     {
         yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
-            FadeManager.FadeObject(Cassette, false, SaveManager.instance.optionsGradientSpeed),
+            FadeManager.FadeObject(Cassette, false, SaveManager.instance.speed),
             ConfirmationPanel.instance.ClosePanel(),
             MMPanelsManager.instance.ILoadGameFromMainMenu(saveNum)
         });
@@ -97,7 +100,7 @@ public class MainMenuLoad : MonoBehaviour
 
         StartCoroutine(DisappearCassette());
         StartCoroutine(saveFileFields.OpenOverPanel());
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross(2);
 
         yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
 
@@ -110,7 +113,7 @@ public class MainMenuLoad : MonoBehaviour
     // Удаление сейва, активируется крестиком
     public void DeleteAction()
     {
-        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.OverlayPanelActive)
+        if (!StaticVariables.UIsystemDown && !StaticVariables.OverlayPanelActive)
         {
             StartCoroutine(IDeleteDialog());
         }
@@ -121,19 +124,27 @@ public class MainMenuLoad : MonoBehaviour
         StaticVariables.OverlayPanelActive = true;
         yield return StartCoroutine(ConfirmationPanel.instance.CreateConfirmationPanel("Удалить сохранение?", IDeleteSave(), ICancelDelete()));
     }
+
     IEnumerator IDeleteSave()
     {
-        StartCoroutine(FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed));
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+        List<IEnumerator> enumerators = new List<IEnumerator>()
+        {
+            FadeManager.FadeOnly(screenshot, false, SaveManager.instance.speed),
+            FadeManager.FadeOnly(saveFileFields.NoImage, true, SaveManager.instance.speed),
+            FadeManager.FadeOnly(saveFileFields.Frame, false, SaveManager.instance.speed),
+            saveFileFields.CloseOverPanel(),
+            ConfirmationPanel.instance.ClosePanel(),
+        };
+
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross(2);
         FadeManager.FadeObject(MainMenuPanel, false);
-        StartCoroutine(saveFileFields.CloseOverPanel());
 
         int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
 
-        StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed));
+        StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.speed));
         SaveManager.instance.RemoveDateTime(actualSaveNum);
 
-        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators));
 
         SaveManager.instance.DeleteSave(actualSaveNum);
     }
@@ -144,7 +155,7 @@ public class MainMenuLoad : MonoBehaviour
 
         StartCoroutine(DisappearCassette());
         StartCoroutine(saveFileFields.OpenOverPanel());
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross(2);
 
         yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
     }

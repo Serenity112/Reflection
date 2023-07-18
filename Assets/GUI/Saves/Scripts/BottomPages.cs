@@ -18,15 +18,16 @@ public class BottomPages : MonoBehaviour
 
     public void StartingLoad()
     {
-        allPages[0].GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
-
-
         for (int i = 0; i < SaveManager.maxPages; i++)
         {
             allPages[i].transform.GetChild(0).gameObject.GetComponent<Text>().text = (i + 1).ToString();
         }
 
+        allPages[0].GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
         allPages[0].transform.GetChild(0).gameObject.GetComponent<Text>().color = new Color(1f, 1f, 1f, 1f);
+
+        allPages[1].GetComponent<Image>().color = new Color(0.6f, 0.6f, 0.6f, 1f);
+        allPages[1].transform.GetChild(0).gameObject.GetComponent<Text>().color = new Color(0.6f, 0.6f, 0.6f, 1f);
     }
 
 

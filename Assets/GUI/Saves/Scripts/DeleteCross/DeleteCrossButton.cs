@@ -51,21 +51,21 @@ public class DeleteCrossButton : MonoBehaviour
         }
     }
 
-    public void AppearCross()
+    public void AppearCross(float speedCoef = 1f)
     {
         if (CrossFadeOut != null)
             StopCoroutine(CrossFadeOut);
 
-        CrossFadeIn = FadeManager.FadeOnly(gameObject, true, SaveManager.instance.optionsGradientSpeed);
+        CrossFadeIn = FadeManager.FadeOnly(gameObject, true, SaveManager.instance.speed * speedCoef);
         StartCoroutine(CrossFadeIn);
     }
 
-    public void DisappearCross()
+    public void DisappearCross(float speedCoef = 1f)
     {
         if (CrossFadeIn != null)
             StopCoroutine(CrossFadeIn);
 
-        CrossFadeOut = FadeManager.FadeOnly(gameObject, false, SaveManager.instance.optionsGradientSpeed);
+        CrossFadeOut = FadeManager.FadeOnly(gameObject, false, SaveManager.instance.speed * speedCoef);
         StartCoroutine(CrossFadeOut);
     }
 

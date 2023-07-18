@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+
 public class FirstSaveAnimator : MonoBehaviour
 {
     [SerializeField] private GameObject CassetteImg;
@@ -36,7 +38,7 @@ public class FirstSaveAnimator : MonoBehaviour
             if (CassetteFadeOut != null)
                 StopCoroutine(CassetteFadeOut);
 
-            CassetteFadeIn = FadeManager.FadeObject(CassetteImg, true, SaveManager.instance.optionsGradientSpeed);
+            CassetteFadeIn = FadeManager.FadeObject(CassetteImg, true, SaveManager.instance.speed);
             StartCoroutine(CassetteFadeIn);
         }
     }
@@ -48,10 +50,14 @@ public class FirstSaveAnimator : MonoBehaviour
             if (CassetteFadeIn != null)
                 StopCoroutine(CassetteFadeIn);
 
-            CassetteFadeOut = FadeManager.FadeObject(CassetteImg, false, SaveManager.instance.optionsGradientSpeed);
+            CassetteFadeOut = FadeManager.FadeObject(CassetteImg, false, SaveManager.instance.speed);
             StartCoroutine(CassetteFadeOut);
         }
+    }
 
+    private void InstantHideCassette()
+    {
+        FadeManager.FadeObject(CassetteImg, false);
     }
 
     public void FirstSaveIconClick()
@@ -68,41 +74,49 @@ public class FirstSaveAnimator : MonoBehaviour
 
         StaticVariables.UIsystemDown = true;
         ButtonUnsaved.interactable = false;
-        saveFileFields.AllowOverPanel = false;
-        saveFileFields.AllowSaveLoad = false;
-        saveFileFields.SavedPanel.SetActive(true);
 
-        Vector3 currScale = CassetteImg.transform.localScale;
         cassetteAnimator.Play("CasseteAnim");
+        Vector3 currScale = CassetteImg.transform.localScale;
         yield return StartCoroutine(ExpandManager.ExpandObject(CassetteImg, 0.9f, 0.05f));
         yield return StartCoroutine(ExpandManager.ExpandObject(CassetteImg, currScale, 0.05f));
 
         // Дата и время
+        FadeManager.FadeObject(saveFileFields.datetime, false);
         string datetime = DateTime.Now.ToString("HH:mm dd/MM/yy");
         SaveManager.instance.SaveDateTime(saveNum, datetime);
         saveFileFields.datetime.GetComponent<Text>().text = datetime;
-        StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, true, SaveManager.instance.optionsGradientSpeed));
+        StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, true, SaveManager.instance.speed));
 
         // Сам сейв
         UserData.instance.SavePlayer(saveNum);
 
         // Скриншот
         StartCoroutine(SaveManager.instance.SetScreenshot(saveNum, screenshot));
-        saveFileFields.AllowOverPanel = true;
 
-        if (saveFileFields.exitLeft && saveFileFields.exitRight)
+        DisappearCassette(); 
+        
+        yield return StartCoroutine(FadeManager.FadeObject(UnSavedPanel, false, SaveManager.instance.speed));
+
+        if (!saveFileFields.OnMouseEnter)
         {
             StartCoroutine(saveFileFields.OpenOverPanel());
         }
 
-        yield return new WaitForSeconds(0.3f);
+        List<IEnumerator> enumerators_next = new List<IEnumerator>()
+        {
+            FadeManager.FadeObject(saveFileFields.Frame, true, SaveManager.instance.speed),
+            FadeManager.FadeObject(saveFileFields.NoImage, false, SaveManager.instance.speed),
+            FadeManager.FadeObject(screenshot, true, SaveManager.instance.speed),
+            FadeManager.FadeObject(SavedPanel, true, SaveManager.instance.speed),
+        };    
 
-        StartCoroutine(FadeManager.FadeObject(screenshot, true, SaveManager.instance.optionsGradientSpeed));
-        StartCoroutine(FadeManager.FadeObject(SavedPanel, true, SaveManager.instance.optionsGradientSpeed));
-        yield return StartCoroutine(FadeManager.FadeObject(UnSavedPanel, false, SaveManager.instance.optionsGradientSpeed));
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators_next));
 
-        saveFileFields.AllowSaveLoad = true;
+        InstantHideCassette();
+
         saveFileFields.resetCassettePosition(CassetteImg);
+
         ButtonUnsaved.interactable = true;
+        StaticVariables.UIsystemDown = false;
     }
 }

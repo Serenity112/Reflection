@@ -61,6 +61,12 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         StaticVariables.ifInMainMenu = false;
     }
 
+    private void Start()
+    {
+        ConfirmationPanel.instance.ActivePanels = ActivePanels;
+        WarningPanel.instance.ActivePanels = ActivePanels;
+    }
+
     // LOAD
     public IEnumerator ILoadGame(int saveNum)
     {

@@ -37,6 +37,7 @@ public class SaveChoiseAnimator : MonoBehaviour
     private GameObject overscreenshot;
 
     private SaveFileFields saveFileFields;
+    private SaveChoiseIconAnimator saveChoiseIconAnimator;
 
     private void Start()
     {
@@ -52,11 +53,13 @@ public class SaveChoiseAnimator : MonoBehaviour
         overscreenshot = saveFileFields.overscreenshot;
         SavedPanel = saveFileFields.SavedPanel;
         UnSavedPanel = saveFileFields.UnSavedPanel;
+
+        saveChoiseIconAnimator = GetComponent<SaveChoiseIconAnimator>();
     }
 
     public void SaveAction(SaveOption option)
     {
-        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.OverlayPanelActive)
+        if (!StaticVariables.UIsystemDown && !StaticVariables.OverlayPanelActive)
         {
             StartCoroutine(ISaveAction(option));
         }
@@ -74,7 +77,7 @@ public class SaveChoiseAnimator : MonoBehaviour
                 yield return StartCoroutine(ExpandManager.ExpandObject(IconLeft, 0.9f, 0.05f));
                 yield return StartCoroutine(ExpandManager.ExpandObject(IconLeft, saveScale, 0.05f));
 
-                yield return StartCoroutine(ConfirmationPanel.instance.CreateConfirmationPanel("Перезаписать сохранение?", RewriteSave(), ICancelSave()));
+                yield return StartCoroutine(ConfirmationPanel.instance.CreateConfirmationPanel("Перезаписать сохранение?", IRewriteSave(), ICancelSave()));
 
                 break;
             case SaveOption.Load:
@@ -92,51 +95,63 @@ public class SaveChoiseAnimator : MonoBehaviour
         }
     }
 
-    IEnumerator RewriteSave()
+    IEnumerator IRewriteSave()
     {
+        StaticVariables.UIsystemDown = true;
+        StaticVariables.OverlayPanelActive = false;
+
         string datetime = DateTime.Now.ToString("HH:mm dd/MM/yy");
         SaveManager.instance.SaveDateTime(saveNum, datetime);
         saveFileFields.datetime.GetComponent<Text>().text = datetime;
 
         UserData.instance.SavePlayer(saveNum);
 
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
-        {
-            FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed),
-            FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed),
-            ConfirmationPanel.instance.ClosePanel()
-        });
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross(2);
+        StartCoroutine(saveFileFields.OpenOverPanel());
 
+        saveChoiseIconAnimator.StopAllCoroutines();
+        saveChoiseIconAnimator.HideLeft();
+
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            ConfirmationPanel.instance.ClosePanel()
+        }));
+
+        yield return StartCoroutine(SaveManager.instance.OverrideScreenshot(saveNum, screenshot, overscreenshot, SaveManager.instance.speed));
         SaveAnimator.SetTrigger("StopSave");
 
-        yield return StartCoroutine(SaveManager.instance.OverrideScreenshot(saveNum, screenshot, overscreenshot, SaveManager.instance.optionsGradientSpeed));
-
+        StaticVariables.UIsystemDown = false;
         saveFileFields.resetCassettePosition(IconLeft);
-        StartCoroutine(saveFileFields.OpenOverPanel());
     }
 
     IEnumerator ICancelSave()
     {
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        StaticVariables.UIsystemDown = true;
+        StaticVariables.OverlayPanelActive = false;
+
+        StartCoroutine(saveFileFields.OpenOverPanel());
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross(2);
+
+        saveChoiseIconAnimator.StopAllCoroutines();
+        saveChoiseIconAnimator.HideLeft();
+
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
-            FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed),
-            FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed),
             ConfirmationPanel.instance.ClosePanel()
-        });
+        }));
 
         SaveAnimator.SetTrigger("StopSave");
 
         saveFileFields.resetCassettePosition(IconLeft);
-        StartCoroutine(saveFileFields.OpenOverPanel());
+
+        StaticVariables.UIsystemDown = false;
     }
 
     // Удаление сейва
 
     public void DeleteAction()
     {
-        if (saveFileFields.AllowSaveLoad && !StaticVariables.UIsystemDown && !StaticVariables.OverlayPanelActive)
+        if (!StaticVariables.UIsystemDown && !StaticVariables.OverlayPanelActive)
         {
             StartCoroutine(IDeleteDialog());
         }
@@ -147,59 +162,81 @@ public class SaveChoiseAnimator : MonoBehaviour
         StaticVariables.OverlayPanelActive = true;
         yield return StartCoroutine(ConfirmationPanel.instance.CreateConfirmationPanel("Удалить сохранение?", IDeleteSave(), ICancelDelete()));
     }
+
     IEnumerator IDeleteSave()
     {
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-        FadeManager.FadeObject(SavedPanel, false);
-        FadeManager.FadeObject(UnSavedPanel, true);
-        StartCoroutine(saveFileFields.CloseOverPanel());
-        SaveManager.instance.RemoveDateTime(saveNum);
+        StaticVariables.UIsystemDown = true;
+        StaticVariables.OverlayPanelActive = false;
 
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross(2);
+        if (saveFileFields.exitLeft && saveFileFields.exitRight)
         {
-            FadeManager.FadeOnly(screenshot, false, SaveManager.instance.optionsGradientSpeed),
-            FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.optionsGradientSpeed),
-            ConfirmationPanel.instance.ClosePanel()
-        });
+            StartCoroutine(saveFileFields.CloseOverPanel());
+        }
 
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        {
+            FadeManager.FadeObject(SavedPanel, false, SaveManager.instance.speed * 2),
+            FadeManager.FadeOnly(screenshot, false, SaveManager.instance.speed),
+            FadeManager.FadeOnly(saveFileFields.Frame, false, SaveManager.instance.speed),
+            FadeManager.FadeOnly(saveFileFields.NoImage, true, SaveManager.instance.speed),
+            FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.speed),
+            ConfirmationPanel.instance.ClosePanel()
+        }));
+
+        FadeManager.FadeObject(UnSavedPanel, true);
+
+        SaveManager.instance.RemoveDateTime(saveNum);
         SaveManager.instance.DeleteSave(saveNum);
+
+        yield return new WaitForSeconds(0.1f);
+
+        StaticVariables.UIsystemDown = false;
     }
 
     IEnumerator ICancelDelete()
     {
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+        StaticVariables.UIsystemDown = true;
+        StaticVariables.OverlayPanelActive = false;
+
+        StartCoroutine(saveFileFields.OpenOverPanel());
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross(2);
+
         yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
+
+        StaticVariables.UIsystemDown = false;
     }
 
     IEnumerator LoadFile()
     {
         int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
 
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
             ConfirmationPanel.instance.ClosePanel(),
             PanelsManager.instance.ILoadGame(actualSaveNum)
-        });
+        }));
     }
 
     IEnumerator CancelLoad()
     {
-        SaveButton.interactable = true;
-        LoadButton.interactable = true;
-        DeleteCross.GetComponent<Button>().interactable = true;
+        StaticVariables.UIsystemDown = true;
+        StaticVariables.OverlayPanelActive = false;
 
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
+        StartCoroutine(saveFileFields.OpenOverPanel());
+        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross(2);
 
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        saveChoiseIconAnimator.StopAllCoroutines();
+        saveChoiseIconAnimator.HideRight();
+
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
-            FadeManager.FadeObject(IconRight, false, SaveManager.instance.optionsGradientSpeed),
-            FadeManager.FadeObject(GradLeft, false, SaveManager.instance.optionsGradientSpeed),
             ConfirmationPanel.instance.ClosePanel()
-        });
+        }));
 
-        SaveAnimator.SetTrigger("StopLoad");
+        LoadAnimator.SetTrigger("StopLoad");
 
         saveFileFields.resetCassettePosition(IconRight);
-        StartCoroutine(saveFileFields.OpenOverPanel());
+        StaticVariables.UIsystemDown = false;
     }
 }

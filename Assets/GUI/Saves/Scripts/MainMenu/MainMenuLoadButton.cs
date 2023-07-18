@@ -14,8 +14,6 @@ public class MainMenuLoadButton : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        mainMenuLoad.onEnter = true;
-
         if (!StaticVariables.OverlayPanelActive)
         {
             DeleteCross.GetComponent<DeleteCrossButton>().AppearCross();
@@ -26,8 +24,6 @@ public class MainMenuLoadButton : MonoBehaviour
 
     private void OnMouseExit()
     {
-        mainMenuLoad.onEnter = false;
-
         if (!StaticVariables.OverlayPanelActive)
         {
             DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();

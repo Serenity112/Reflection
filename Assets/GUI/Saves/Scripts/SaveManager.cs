@@ -18,9 +18,7 @@ public class SaveManager : MonoBehaviour
 {
     public static SaveManager instance = null;
 
-    [HideInInspector] public float pagesScrollSpeed = 4f;
-
-    [HideInInspector] public float optionsGradientSpeed = 4f;
+    [HideInInspector] public float speed = 4f;
 
     private (int width, int height) CaptureRes = (1280, 720);
 
@@ -191,9 +189,7 @@ public class SaveManager : MonoBehaviour
                 FadeManager.FadeObject(frame, true);
                 FadeManager.FadeObject(noImage, false);
                 FadeManager.FadeObject(unsavedPanel, false);
-
-                saveFileFields.AllowSaveLoad = true;
-                saveFileFields.AllowOverPanel = true;
+                ;
             }
             else
             {
@@ -214,20 +210,20 @@ public class SaveManager : MonoBehaviour
                 {
                     FadeManager.FadeObject(unsavedPanel, true);
                 }
-
-                saveFileFields.AllowSaveLoad = false;
-                saveFileFields.AllowOverPanel = false;
             }
         }
 
         bottomPagesObj.GetComponent<BottomPages>().StartingLoad();
     }
 
-    public IEnumerator LoadPictures(int currentPage, int pageToLoad)
+    private IEnumerator LoadPictures(int currentPage, int pageToLoad)
     {
         // Выцветание скринов
         List<IEnumerator> enumerators_prev = new List<IEnumerator>();
         List<IEnumerator> enumerators_next = new List<IEnumerator>();
+
+        List<Action> action_prev = new List<Action>();
+        List<Action> action_next = new List<Action>();
 
         for (int i = 0; i < savesPerPage; i++)
         {
@@ -246,26 +242,33 @@ public class SaveManager : MonoBehaviour
             // [До]
             if (StaticVariables.ifInMainMenu)
             {
-                enumerators_prev.Add(allFiles[i].GetComponent<MainMenuLoad>().DisappearCassette());
+                allFiles[i].GetComponent<MainMenuLoad>().InstantHideCassette();
             }
 
             if (savesTaken[a_prev])
             {
                 if (StaticVariables.ifInMainMenu)
                 {
-                    enumerators_prev.Add(FadeManager.FadeObject(mainMenuPanel, false, optionsGradientSpeed));
+                    FadeManager.FadeObject(mainMenuPanel, false);
+                    //enumerators_prev.Add(FadeManager.FadeObject(mainMenuPanel, false, optionsGradientSpeed));
                 }
                 else
                 {
-                    enumerators_prev.Add(FadeManager.FadeObject(savedPanel, false, optionsGradientSpeed));
+                    allFiles[i].GetComponent<SaveChoiseIconAnimator>().InstantHideAll();
+                    FadeManager.FadeObject(savedPanel, false);
+                    //enumerators_prev.Add(FadeManager.FadeObject(savedPanel, false, optionsGradientSpeed));
                 }
             }
 
             if (!savesTaken[a_prev])
             {
-                if (!StaticVariables.ifInMainMenu)
+                if (StaticVariables.ifInMainMenu)
                 {
-                    enumerators_prev.Add(FadeManager.FadeObject(unsavedPanel, false, optionsGradientSpeed));
+
+                }
+                else
+                {
+                    FadeManager.FadeObject(unsavedPanel, false);
                 }
             }
 
@@ -274,49 +277,62 @@ public class SaveManager : MonoBehaviour
             {
                 if (StaticVariables.ifInMainMenu)
                 {
-                    enumerators_next.Add(FadeManager.FadeObject(mainMenuPanel, true, optionsGradientSpeed));
+                    enumerators_next.Add(FadeManager.FadeObject(mainMenuPanel, true, speed));
                 }
                 else
                 {
-                    enumerators_next.Add(FadeManager.FadeObject(savedPanel, true, optionsGradientSpeed));
+                    enumerators_next.Add(FadeManager.FadeObject(savedPanel, true, speed));
+                }
+            }
+
+            if (!savesTaken[a_next])
+            {
+                if (StaticVariables.ifInMainMenu)
+                {
+                }
+                else
+                {
+                    FadeManager.FadeObject(unsavedPanel, false);
+                    enumerators_next.Add(FadeManager.FadeObject(unsavedPanel, true, speed));
                 }
             }
 
             // Переход [Занятый] => [Занятый]
             if (savesTaken[a_prev] && savesTaken[a_next])
             {
-                enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, pagesScrollSpeed));
-                enumerators_prev.Add(FadeManager.FadeOnly(saveFileFields.datetime, false, pagesScrollSpeed));
+                enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, speed));
+                enumerators_prev.Add(FadeManager.FadeOnly(saveFileFields.datetime, false, speed));
+                enumerators_prev.Add(FadeManager.FadeOnly(frame, false, speed));
+                enumerators_prev.Add(FadeManager.FadeOnly(noImage, true, speed));
+                action_prev.Add(delegate { StartCoroutine(saveFileFields.CloseOverPanel()); });
 
                 enumerators_next.Add(SetDateTime(saveFileFields.datetime.GetComponent<Text>(), saveDataTimes[a_next]));
-                enumerators_next.Add(FadeManager.FadeOnly(saveFileFields.datetime, true, pagesScrollSpeed));
-                enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, pagesScrollSpeed));
+                enumerators_next.Add(FadeManager.FadeOnly(saveFileFields.datetime, true, speed));
+                enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, speed));
+                enumerators_next.Add(FadeManager.FadeOnly(frame, true, speed));
+                enumerators_next.Add(FadeManager.FadeOnly(noImage, false, speed));
+                action_next.Add(delegate { StartCoroutine(saveFileFields.OpenOverPanel()); });
             }
 
             // Переход [Занятый] => [Пустой]
             if (savesTaken[a_prev] && !savesTaken[a_next])
             {
-                enumerators_prev.Add(FadeManager.FadeOnly(saveFileFields.datetime, false, pagesScrollSpeed));
-                enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, pagesScrollSpeed));
-                enumerators_prev.Add(FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, 0), pagesScrollSpeed));
-                enumerators_prev.Add(FadeManager.FadeOnly(noImage, true, pagesScrollSpeed));
-                enumerators_prev.Add(FadeManager.FadeOnly(frame, false, pagesScrollSpeed));
-
-                enumerators_next.Add(FadeManager.FadeOnly(overPanel, false, pagesScrollSpeed));
+                enumerators_prev.Add(FadeManager.FadeOnly(saveFileFields.datetime, false, speed));
+                enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, speed));
+                enumerators_prev.Add(FadeManager.FadeOnly(frame, false, speed));
+                enumerators_prev.Add(FadeManager.FadeOnly(overPanel, false, speed));
+                enumerators_prev.Add(FadeManager.FadeOnly(noImage, true, speed));
             }
 
             // Переход [Пустой] => [Занятый]
             if (!savesTaken[a_prev] && savesTaken[a_next])
             {
-                enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, pagesScrollSpeed));
-                enumerators_prev.Add(FadeManager.FadeOnly(overPanel, true, pagesScrollSpeed));
-
+                enumerators_next.Add(FadeManager.FadeOnly(overPanel, true, speed));
                 enumerators_next.Add(SetDateTime(saveFileFields.datetime.GetComponent<Text>(), saveDataTimes[a_next]));
-                enumerators_next.Add(FadeManager.FadeOnly(saveFileFields.datetime, true, pagesScrollSpeed));
-                enumerators_next.Add(FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, 0.4f), pagesScrollSpeed));
-                enumerators_next.Add(FadeManager.FadeOnly(noImage, false, pagesScrollSpeed));
-                enumerators_next.Add(FadeManager.FadeOnly(frame, true, pagesScrollSpeed));
-                enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, pagesScrollSpeed));
+                enumerators_next.Add(FadeManager.FadeOnly(saveFileFields.datetime, true, speed));
+                enumerators_next.Add(FadeManager.FadeOnly(noImage, false, speed));
+                enumerators_next.Add(FadeManager.FadeOnly(frame, true, speed));
+                enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, speed));
             }
 
             // Переход [Пустой] => [Пустой]
@@ -324,6 +340,11 @@ public class SaveManager : MonoBehaviour
             {
                 // Ничего
             }
+        }
+
+        foreach (var action in action_prev)
+        {
+            action.Invoke();
         }
 
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators_prev));
@@ -350,6 +371,11 @@ public class SaveManager : MonoBehaviour
             }
 
             yield return null;
+        }
+
+        foreach (var action in action_next)
+        {
+            action.Invoke();
         }
 
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators_next));
@@ -465,7 +491,6 @@ public class SaveManager : MonoBehaviour
             ES3.Save<bool[]>("saveTaken", savesTaken, SaveFilesData);
         }).Start();
 
-        StaticVariables.UIsystemDown = false;
     }
 
     public void DeleteSave(int saveNum)

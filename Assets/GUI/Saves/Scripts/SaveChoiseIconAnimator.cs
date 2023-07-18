@@ -10,6 +10,7 @@ public class SaveChoiseIconAnimator : MonoBehaviour
     private GameObject IconRight;
 
     private SaveFileFields saveFileFields;
+
     private void Start()
     {
         saveFileFields = GetComponent<SaveFileFields>();
@@ -19,122 +20,113 @@ public class SaveChoiseIconAnimator : MonoBehaviour
         IconLeft = saveFileFields.IconLeft;
         IconRight = saveFileFields.IconRight;
     }
-    public void appearSide(Side side)
+    public void AppearSide(Side side)
     {
-        StopAllCoroutines();
-
+        StartCoroutine(saveFileFields.CloseOverPanel());
         switch (side)
         {
             case Side.Left:
-                chooseLeft();
+                AppearLeft();
                 break;
             case Side.Right:
-                chooseRight();
+                AppearRight();
                 break;
         }
     }
 
-    public void removeSide(Side side)
+    public void RemoveSide(Side side)
     {
-        StopAllCoroutines();
-
         switch (side)
         {
             case Side.Left:
-                cancelLeft();
+                if (saveFileFields.exitRight)
+                {
+                    StartCoroutine(saveFileFields.OpenOverPanel());
+                }
+                ExitLeft();
                 break;
             case Side.Right:
-                cancelRight();
+                if (saveFileFields.exitLeft)
+                {
+                    StartCoroutine(saveFileFields.OpenOverPanel());
+                }
+                ExitRight();
                 break;
         }
     }
 
-    public void chooseLeft()
+    public void AppearLeft()
     {
+        StopAllCoroutines();
         saveFileFields.exitLeft = false;
 
-        if (saveFileFields.AllowSaveLoad)
-        {
-            StartCoroutine(FadeManager.FadeObject(GradRight, true, SaveManager.instance.optionsGradientSpeed));
-            StartCoroutine(FadeManager.FadeObject(IconLeft, true, SaveManager.instance.optionsGradientSpeed));
+        StartCoroutine(FadeManager.FadeOnly(GradRight, true, SaveManager.instance.speed));
+        StartCoroutine(FadeManager.FadeOnly(IconLeft, true, SaveManager.instance.speed));
 
-            StartCoroutine(FadeManager.FadeObject(GradLeft, false, SaveManager.instance.optionsGradientSpeed));
-            StartCoroutine(FadeManager.FadeObject(IconRight, false, SaveManager.instance.optionsGradientSpeed));
-        }
-
-        if (saveFileFields.AllowOverPanel)
-        {
-            StartCoroutine(saveFileFields.CloseOverPanel());
-        }
+        StartCoroutine(FadeManager.FadeOnly(GradLeft, false, SaveManager.instance.speed));
+        StartCoroutine(FadeManager.FadeOnly(IconRight, false, SaveManager.instance.speed));
     }
 
-    public void chooseRight()
+    public void AppearRight()
     {
+        StopAllCoroutines();
         saveFileFields.exitRight = false;
 
-        if (saveFileFields.AllowSaveLoad)
-        {
-            StartCoroutine(FadeManager.FadeObject(GradLeft, true, SaveManager.instance.optionsGradientSpeed));
-            StartCoroutine(FadeManager.FadeObject(IconRight, true, SaveManager.instance.optionsGradientSpeed));
+        StartCoroutine(FadeManager.FadeOnly(GradLeft, true, SaveManager.instance.speed));
+        StartCoroutine(FadeManager.FadeOnly(IconRight, true, SaveManager.instance.speed));
 
-            StartCoroutine(FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed));
-            StartCoroutine(FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed));
-        }
-
-        if (saveFileFields.AllowOverPanel)
-        {
-            StartCoroutine(saveFileFields.CloseOverPanel());
-        }
+        StartCoroutine(FadeManager.FadeOnly(GradRight, false, SaveManager.instance.speed));
+        StartCoroutine(FadeManager.FadeOnly(IconLeft, false, SaveManager.instance.speed));
     }
 
-    public void cancelLeft()
+    public void ExitLeft()
     {
+        StopAllCoroutines();
         saveFileFields.exitLeft = true;
 
-        if (saveFileFields.AllowSaveLoad)
+        StartCoroutine(FadeManager.FadeOnly(GradRight, false, SaveManager.instance.speed));
+        StartCoroutine(FadeManager.FadeOnly(IconLeft, false, SaveManager.instance.speed));
+
+        if (saveFileFields.exitRight)
         {
-            StartCoroutine(FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed));
-            StartCoroutine(FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed));
-
-            if (saveFileFields.exitRight)
-            {
-
-                StartCoroutine(FadeManager.FadeObject(IconRight, false, SaveManager.instance.optionsGradientSpeed));
-                StartCoroutine(FadeManager.FadeObject(GradLeft, false, SaveManager.instance.optionsGradientSpeed));
-            }
-        }
-
-        if (saveFileFields.AllowOverPanel)
-        {
-            if (saveFileFields.exitRight)
-            {
-                StartCoroutine(saveFileFields.OpenOverPanel());
-            }
+            StartCoroutine(FadeManager.FadeOnly(GradLeft, false, SaveManager.instance.speed));
+            StartCoroutine(FadeManager.FadeOnly(IconRight, false, SaveManager.instance.speed));
         }
     }
 
-    public void cancelRight()
+    public void ExitRight()
     {
+        StopAllCoroutines();
         saveFileFields.exitRight = true;
 
-        if (saveFileFields.AllowSaveLoad)
-        {
-            StartCoroutine(FadeManager.FadeObject(IconRight, false, SaveManager.instance.optionsGradientSpeed));
-            StartCoroutine(FadeManager.FadeObject(GradLeft, false, SaveManager.instance.optionsGradientSpeed));
+        StartCoroutine(FadeManager.FadeOnly(GradLeft, false, SaveManager.instance.speed));
+        StartCoroutine(FadeManager.FadeOnly(IconRight, false, SaveManager.instance.speed));
 
-            if (saveFileFields.exitLeft)
-            {
-                StartCoroutine(FadeManager.FadeObject(GradRight, false, SaveManager.instance.optionsGradientSpeed));
-                StartCoroutine(FadeManager.FadeObject(IconLeft, false, SaveManager.instance.optionsGradientSpeed));
-            }
-        }
-
-        if (saveFileFields.AllowOverPanel)
+        if (saveFileFields.exitLeft)
         {
-            if (saveFileFields.exitLeft)
-            {
-                StartCoroutine(saveFileFields.OpenOverPanel());
-            }
+            StartCoroutine(FadeManager.FadeOnly(GradRight, false, SaveManager.instance.speed));
+            StartCoroutine(FadeManager.FadeOnly(IconLeft, false, SaveManager.instance.speed));
         }
+    }
+
+    public void InstantHideAll()
+    {
+        StopAllCoroutines();
+        GradLeft.GetComponent<CanvasGroup>().alpha = 0f;
+        GradRight.GetComponent<CanvasGroup>().alpha = 0f;
+        IconLeft.GetComponent<CanvasGroup>().alpha = 0f;
+        IconRight.GetComponent<CanvasGroup>().alpha = 0f;
+    }
+
+    public void HideLeft()
+    {
+        StartCoroutine(FadeManager.FadeOnly(GradRight, false, SaveManager.instance.speed));
+        StartCoroutine(FadeManager.FadeOnly(IconLeft, false, SaveManager.instance.speed));
+    }
+
+    public void HideRight()
+    {
+        StartCoroutine(FadeManager.FadeOnly(GradLeft, false, SaveManager.instance.speed));
+        StartCoroutine(FadeManager.FadeOnly(IconRight, false, SaveManager.instance.speed));
     }
 }
