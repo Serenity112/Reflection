@@ -1,12 +1,10 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using Fungus;
 
 public class HideButton : MonoBehaviour
 {
-    [SerializeField]
-    private float shadesSpeed;
+    private float shadesSpeed = 5f;
 
     [SerializeField]
     private GameObject HideOverlayButton;
@@ -91,7 +89,7 @@ public class HideButton : MonoBehaviour
 
     public void Click()
     {
-        DialogMod.denyNextDialog = true;
+        Typewriter.Instance.denySkip = true;
         StartCoroutine(IClick());
     }
 
@@ -138,14 +136,15 @@ public class HideButton : MonoBehaviour
             StopCoroutine(gui2out);
         }
 
-        gui1in = FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, true, shadesSpeed / 2.5f);
-        gui2in = FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, shadesSpeed / 2.5f);
+        gui1in = FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, true, shadesSpeed / 2f);
+        gui2in = FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, shadesSpeed / 2f);
 
         StartCoroutine(gui1in);
         yield return StartCoroutine(gui2in);
 
         HideOverlayButton.GetComponent<Button>().interactable = true;
         HideOverlayButton.SetActive(false);
-        DialogMod.denyNextDialog = false;
+        Typewriter.Instance.denySkip = false;
     }
 }
+        

@@ -41,9 +41,9 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            DialogMod.denyNextDialog = true; // разрешение будет в конце выполнения SwapSprites.
+           Typewriter.Instance.denyNextDialog = true; // разрешение будет в конце выполнения SwapSprites.
 
-            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, DialogMod.skipping, waitForFinished));
+            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, Typewriter.Instance.skipping, waitForFinished));
 
             Continue();
         }

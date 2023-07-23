@@ -1,4 +1,3 @@
-using ChristinaCreatesGames.Typography.Typewriter;
 using Fungus;
 using System.Collections;
 using System.Collections.Generic;
@@ -50,7 +49,7 @@ public class PauseButton : MonoBehaviour
     {
         gameObject.GetComponent<Button>().interactable = false;
 
-        Typewriter.denyNextDialog = true;
+        Typewriter.Instance.denyNextDialog = true;
 
         StartCoroutine(IOnClick());
     }
@@ -84,6 +83,6 @@ public class PauseButton : MonoBehaviour
             FadeManager.FadeObject(PanelsManager.instance.pausePanel, false, speed)
         });
 
-        Typewriter.denyNextDialog = false;
+        Typewriter.Instance.denyNextDialog = false;
     }
 }

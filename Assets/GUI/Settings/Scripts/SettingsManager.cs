@@ -162,7 +162,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
                 SettingsConfig.SetVolume(audioMixer, "AmbientVol", data / 100);
                 break;
             case Settings.TextSpeed:
-                //SettingsConfig.changeTextSpeed(PanelsCanvas.GetComponent<Writer>(), data);
+                SettingsConfig.ChangeTextSpeed(Typewriter.Instance, data);
                 break;
             case Settings.Language:
                 break;

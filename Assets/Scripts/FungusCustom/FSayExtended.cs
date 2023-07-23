@@ -1,19 +1,22 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using System;
 
 namespace Fungus
 {
     [CommandInfo("Ref",
-                 "FungusSayDialog",
-                 "FungusSayDialog")]
+                 "FSayExtended",
+                 "FSayExtended")]
     [AddComponentMenu("")]
     [ExecuteInEditMode]
 
-    public class FungusSayDialog : Command
+    public class FSayExtended : Command
     {
         [SerializeField]
-        private string storyText = string.Empty;
+        private string prevText = string.Empty;
+
+        [SerializeField]
+        private string extendedText = string.Empty;
 
         [SerializeField]
         private string speaker = null;
@@ -32,7 +35,7 @@ namespace Fungus
             SpriteExpand.instance.StopPrev();
             SpriteExpand.instance.SetExpanding(speaker, Typewriter.Instance.skipping);
 
-            LogManager.instance.NewMessage(storyText, speaker);
+             LogManager.instance.NewMessageExtended(extendedText, speaker);
 
             NameChanger.instance.SetName(speaker);
 
@@ -49,7 +52,7 @@ namespace Fungus
                 ES3.Save<bool>(saveString, true, "DialogSaves.es3");
             }
 
-            yield return StartCoroutine(Typewriter.Instance.Say(storyText));
+            yield return StartCoroutine(Typewriter.Instance.SayExtend(extendedText, prevText));
 
             Continue();
         }
@@ -64,7 +67,7 @@ namespace Fungus
 
         public override string GetSummary()
         {
-            return storyText;
+            return extendedText;
         }
 
         public override Color GetButtonColor()

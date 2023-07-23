@@ -21,12 +21,12 @@ public class SpritesSwapper : MonoBehaviour
         }
     }
 
+    private int ignoreXval = -1;
+
     public IEnumerator SwapSprites(string spriteName, int pose, int emotion, Vector3 newPosition, float disappearSpeed, float appearSpeed, float moveSpeed, bool skip, bool waitForFinished)
     {
-        SpriteController.instance.printData();
         SpriteMove.instance.StopSpriteMoving();
         SpriteFade.instance.StopSpritesFading();
-
         SpriteController.instance.SkipSpriteActions();
 
         int sprite1 = SpriteController.instance.GetSpriteByName(spriteName);
@@ -67,7 +67,7 @@ public class SpritesSwapper : MonoBehaviour
             yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Current2, sprite2, spriteName, pose, emotion));
 
             bool move = false;
-            if (newPosition.x == -1) // Если 0й вектор, спрайт не двигается
+            if (newPosition.x == ignoreXval)
             {
                 SpriteController.instance.SaveSpriteData(sprite2, Current1.transform.localPosition);
             }
@@ -99,7 +99,7 @@ public class SpritesSwapper : MonoBehaviour
                  delegate { Addressables.ReleaseInstance(SpriteController.instance.GameSpriteData[sprite1].handles[1]); },
                  delegate { Resources.UnloadUnusedAssets(); },
                  delegate { SpriteController.instance.DelActivity(sprite1); },
-                 delegate { DialogMod.denyNextDialog = false; },
+                 delegate {Typewriter.Instance.denyNextDialog = false; },
             };
 
             if (waitForFinished)
@@ -131,7 +131,7 @@ public class SpritesSwapper : MonoBehaviour
             yield return StartCoroutine(SpriteController.instance.ILoadSpriteOfSpecificObject(Face1, sprite1, spriteName, pose, emotion, SpritePart.FACE1));
 
             bool move = false;
-            if (newPosition.x != -1) // Если 0й вектор, спрайт не двигается
+            if (newPosition.x != ignoreXval)
             {
                 move = true;
                 SpriteController.instance.SaveSpriteData(sprite1, newPosition);
@@ -154,7 +154,7 @@ public class SpritesSwapper : MonoBehaviour
             {
                  delegate { Addressables.ReleaseInstance(SpriteController.instance.GameSpriteData[sprite1].handles[2]); },
                  delegate { Resources.UnloadUnusedAssets(); },
-                 delegate { DialogMod.denyNextDialog = false; },
+                 delegate {Typewriter.Instance.denyNextDialog = false; },
             };
 
             if (waitForFinished)

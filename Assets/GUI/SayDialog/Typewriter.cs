@@ -1,117 +1,128 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using TMPro;
 using UnityEngine.UI;
 
-namespace ChristinaCreatesGames.Typography.Typewriter
+public class Typewriter : MonoBehaviour
 {
-    public class Typewriter : MonoBehaviour
+    public static Typewriter Instance;
+
+    [SerializeField] private GameObject StoryText;
+
+    private Text _text;
+
+    public bool autoSkip = false;
+    public bool wasCurrentDialogRead = false;
+    public bool skipping = false;
+
+    public bool denySkip { get; set; } = false;
+
+    public bool denyNextDialog { get; set; } = false;
+
+    [SerializeField] private SkipButton skipButton;
+
+    private Coroutine _say;
+
+    private string currentText;
+
+    private bool clickFlag = false;
+
+    private float defaultDelay;
+
+    private bool instantSpeed = false;
+
+    public float TextSpeed { get; private set; }
+
+    private void Awake()
     {
-        public static Typewriter Instance;
+        Instance = this;
 
-        public static bool denyNextDialog;
+        _text = StoryText.GetComponent<Text>();
+    }
 
-        [SerializeField] private GameObject StoryText;
-
-        private Text _text;
-
-        public bool autoSkip = false;
-        public bool wasCurrentDialogRead = false;
-        public bool skipping = false;
-
-        [SerializeField] private SkipButton skipButton;
-
-        private Coroutine _say;
-
-        private string currentText;
-
-        private bool clickFlag = false;
-
-        private float defaultDelay;
-
-        //private bool dialogSkipFlag = false;
-
-        public float TextSpeed { get; private set; }
-
-        private void Awake()
+    private void Update()
+    {
+        if ((Input.GetKey(KeyCode.Tab) || autoSkip) && (SettingsConfig.skipEverything || wasCurrentDialogRead) && !denySkip)
         {
-            Instance = this;
-
-            SetTextSpeed(80);
-
-            _text = StoryText.GetComponent<Text>();
-        }
-
-        private void Update()
-        {
-            if ((Input.GetKey(KeyCode.Tab) || autoSkip) && (SettingsConfig.skipEverything || wasCurrentDialogRead))
+            if (!skipping)
             {
-                if (!skipping)
-                {
-                    skipButton.EnableSkip();
-                    skipping = true;
-                }
-
-                if (!denyNextDialog)
-                {
-                    SetClickFlag();
-                }
+                skipButton.EnableSkip();
+                skipping = true;
             }
-            else
+
+            if (!denyNextDialog)
             {
-                if (skipping)
-                {
-                    skipButton.DisableSkip();
-                    skipping = false;
-                }
+                SetClickFlag();
             }
         }
-
-        public void SetTextSpeed(float value)
+        else
         {
+            if (skipping)
+            {
+                skipButton.DisableSkip();
+                skipping = false;
+            }
+        }
+    }
+
+    public void SetTextSpeed(float value)
+    {
+        if (value == 120)
+        {
+            instantSpeed = true;
+        }
+        else
+        {
+            instantSpeed = false;
             defaultDelay = 1 / value;
         }
+    }
 
-        public void SetClickFlag()
+    public void SetClickFlag()
+    {
+        clickFlag = true;
+    }
+
+    public void StopTypewriter()
+    {
+        if (_say != null)
         {
-            clickFlag = true;
+            StopCoroutine(_say);
         }
+    }
 
-        public void StopTypewriter()
+    public IEnumerator SayExtend(string extendedText, string prevText)
+    {
+        _text.text = prevText + " ";
+        currentText = prevText + " " + extendedText;
+
+        _say = StartCoroutine(ISay(extendedText));
+        yield return _say;
+    }
+
+    public IEnumerator Say(string storyText)
+    {
+        _text.text = "";
+        currentText = storyText;
+
+        _say = StartCoroutine(ISay(storyText));
+        yield return _say;
+    }
+
+    private IEnumerator ISay(string storyText)
+    {
+        float timeElapsed = 0f;
+
+        if (instantSpeed)
         {
-            if (_say != null)
-            {
-                StopCoroutine(_say);
-            }
+            _text.text = storyText;
         }
-
-        public IEnumerator Say(string storyText, bool extend)
+        else
         {
-            if (extend)
-            {
-                _text.text += " ";
-                currentText = currentText + " " + storyText;
-            }
-            else
-            {
-                _text.text = "";
-                currentText = storyText;
-            }
-
-            _say = StartCoroutine(ISay(storyText));
-            yield return _say;
-        }
-
-        private IEnumerator ISay(string storyText)
-        {
-            float timeElapsed = 0f;
-
             foreach (char c in currentText)
             {
                 _text.text += c;
 
-                timeElapsed += Time.deltaTime;
                 while (timeElapsed < defaultDelay)
                 {
                     if (clickFlag)
@@ -132,13 +143,13 @@ namespace ChristinaCreatesGames.Typography.Typewriter
                     break;
                 }
             }
-
-            while (!clickFlag)
-            {
-                yield return null;
-            }
-
-            clickFlag = false;
         }
+
+        while (!clickFlag)
+        {
+            yield return null;
+        }
+
+        clickFlag = false;
     }
 }

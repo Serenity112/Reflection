@@ -6,7 +6,6 @@ using UnityEngine.UI;
 using static StaticVariables;
 using System.Collections.Generic;
 using System.Threading;
-using Unity.VisualScripting;
 
 public enum SavePageScroll
 {
@@ -18,7 +17,7 @@ public class SaveManager : MonoBehaviour
 {
     public static SaveManager instance = null;
 
-    [HideInInspector] public float speed = 4f;
+    public float speed { get; set; } = 4f;
 
     private (int width, int height) CaptureRes = (1280, 720);
 
@@ -47,6 +46,9 @@ public class SaveManager : MonoBehaviour
 
     private static string ScreenshotsFolder;
     private static string SaveFilesFolder;
+
+    public float frameAplhaOff { get; private set; } = 0.65f;
+    public float frameAplhaOn { get; private set; } = 0.4f;
 
     void Start()
     {
@@ -161,7 +163,6 @@ public class SaveManager : MonoBehaviour
             GameObject screenshot = allScreenshots[saveNum];
 
             GameObject noImage = saveFileFields.NoImage;
-            GameObject frame = saveFileFields.Frame;
             GameObject overPanel = saveFileFields.overPanel;
 
             if (savesTaken[saveNum])
@@ -186,15 +187,12 @@ public class SaveManager : MonoBehaviour
                 screenshot.GetComponent<CanvasGroup>().alpha = 1f;
 
                 FadeManager.FadeObject(overPanel, true);
-                FadeManager.FadeObject(frame, true);
-                FadeManager.FadeObject(noImage, false);
+                noImage.GetComponent<CanvasGroup>().alpha = frameAplhaOff;
                 FadeManager.FadeObject(unsavedPanel, false);
-                ;
             }
             else
             {
                 FadeManager.FadeObject(overPanel, false);
-                FadeManager.FadeObject(frame, false);
                 FadeManager.FadeObject(noImage, true);
 
                 FadeManager.FadeObject(MainMenuPanel, false);
@@ -236,7 +234,6 @@ public class SaveManager : MonoBehaviour
             GameObject mainMenuPanel = saveFileFields.MainMenuPanel;
 
             GameObject noImage = saveFileFields.NoImage;
-            GameObject frame = saveFileFields.Frame;
             GameObject overPanel = saveFileFields.overPanel;
 
             // [До]
@@ -302,16 +299,14 @@ public class SaveManager : MonoBehaviour
             {
                 enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, speed));
                 enumerators_prev.Add(FadeManager.FadeOnly(saveFileFields.datetime, false, speed));
-                enumerators_prev.Add(FadeManager.FadeOnly(frame, false, speed));
                 enumerators_prev.Add(FadeManager.FadeOnly(noImage, true, speed));
-                action_prev.Add(delegate { StartCoroutine(saveFileFields.CloseOverPanel()); });
+                action_prev.Add(delegate { StartCoroutine(saveFileFields.CloseOverPanel(1)); });
 
                 enumerators_next.Add(SetDateTime(saveFileFields.datetime.GetComponent<Text>(), saveDataTimes[a_next]));
                 enumerators_next.Add(FadeManager.FadeOnly(saveFileFields.datetime, true, speed));
                 enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, speed));
-                enumerators_next.Add(FadeManager.FadeOnly(frame, true, speed));
-                enumerators_next.Add(FadeManager.FadeOnly(noImage, false, speed));
-                action_next.Add(delegate { StartCoroutine(saveFileFields.OpenOverPanel()); });
+                enumerators_next.Add(FadeManager.FadeToTargetAlpha(noImage, frameAplhaOff, speed));
+                action_next.Add(delegate { StartCoroutine(saveFileFields.OpenOverPanel(1)); });
             }
 
             // Переход [Занятый] => [Пустой]
@@ -319,20 +314,19 @@ public class SaveManager : MonoBehaviour
             {
                 enumerators_prev.Add(FadeManager.FadeOnly(saveFileFields.datetime, false, speed));
                 enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, speed));
-                enumerators_prev.Add(FadeManager.FadeOnly(frame, false, speed));
-                enumerators_prev.Add(FadeManager.FadeOnly(overPanel, false, speed));
                 enumerators_prev.Add(FadeManager.FadeOnly(noImage, true, speed));
+                action_prev.Add(delegate { StartCoroutine(saveFileFields.CloseOverPanel(1)); });
             }
 
             // Переход [Пустой] => [Занятый]
             if (!savesTaken[a_prev] && savesTaken[a_next])
             {
-                enumerators_next.Add(FadeManager.FadeOnly(overPanel, true, speed));
                 enumerators_next.Add(SetDateTime(saveFileFields.datetime.GetComponent<Text>(), saveDataTimes[a_next]));
                 enumerators_next.Add(FadeManager.FadeOnly(saveFileFields.datetime, true, speed));
-                enumerators_next.Add(FadeManager.FadeOnly(noImage, false, speed));
-                enumerators_next.Add(FadeManager.FadeOnly(frame, true, speed));
+                enumerators_next.Add(FadeManager.FadeToTargetAlpha(noImage, frameAplhaOff, speed));
                 enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, speed));
+
+                action_next.Add(delegate { StartCoroutine(saveFileFields.OpenOverPanel(1)); });
             }
 
             // Переход [Пустой] => [Пустой]
@@ -380,7 +374,6 @@ public class SaveManager : MonoBehaviour
 
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators_next));
 
-        Debug.Log("UIsystemDown = false");
         StaticVariables.UIsystemDown = false;
     }
 
@@ -513,9 +506,7 @@ public class SaveManager : MonoBehaviour
                 StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.HideAnimation;
             }
 
-            ES3.DeleteKey("SaveFile" + actualSaveNum, fileName);
-
-            // Добавить удаление спешл ивентов!
+            ES3.DeleteFile(fileName);
         }
     }
 

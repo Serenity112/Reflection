@@ -69,6 +69,6 @@ public class LogBack : MonoBehaviour
         yield return StartCoroutine(ExpandManager.ExpandObject(Arrow, currArrowScale, 0.06f));
 
         GetComponent<Button>().interactable = true;
-        DialogMod.denyNextDialog = false;
+       Typewriter.Instance.denyNextDialog = false;
     }
 }

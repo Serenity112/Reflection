@@ -17,6 +17,9 @@ public class MainMenuLoad : MonoBehaviour
     private IEnumerator CassetteFadeIn;
     private IEnumerator CassetteFadeOut;
 
+    private IEnumerator FrameFadeIn;
+    private IEnumerator FrameFadeOut;
+
     public SaveFileFields saveFileFields;
 
     void Start()
@@ -131,7 +134,6 @@ public class MainMenuLoad : MonoBehaviour
         {
             FadeManager.FadeOnly(screenshot, false, SaveManager.instance.speed),
             FadeManager.FadeOnly(saveFileFields.NoImage, true, SaveManager.instance.speed),
-            FadeManager.FadeOnly(saveFileFields.Frame, false, SaveManager.instance.speed),
             saveFileFields.CloseOverPanel(),
             ConfirmationPanel.instance.ClosePanel(),
         };

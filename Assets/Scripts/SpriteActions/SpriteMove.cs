@@ -52,7 +52,7 @@ public class SpriteMove : MonoBehaviour
                 if (Math.Abs(diff) < 1)
                 {
                     sprite.transform.localPosition = targetVect;
-                    DialogMod.denyNextDialog = false;
+                   Typewriter.Instance.denyNextDialog = false;
                     yield break;
                 }
 
@@ -62,6 +62,6 @@ public class SpriteMove : MonoBehaviour
             }
         }
 
-        DialogMod.denyNextDialog = false;
+       Typewriter.Instance.denyNextDialog = false;
     }
 }

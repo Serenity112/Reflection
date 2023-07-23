@@ -69,6 +69,11 @@ public class LogManager : MonoBehaviour
         };
     }
 
+    public void NewMessageExtended(string MyMessage, string speakerName)
+    {
+
+    }
+
     public void NewMessage(string MyMessage, string speakerName)
     {
         counter++;

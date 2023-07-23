@@ -73,6 +73,8 @@ public class UserData : MonoBehaviour
     private static string SaveFilesFolder;
     private static string SaveFilesData;
 
+    private float speed = 5f;
+
     private void Awake()
     {
         if (instance == null)
@@ -102,7 +104,7 @@ public class UserData : MonoBehaviour
         }
         else
         {
-            StartCoroutine(ILoadGame(StaticVariables.StartingLoadSaveFile));
+            StartCoroutine(ILoadGameWithFade(StaticVariables.StartingLoadSaveFile));
         }
     }
 
@@ -137,7 +139,7 @@ public class UserData : MonoBehaviour
         {
             ES3.Save<SaveData>("SaveFile" + actualSaveNum, newSave, $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3");
         }).Start();
-      
+
         //newSave.LogBlocks = LogBlocks;
     }
 
@@ -148,14 +150,24 @@ public class UserData : MonoBehaviour
         flowchart.ExecuteBlock(targetBlock);
     }
 
+    private IEnumerator ILoadGameWithFade(int actualSaveNum)
+    {
+        FadeManager.FadeObject(PanelsManager.instance.BlackPanel, true);
+        yield return StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.blackPanelPanels, true, speed));
+
+        yield return StartCoroutine(ILoadGame(actualSaveNum));
+
+        FadeManager.FadeObject(PanelsManager.instance.blackPanelPanels, false);
+        yield return StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.BlackPanel, false, speed));
+    }
+
     public IEnumerator ILoadGame(int actualSaveNum)
     {
-        yield return new WaitForSeconds(0.5f);
-
         string fileName = $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3";
-        SaveData newSave = ES3.Load<SaveData>("SaveFile" + actualSaveNum, fileName);
+        SaveData newSave = ES3.Load<SaveData>($"SaveFile{actualSaveNum}", fileName);
 
         Flowchart flowchart = PanelsManager.instance.flowchart;
+        Typewriter.Instance.denyNextDialog = false;
 
         // Block
         if (CurrentBlock != null)
@@ -173,32 +185,32 @@ public class UserData : MonoBehaviour
 
         CurrentCommandIndex = newSave.CurrentCommandIndex;
 
-        // Background
-        yield return StartCoroutine(SpecialEventManager.instance.IReleaseCurrentEvent());
-        yield return StartCoroutine(BackgroundManager.instance.IReleaseBackground());
-
-        CurrentBG = newSave.Background;
-        if (CurrentBG != null)
+        // Special event
+        IEnumerator i_specialevent = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
         {
-            yield return StartCoroutine(BackgroundManager.instance.ILoadBackground(CurrentBG));
-        }
+            SpecialEventManager.instance.IReleaseCurrentEvent(),
+            SpecialEventManager.instance.ILoadCurrentEventByState(newSave.specialEvent, newSave.specialEventData),
+        });
 
-        // Special Events
-        yield return StartCoroutine(SpecialEventManager.instance.ILoadCurrentEventByState(newSave.specialEvent, newSave.specialEventData));
+        // Backgrounds
+        CurrentBG = newSave.Background;
+        IEnumerator i_bg = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+        {
+            BackgroundManager.instance.IReleaseBackground(),
+            BackgroundManager.instance.ILoadBackground(CurrentBG)
+        });
 
-        // Спрайты
-        // Отгрузка
-        PackageConntector.instance.DisconnectAllPackages();
-        SpriteController.instance.UnloadSprites();
-        // Загрузка
-        SpriteController.instance.GameSpriteData = newSave.SpriteData;
-        yield return StartCoroutine(SpriteController.instance.AutoConnectPackages());
-        yield return StartCoroutine(SpriteController.instance.LoadSprites());
+        // Sprites
+        IEnumerator i_sprite = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+        {
+            PackageConntector.instance.IDisconnectAllPackages(),
+            SpriteController.instance.IUnloadSprites(),
+            SpriteController.instance.AutoConnectData(newSave.SpriteData),
+            SpriteController.instance.LoadSprites(),
+        });
 
-        //GameObject.Find("ChatLog").GetComponent<LogManager>().DelLog();
-        //LogBlocks = newSave.LogBlocks;
 
-        // Музыка
+        /*// Музыка
         // Отгрузка
         yield return StartCoroutine(AudioManager.instance.FadeOutCurrent());
 
@@ -218,21 +230,24 @@ public class UserData : MonoBehaviour
         if (CurrentAmbient2.Name != null)
         {
             AudioManager.instance.AmbientStart(CurrentAmbient2.Name, 3f, CurrentAmbient2.Volume, true);
-        }
-
-        DialogMod.denyNextDialog = false;
+        }*/
 
         // Лог
         LogManager.instance.DelLog();
 
         // Выборы игрока
-        StartCoroutine(ChoiceManager.instance.HideOptionsBox(20f));
-        ChoiceManager.instance.ReleaseChoiceBox();
-        ChoiceManager.instance.LoadSavedChoices(actualSaveNum);
+        //StartCoroutine(ChoiceManager.instance.HideOptionsBox(20f));
+        //ChoiceManager.instance.ReleaseChoiceBox();
+        //ChoiceManager.instance.LoadSavedChoices(actualSaveNum);
 
-        flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex, null);
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            i_specialevent,
+            i_bg,
+            i_sprite
+        }));
+
+        flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex);
         CurrentCommandIndex--;
-
-        //yield return null;
     }
 }

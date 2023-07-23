@@ -56,7 +56,7 @@ public class ChoiceManager : MonoBehaviour
 
     private IEnumerator ICreateChoice(ChoiceArr[] choices, string choiceCode)
     {
-        DialogMod.denyNextDialog = true;
+       Typewriter.Instance.denyNextDialog = true;
 
         _currentChoices = choices;
         _currentChoiceCode = choiceCode;
@@ -106,7 +106,7 @@ public class ChoiceManager : MonoBehaviour
 
         LoadBlock(blockName);
 
-        DialogMod.denyNextDialog = false;
+       Typewriter.Instance.denyNextDialog = false;
     }
 
     public IEnumerator ShowOptionsBox(float speed)

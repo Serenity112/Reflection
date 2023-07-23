@@ -376,6 +376,8 @@ namespace Fungus.EditorUtils
                             new FieldArg("blockName", (target as Block).BlockName)}); // Extend
 
             int counter = 0;
+            string prevText = string.Empty;
+
             foreach (XmlNode key in xDoc["Keys"].ChildNodes)
             {
                 counter++;
@@ -383,11 +385,20 @@ namespace Fungus.EditorUtils
                 {
                     // Dialog
                     case "SayDialog":
+                        prevText = GetInnerText(key, "arg1");
+
                         AddCommand("Fungus.FungusSayDialog", new FieldArg[] {
                             new FieldArg("storyText", GetInnerText(key, "arg1")), // Phrase
                             new FieldArg("speaker", GetInnerText(key, "arg2")), // Speaker
-                            new FieldArg("extendPrevious", GetInnerText(key, "arg3") == "y")} // Extend
-                        );
+                            });
+                        break;
+
+                    case "ExtendDialog":
+                        AddCommand("Fungus.FSayExtended", new FieldArg[] {
+                            new FieldArg("extendedText", GetInnerText(key, "arg1")), // Phrase
+                            new FieldArg("prevText", prevText), // Prev text
+                            new FieldArg("speaker", GetInnerText(key, "arg2")) // Speaker
+                        });
                         break;
 
                     // Sprites
@@ -525,7 +536,7 @@ namespace Fungus.EditorUtils
                         break;
                 }
 
-                if(counter % 100 == 0)
+                if (counter % 100 == 0)
                 {
                     AddCommand("Fungus.FungusDelLog", new FieldArg[] { });
                 }

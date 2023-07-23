@@ -17,8 +17,6 @@ public class CheckBox : MonoBehaviour, ISettingsOption
     private IEnumerator ICircleOn;
     private IEnumerator ICircleOff;
 
-    private bool isAnimatig;
-
     private void Awake()
     {
         CircleIn = transform.GetChild(0).gameObject;
@@ -38,7 +36,6 @@ public class CheckBox : MonoBehaviour, ISettingsOption
         Vector3 origScale = CircleIn.transform.localScale;
         Vector3 shrinkedScale = origScale * 0.85f;
 
-        isAnimatig = true;
         GetComponent<Button>().interactable = false;
 
 
@@ -53,7 +50,6 @@ public class CheckBox : MonoBehaviour, ISettingsOption
         }
 
         GetComponent<Button>().interactable = true;
-        isAnimatig = false;
     }
 
     private void OnMouseEnter()

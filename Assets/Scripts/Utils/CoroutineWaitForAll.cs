@@ -32,4 +32,12 @@ public class CoroutineWaitForAll : MonoBehaviour
             tally--;
         }
     }
+
+    public IEnumerator WaitForSequence(List<IEnumerator> coroutines)
+    {
+        foreach (IEnumerator c in coroutines)
+        {
+            yield return StartCoroutine(c);
+        }
+    }
 }

@@ -42,8 +42,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     // handlers
     private AsyncOperationHandle<GameObject> savePanelHandler;
 
-    [SerializeField]
-    private float savesSpeed;
+    private float savesSpeed = 5f;
 
     private void Awake()
     {
@@ -81,7 +80,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
         Resources.UnloadUnusedAssets();
 
-        StartCoroutine(UserData.instance.ILoadGame(saveNum));
+        yield return StartCoroutine(UserData.instance.ILoadGame(saveNum));
         // yield return'ы не работают тут по какой-то причине
         //yield return new WaitForSeconds(0.5f);
 

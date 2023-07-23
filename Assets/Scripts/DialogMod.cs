@@ -30,7 +30,7 @@ namespace Fungus
         public static bool autoSkip { get; set; } = false;
 
         // Публичный параметр для понимания, идтёт ли сейчас пропуск
-        public static bool skipping { get; set; } = false;
+        //public static bool skipping { get; set; } = false;
 
         public SkipButton skipButton; // Для синхронизации кунопки tab и анимаций
 
@@ -90,11 +90,11 @@ namespace Fungus
             {
                 if ((Input.GetKey(KeyCode.Tab) || autoSkip) && (SettingsConfig.skipEverything || wasCurrentDialogRead))
                 {
-                    if (!skipping)
+                   /* if (!skipping)
                     {
                         skipButton.EnableSkip();
                         skipping = true;
-                    }
+                    }*/
 
                     if (!denyNextDialog)
                     {
@@ -103,11 +103,11 @@ namespace Fungus
                 }
                 else
                 {
-                    if (skipping)
+                    /*if (skipping)
                     {
                         skipButton.DisableSkip();
                         skipping = false;
-                    }
+                    }*/
                 }
             }
 

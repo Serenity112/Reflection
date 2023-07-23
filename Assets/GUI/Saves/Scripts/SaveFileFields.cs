@@ -20,7 +20,6 @@ public class SaveFileFields : MonoBehaviour
     public GameObject IconRight;
 
     public GameObject NoImage;
-    public GameObject Frame;
 
     public GameObject datetime;
 
@@ -68,26 +67,26 @@ public class SaveFileFields : MonoBehaviour
         }
     }
 
-    public IEnumerator OpenOverPanel()
+    public IEnumerator OpenOverPanel(float coef = 1)
     {
         if (!StaticVariables.OverlayPanelActive)
         {
             if (overPanelOut != null)
                 StopCoroutine(overPanelOut);
 
-            overPanelIn = FadeManager.FadeOnly(overPanel, true, SaveManager.instance.speed);
+            overPanelIn = FadeManager.FadeOnly(overPanel, true, SaveManager.instance.speed * coef);
             yield return StartCoroutine(overPanelIn);
         }
 
         yield return null;
     }
 
-    public IEnumerator CloseOverPanel()
+    public IEnumerator CloseOverPanel(float coef = 1)
     {
         if (overPanelIn != null)
             StopCoroutine(overPanelIn);
 
-        overPanelOut = FadeManager.FadeOnly(overPanel, false, SaveManager.instance.speed);
+        overPanelOut = FadeManager.FadeOnly(overPanel, false, SaveManager.instance.speed * coef);
         yield return StartCoroutine(overPanelOut);
     }
 

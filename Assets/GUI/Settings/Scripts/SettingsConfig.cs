@@ -325,8 +325,8 @@ public class SettingsConfig
         mixer.SetFloat(exposedparam, dbVolume);
     }
 
-    public static void changeTextSpeed(Writer writer, float speed)
+    public static void ChangeTextSpeed(Typewriter typewriter, float speed)
     {
-        writer.writingSpeed = speed;
+        typewriter.SetTextSpeed(speed);
     }
 }

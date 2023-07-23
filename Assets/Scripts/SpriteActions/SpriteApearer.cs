@@ -1,11 +1,12 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SpriteApearer : MonoBehaviour
 {
     public static SpriteApearer instance = null;
 
-    private void Start()
+    private void Awake()
     {
         if (instance == null)
         {
@@ -21,25 +22,48 @@ public class SpriteApearer : MonoBehaviour
     {
         int newSpriteNum = SpriteController.instance.GetAvaliableSpriteNum(characterName);
 
-        SpriteController.instance.SaveSpriteData(newSpriteNum, characterName, pose, emotion, position, 1f, false);
+        if (newSpriteNum != -1)
+        {
+            SpriteMove.instance.StopSpriteMoving();
+            SpriteFade.instance.StopSpritesFading();
+            SpriteController.instance.SkipSpriteActions();
 
-        GameObject Current = SpriteController.instance.GetSprite(newSpriteNum);
-        GameObject Face1 = Current.transform.GetChild(0).gameObject;
-        GameObject Face2 = Current.transform.GetChild(1).gameObject;
+            SpriteController.instance.SaveSpriteData(newSpriteNum, characterName, pose, emotion, position, 1f, false);
 
-        Current.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
-        Face1.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
-        Face2.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
+            GameObject Sprite = SpriteController.instance.GetSprite(newSpriteNum);
+            GameObject Face1 = Sprite.transform.GetChild(0).gameObject;
+            GameObject Face2 = Sprite.transform.GetChild(1).gameObject;
 
-        SpriteController.instance.SetDefaultScale(Current, characterName);
+            Sprite.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
+            Face1.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
+            Face2.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
 
-        Current.transform.localPosition = position;
+            SpriteController.instance.SetDefaultScale(Sprite, characterName);
 
-        yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Current, newSpriteNum, characterName, pose, emotion));
+            Sprite.transform.localPosition = position;
 
-        // Можно добавить опционпльность синк/асинк появления, но вроде синк лучше всегда
-        yield return StartCoroutine(SpriteFade.instance.IAppearFullSprite(Current, speed, skip));
+            yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Sprite, newSpriteNum, characterName, pose, emotion));
 
-        // Возможно нужно доабвить скип фейда и мува, но вроде и так нормально
+            // Можно добавить опционпльность синк/асинк появления, но вроде синк лучше всегда
+
+            if (skip)
+            {
+                Sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
+                Face1.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
+                yield return null;
+            }
+            else
+            {
+                yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+                {
+                    FadeManager.ColorAlphaFadeObject(Sprite, true, speed),
+                    FadeManager.ColorAlphaFadeObject(Face1, true, speed)
+                }));
+            }
+        }
+        else
+        {
+            yield return null;
+        }
     }
 }

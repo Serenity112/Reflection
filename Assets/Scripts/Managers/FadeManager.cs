@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,7 +14,7 @@ public class FadeManager : MonoBehaviour
 
         if (fadein)
         {
-            for (float i = color; i <= 1 + 0.05; i += speed * Time.deltaTime)
+            for (float i = color; i <= 1; i += speed * Time.deltaTime)
             {
                 obj.GetComponent<CanvasGroup>().alpha = i;
                 yield return null;
@@ -22,7 +23,7 @@ public class FadeManager : MonoBehaviour
         }
         else
         {
-            for (float i = color; i >= 0 - 0.05; i -= speed * Time.deltaTime)
+            for (float i = color; i >= 0; i -= speed * Time.deltaTime)
             {
                 obj.GetComponent<CanvasGroup>().alpha = i;
                 yield return null;
@@ -39,7 +40,7 @@ public class FadeManager : MonoBehaviour
 
         if (fadein)
         {
-            for (float i = color; i <= 1 + 0.05; i += speed * Time.deltaTime)
+            for (float i = color; i <= 1; i += (speed * Time.deltaTime))
             {
                 obj.GetComponent<CanvasGroup>().alpha = i;
                 yield return null;
@@ -48,13 +49,40 @@ public class FadeManager : MonoBehaviour
         }
         else
         {
-            for (float i = color; i >= 0 - 0.05; i -= speed * Time.deltaTime)
+            for (float i = color; i >= 0; i -= speed * Time.deltaTime)
             {
                 obj.GetComponent<CanvasGroup>().alpha = i;
                 yield return null;
             }
             obj.GetComponent<CanvasGroup>().alpha = 0;
         }
+    }
+
+    public static IEnumerator FadeToTargetAlpha(GameObject obj, float targetAlpha, float speed)
+    {
+        obj.SetActive(true);
+
+        float color = obj.GetComponent<CanvasGroup>().alpha;
+        bool fadein = targetAlpha >= color ? true : false;
+
+        if (fadein)
+        {
+            for (float i = color; i <= targetAlpha; i += (speed * Time.deltaTime))
+            {
+                obj.GetComponent<CanvasGroup>().alpha = i;
+                yield return null;
+            }
+        }
+        else
+        {
+            for (float i = color; i >= targetAlpha; i -= speed * Time.deltaTime)
+            {
+                obj.GetComponent<CanvasGroup>().alpha = i;
+                yield return null;
+            }
+        }
+
+        obj.GetComponent<CanvasGroup>().alpha = targetAlpha;
     }
 
     public static void FadeObject(GameObject obj, bool fadein)
@@ -105,7 +133,7 @@ public class FadeManager : MonoBehaviour
 
         if (fadein)
         {
-            for (float i = alpha; i <= 1 + 0.05; i += speed * Time.deltaTime)
+            for (float i = alpha; i <= 1; i += speed * Time.deltaTime)
             {
                 obj.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, i);
                 yield return null;
@@ -114,7 +142,7 @@ public class FadeManager : MonoBehaviour
         }
         else
         {
-            for (float i = alpha; i >= 0 - 0.05; i -= speed * Time.deltaTime)
+            for (float i = alpha; i >= 0; i -= speed * Time.deltaTime)
             {
                 obj.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, i);
                 yield return null;

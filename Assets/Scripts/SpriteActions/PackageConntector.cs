@@ -26,10 +26,7 @@ public class PackageConntector : MonoBehaviour
         handlers = new Dictionary<string, AsyncOperationHandle<Sprite>>();
     }
 
-    public void ConnectPackage(string PackageName)
-    {
-        StartCoroutine(IConnectPackage(PackageName));
-    }
+    public void ConnectPackage(string PackageName) => StartCoroutine(IConnectPackage(PackageName));
 
     public void DisconnectPackage(string PackageName)
     {
@@ -37,22 +34,25 @@ public class PackageConntector : MonoBehaviour
 
         if (handlers.ContainsKey(address))
         {
-            Addressables.Release(handlers[address]);
+            Addressables.ReleaseInstance(handlers[address]);
             handlers.Remove(address);
-        } else
+        }
+        else
         {
             Debug.Log($"Key {address} was not in dictionary!");
-        }        
+        }
     }
 
-    public void DisconnectAllPackages()
+    public IEnumerator IDisconnectAllPackages()
     {
-        foreach(KeyValuePair<string, AsyncOperationHandle<Sprite>> handler in handlers)
+        foreach (KeyValuePair<string, AsyncOperationHandle<Sprite>> handler in handlers)
         {
-            Addressables.Release(handler.Value);          
+            yield return Addressables.ReleaseInstance(handler.Value);
         }
 
         handlers.Clear();
+
+        yield return null;
     }
 
     public IEnumerator IConnectPackage(string packageName)
@@ -61,13 +61,13 @@ public class PackageConntector : MonoBehaviour
         AsyncOperationHandle<Sprite> handler = Addressables.LoadAssetAsync<Sprite>(address);
         yield return handler;
 
-        if(handler.Status == AsyncOperationStatus.Succeeded)
+        if (handler.Status == AsyncOperationStatus.Succeeded && !handlers.ContainsKey(address))
         {
             handlers.Add(address, handler);
         }
         else
         {
             Debug.Log("Error loading package connector");
-        }      
+        }
     }
 }

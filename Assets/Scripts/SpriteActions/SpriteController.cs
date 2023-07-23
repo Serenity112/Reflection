@@ -1,6 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Reflection;
 using System.Text;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -77,7 +81,7 @@ public class SpriteController : MonoBehaviour
     [SerializeField] private List<AssetReference> Tanya2;
     [SerializeField] private List<AssetReference> Tanya3;
 
-    [SerializeField] private List<AssetReference> Raketnikov;
+    [SerializeField] private List<AssetReference> Raketnikov1;
 
     [SerializeField] private List<AssetReference> Tumanov1; //pose 1 glasses
     [SerializeField] private List<AssetReference> Tumanov2; //pose 1 no glasses
@@ -113,53 +117,35 @@ public class SpriteController : MonoBehaviour
             GameSpriteData[i] = new SpriteData(i);
         }
 
-        CharactersScales.Add("Pasha", new Vector3(27f, 27f, 0f));
-        CharactersScales.Add("Nastya", new Vector3(37f, 37f, 0f));
-        CharactersScales.Add("Evelina", new Vector3(32f, 32f, 0f));
-        CharactersScales.Add("Tanya", new Vector3(35f, 35f, 0f));
-        CharactersScales.Add("Katya", new Vector3(29f, 29f, 0f));
-        CharactersScales.Add("Raketnikov", new Vector3(29f, 29f, 0f));
-        CharactersScales.Add("Tumanov", new Vector3(26f, 26f, 0f));
+        CharactersScales.Add("Pasha", new Vector3(36f, 36f, 0f));
+        CharactersScales.Add("Nastya", new Vector3(45f, 45f, 0f));
+        CharactersScales.Add("Evelina", new Vector3(40f, 40f, 0f));
+        CharactersScales.Add("Tanya", new Vector3(41f, 41f, 0f));
+        CharactersScales.Add("Katya", new Vector3(37f, 37f, 0f));
+        CharactersScales.Add("Raketnikov", new Vector3(35f, 35f, 0f));
+        CharactersScales.Add("Tumanov", new Vector3(33f, 33f, 0f));
 
-        // Assets
-        characterAssets.Add(("Pasha", 1), Pasha1);
-        characterAssets.Add(("Pasha", 2), Pasha2);
-        characterAssets.Add(("Pasha", 3), Pasha3);
-        characterAssets.Add(("Pasha", 4), Pasha4);
-        characterAssets.Add(("Pasha", 5), Pasha5);
-        characterAssets.Add(("Pasha", 6), Pasha6);
-        characterAssets.Add(("Pasha", 7), Pasha7);
-        characterAssets.Add(("Pasha", 8), Pasha8);
-        characterAssets.Add(("Pasha", 9), Pasha9);
+        // Assets       
+        InitAssetByName("Pasha", 9);
+        InitAssetByName("Nastya", 3);
+        InitAssetByName("Katya", 3);
+        InitAssetByName("Evelina", 3);
+        InitAssetByName("Tanya", 3);
+        InitAssetByName("Raketnikov", 1);
+        InitAssetByName("Tumanov", 4);
+    }
 
-        characterAssets.Add(("Katya", 1), Katya1);
-        characterAssets.Add(("Katya", 2), Katya2);
-        characterAssets.Add(("Katya", 3), Katya3);
-        characterAssets.Add(("Katya", 4), Katya4);
-        characterAssets.Add(("Katya", 5), Katya5);
-        characterAssets.Add(("Katya", 6), Katya6);
-        characterAssets.Add(("Katya", 7), Katya7);
-        characterAssets.Add(("Katya", 8), Katya8);
-        characterAssets.Add(("Katya", 9), Katya9);
-
-        characterAssets.Add(("Nastya", 1), Nastya1);
-        characterAssets.Add(("Nastya", 2), Nastya2);
-        characterAssets.Add(("Nastya", 3), Nastya3);
-
-        characterAssets.Add(("Evelina", 1), Evelina1);
-        characterAssets.Add(("Evelina", 2), Evelina2);
-        characterAssets.Add(("Evelina", 3), Evelina3);
-
-        characterAssets.Add(("Tanya", 1), Tanya1);
-        characterAssets.Add(("Tanya", 2), Tanya2);
-        characterAssets.Add(("Tanya", 3), Tanya3);
-
-        characterAssets.Add(("Raketnikov", 1), Raketnikov);
-
-        characterAssets.Add(("Tumanov", 1), Tumanov1);
-        characterAssets.Add(("Tumanov", 2), Tumanov2);
-        characterAssets.Add(("Tumanov", 3), Tumanov3);
-        characterAssets.Add(("Tumanov", 4), Tumanov4);
+    private void InitAssetByName(string assetName, int len)
+    {
+        Type type = GetType();
+        for (int i = 1; i <= len; i++)
+        {
+            FieldInfo fieldInfo = type.GetField(assetName + i, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (fieldInfo != null)
+            {
+                characterAssets.Add((assetName, i), (List<AssetReference>)fieldInfo.GetValue(this));
+            }
+        }
     }
 
     public void printData()
@@ -182,14 +168,14 @@ public class SpriteController : MonoBehaviour
     }
 
     // SaveSpriteData
-    public void SaveSpriteData(int Sprite, string name, int pose, int emotion, Vector3 position, float alpha, bool expanded) // Full
+    public void SaveSpriteData(int spriteNum, string name, int pose, int emotion, Vector3 position, float alpha, bool expanded) // Full
     {
-        GameSpriteData[Sprite].name = name;
-        GameSpriteData[Sprite].pose = pose;
-        GameSpriteData[Sprite].emotion = emotion;
-        GameSpriteData[Sprite].postion = position;
-        GameSpriteData[Sprite].alpha = alpha;
-        GameSpriteData[Sprite].expanded = expanded;
+        GameSpriteData[spriteNum].name = name;
+        GameSpriteData[spriteNum].pose = pose;
+        GameSpriteData[spriteNum].emotion = emotion;
+        GameSpriteData[spriteNum].postion = position;
+        GameSpriteData[spriteNum].alpha = alpha;
+        GameSpriteData[spriteNum].expanded = expanded;
     }
     public void SaveSpriteData(int Sprite, Vector3 newVector) //save Position
     {
@@ -357,8 +343,10 @@ public class SpriteController : MonoBehaviour
         }
     }
 
-    public IEnumerator AutoConnectPackages()
+    public IEnumerator AutoConnectData(SpriteData[] data)
     {
+        GameSpriteData = data;
+
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             if (GameSpriteData[i].name != null)
@@ -368,14 +356,14 @@ public class SpriteController : MonoBehaviour
         }
     }
 
-    public void UnloadSprites()
+    public IEnumerator IUnloadSprites()
     {
         for (int i = 0; i < 4; i++)
         {
             if (GameSpriteData[i].name != null)
             {
-                Addressables.Release(GameSpriteData[i].handles[0]);
-                Addressables.Release(GameSpriteData[i].handles[1]);
+                yield return Addressables.ReleaseInstance(GameSpriteData[i].handles[0]);
+                yield return Addressables.ReleaseInstance(GameSpriteData[i].handles[1]);
 
                 GameObject sprite = Sprites.transform.GetChild(i).gameObject;
 
@@ -395,11 +383,11 @@ public class SpriteController : MonoBehaviour
     public IEnumerator LoadSpriteByParts(GameObject spriteToLoad, int spriteNum, string character, int pose, int emotion)
     {
         GameObject Face = spriteToLoad.transform.GetChild(0).gameObject;
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
             ILoadSpriteOfSpecificObject(spriteToLoad, spriteNum, character, pose, 0, SpritePart.BASE),
             ILoadSpriteOfSpecificObject(Face, spriteNum, character, pose, emotion, SpritePart.FACE1)
-        });
+        }));
     }
 
     public IEnumerator ILoadSpriteOfSpecificObject(GameObject obj, int spriteNum, string characterName, int pose, int emotion, SpritePart part)
@@ -414,15 +402,15 @@ public class SpriteController : MonoBehaviour
         {
             case SpritePart.BASE:
                 GameSpriteData[spriteNum].handles[0] = newHandle;
-                obj.GetComponent<SpriteRenderer>().sprite = newHandle.Result;
                 break;
             case SpritePart.FACE1:
                 GameSpriteData[spriteNum].handles[1] = newHandle;
-                obj.GetComponent<SpriteRenderer>().sprite = newHandle.Result;
                 break;
             default:
                 Debug.Log($"Error in sprite {characterName} loading!");
                 break;
         }
+
+        obj.GetComponent<SpriteRenderer>().sprite = newHandle.Result;
     }
 }

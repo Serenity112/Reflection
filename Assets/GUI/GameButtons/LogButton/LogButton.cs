@@ -95,7 +95,7 @@ public class LogButton : MonoBehaviour
 
     public void Click()
     {
-        DialogMod.denyNextDialog = true;
+       Typewriter.Instance.denyNextDialog = true;
         StartCoroutine(IClick());
     }
 

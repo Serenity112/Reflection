@@ -178,7 +178,6 @@ public class SaveChoiseAnimator : MonoBehaviour
         {
             FadeManager.FadeObject(SavedPanel, false, SaveManager.instance.speed * 2),
             FadeManager.FadeOnly(screenshot, false, SaveManager.instance.speed),
-            FadeManager.FadeOnly(saveFileFields.Frame, false, SaveManager.instance.speed),
             FadeManager.FadeOnly(saveFileFields.NoImage, true, SaveManager.instance.speed),
             FadeManager.FadeObject(saveFileFields.datetime, false, SaveManager.instance.speed),
             ConfirmationPanel.instance.ClosePanel()

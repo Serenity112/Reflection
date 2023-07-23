@@ -11,7 +11,7 @@ public class WarningPanel : MonoBehaviour
 
     [HideInInspector] public GameObject ActivePanels;
 
-    private float FadingSpeed = 5f;
+    //private float FadingSpeed = 5f;
 
     public static string SavingErrorMessage =
        "В системе сохранений возникла ошибка!\n" +

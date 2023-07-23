@@ -18,9 +18,9 @@ namespace Fungus
         private GameObject ButtonBlockingOverlay;
         public void Awake()
         {
-            /*ButtonBlockingOverlay.SetActive(true);
+            ButtonBlockingOverlay.SetActive(true);
             gameGuiPanel.GetComponent<CanvasGroup>().alpha = 0f;
-            gameButtons.GetComponent<CanvasGroup>().alpha = 0f;*/
+            gameButtons.GetComponent<CanvasGroup>().alpha = 0f;
         }
         public override void OnEnter()
         {
@@ -37,7 +37,7 @@ namespace Fungus
             yield return StartCoroutine(FadeManager.FadeObject(gameGuiPanel, true, 4f));
 
             yield return new WaitForSeconds(0.33f);
-            
+
             ButtonBlockingOverlay.SetActive(false);
 
             Continue();

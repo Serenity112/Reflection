@@ -104,8 +104,7 @@ public class FirstSaveAnimator : MonoBehaviour
 
         List<IEnumerator> enumerators_next = new List<IEnumerator>()
         {
-            FadeManager.FadeObject(saveFileFields.Frame, true, SaveManager.instance.speed),
-            FadeManager.FadeObject(saveFileFields.NoImage, false, SaveManager.instance.speed),
+            FadeManager.FadeToTargetAlpha(saveFileFields.NoImage, SaveManager.instance.frameAplhaOff, SaveManager.instance.speed),
             FadeManager.FadeObject(screenshot, true, SaveManager.instance.speed),
             FadeManager.FadeObject(SavedPanel, true, SaveManager.instance.speed),
         };    

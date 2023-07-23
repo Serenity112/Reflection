@@ -24,7 +24,7 @@ namespace Fungus
             SpriteFade.instance.StopSpritesFading();
             SpriteController.instance.SkipSpriteActions();
 
-            DialogMod.denyNextDialog = true; // Запрет отключтся в конце выполнения SetMovementSprites
+           Typewriter.Instance.denyNextDialog = true; // Запрет отключтся в конце выполнения SetMovementSprites
 
             int spriteNum = SpriteController.instance.GetSpriteByName(CharacterName);
 
@@ -32,7 +32,7 @@ namespace Fungus
 
             GameObject sprite = SpriteController.instance.GetSprite(spriteNum);
 
-            SpriteMove.instance.SetMovementSprites(sprite, Position, MovementTime, DialogMod.skipping);
+            SpriteMove.instance.SetMovementSprites(sprite, Position, MovementTime, Typewriter.Instance.skipping);
 
             Continue();
         }
