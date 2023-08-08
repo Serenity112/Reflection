@@ -46,7 +46,9 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
 
         SettingsConfig.LoadSettingsFromMemory();
 
-        ApplySettingsOnStart(); 
+        ApplySettingsOnStart();
+
+        StaticVariables.GameIsStarting = false;
     }
 
     public void OpenSettings() => StartCoroutine(IOpenSettings());
@@ -133,6 +135,18 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
                     break;
                 case Settings.soundVolume:
                     SmoothMusicOnStart("SoundVol", data);
+                    break;
+                case Settings.FullScreenMode:
+                    if (StaticVariables.GameIsStarting)
+                    {
+                        InstantApplySpecificSetting(setting, value, data);
+                    }
+                    break;
+                case Settings.Resolution:
+                    if (StaticVariables.GameIsStarting)
+                    {
+                        InstantApplySpecificSetting(setting, value, data);
+                    }
                     break;
                 default:
                     InstantApplySpecificSetting(setting, value, data);

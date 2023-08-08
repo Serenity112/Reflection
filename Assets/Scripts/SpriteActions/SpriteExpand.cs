@@ -68,7 +68,7 @@ public class SpriteExpand : MonoBehaviour
                 {
                     if (allowExpand && !skip)
                     {
-                        StartCoroutine(Expand(SpriteController.instance.GetSprite(linkedSprite), newScale, expand_time));
+                        StartCoroutine(Expand(SpriteController.instance.GameSprites[linkedSprite].ByPart(SpritePart.Body), newScale, expand_time));
                     }
                 }
 
@@ -109,7 +109,7 @@ public class SpriteExpand : MonoBehaviour
             int linkedSprite = SpriteController.instance.GameSpriteData[sprite.num].prevSprite;
             if (linkedSprite != -1)
             {
-                StartCoroutine(Expand(SpriteController.instance.GetSprite(linkedSprite), SpriteController.instance.CharactersScales[lastExpandedSpriteName], expand_time));
+                StartCoroutine(Expand(SpriteController.instance.GameSprites[linkedSprite].ByPart(SpritePart.Body), SpriteController.instance.CharactersScales[lastExpandedSpriteName], expand_time));
             }
 
             StartCoroutine(Expand(sprite.ByPart(SpritePart.Body), SpriteController.instance.CharactersScales[lastExpandedSpriteName], expand_time));

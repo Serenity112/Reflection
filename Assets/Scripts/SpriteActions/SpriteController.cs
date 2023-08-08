@@ -25,8 +25,8 @@ public struct GameSpriteObject
     }
 
     public int num;
-    public Dictionary<SpritePart, GameObject> Parts;
     public AsyncOperationHandle<Sprite>[] Handlers;
+    private Dictionary<SpritePart, GameObject> Parts;
 
     #region alpha
 
@@ -125,8 +125,6 @@ public struct SpriteData
 public class SpriteController : MonoBehaviour
 {
     public static SpriteController instance = null;
-
-    //[SerializeField] private Dictionary<(string name, int pose_num), List<AssetReference>> characterAssets = new Dictionary<(string, int), List<AssetReference>>();
 
     private const int maxSpritesOnScreen = 4;
 
@@ -287,16 +285,11 @@ public class SpriteController : MonoBehaviour
         return;
     }
 
-    public GameObject GetSprite(int num)
-    {
-        return GameSprites[num].Parts[SpritePart.Body];
-    }
-
     public void SkipSpritesExpanding()
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
-            GameObject sprite = GetSprite(i);
+            GameSpriteObject sprite = GameSprites[i];
 
             SpriteData data = GameSpriteData[i];
 
@@ -309,7 +302,7 @@ public class SpriteController : MonoBehaviour
                     scale *= SpriteExpand.instance.expand_coefficient;
                 }
 
-                sprite.transform.localScale = scale;
+                sprite.SetScale(scale);
             }
         }
     }
@@ -364,13 +357,10 @@ public class SpriteController : MonoBehaviour
 
             if (i_data.name != null)
             {
-                // Position
                 sprite.SetPosition(i_data.postion);
 
-                // Color
                 sprite.SetAlpha(i_data.alpha, i_data.alpha, 0);
 
-                // Scale
                 Vector3 scale = CharactersScales[i_data.name];
                 if (i_data.expanded)
                 {
@@ -378,8 +368,7 @@ public class SpriteController : MonoBehaviour
                 }
                 sprite.SetScale(scale);
 
-                // Loading
-                //StartCoroutine(PackageConntector.instance.IConnectPackage(i_data.name));
+                StartCoroutine(PackageConntector.instance.IConnectPackage(i_data.name));
                 list.Add(LoadSpriteByParts(sprite, i_data.name, i_data.pose, i_data.emotion));
             }
 
@@ -423,8 +412,6 @@ public class SpriteController : MonoBehaviour
 
     public IEnumerator ILoadSpriteOfSpecificObject(GameSpriteObject sprite, SpritePart part, string name, int pose, int emotion)
     {
-        // AssetReference spriteReference = characterAssets[(name, pose)][emotion];
-
         AsyncOperationHandle<Sprite> newHandle = Addressables.LoadAssetAsync<Sprite>($"{name}{pose}_p{emotion}");
         yield return newHandle;
 

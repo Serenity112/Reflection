@@ -47,7 +47,7 @@ public class SaveManager : MonoBehaviour
     private static string ScreenshotsFolder;
     private static string SaveFilesFolder;
 
-    public float frameAplhaOff { get; private set; } = 0.65f;
+    public float frameAplhaOff { get; private set; } = 1f;
     public float frameAplhaOn { get; private set; } = 0.4f;
 
     void Start()

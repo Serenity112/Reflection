@@ -122,7 +122,7 @@ public class SettingsConfig
         chosenOptions.Add(Settings.ambientVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
 
         // Скорость текста
-        chosenOptions.Add(Settings.TextSpeed, new SettingsOptionsData(SettingsOptions.Speed, 80));
+        chosenOptions.Add(Settings.TextSpeed, new SettingsOptionsData(SettingsOptions.Speed, 100));
 
         // Увеличениек спрайтов
         chosenOptions.Add(Settings.SpriteExpand, new SettingsOptionsData(SettingsOptions.Expand, 1)); // 1 - true
@@ -174,11 +174,6 @@ public class SettingsConfig
         {
             WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
-    }
-
-    public static void UpdatedLinkedVisuals()
-    {
-
     }
 
     public static void FilterAndApplySpecificSetting(Settings setting, SettingsOptions value, float data = 0)
@@ -287,25 +282,28 @@ public class SettingsConfig
 
     public static void ChangeResoulution(SettingsOptions value)
     {
-        Screen.fullScreenMode = FullScreenMode.Windowed;
-
         switch (value)
         {
             case SettingsOptions.r2560x1440:
+                Screen.fullScreenMode = FullScreenMode.Windowed;
                 Screen.SetResolution(2560, 1440, FullScreenMode.Windowed, 144);
                 break;
             case SettingsOptions.r1920x1080:
+                Screen.fullScreenMode = FullScreenMode.Windowed;
                 Screen.SetResolution(1920, 1080, FullScreenMode.Windowed, 60);
                 break;
             case SettingsOptions.r1280x720:
+                Screen.fullScreenMode = FullScreenMode.Windowed;
                 Screen.SetResolution(1280, 720, FullScreenMode.Windowed, 60);
                 break;
             case SettingsOptions.r832x480:
+                Screen.fullScreenMode = FullScreenMode.Windowed;
                 Screen.SetResolution(832, 480, FullScreenMode.Windowed, 60);
                 break;
             case SettingsOptions.rAutomatic:
                 if (GetChosenOption(Settings.FullScreenMode) != SettingsOptions.FullScreen)
                 {
+                    Screen.fullScreenMode = FullScreenMode.Windowed;
                     Screen.SetResolution(Screen.currentResolution.width, Screen.currentResolution.height, FullScreenMode.Windowed, 60);
                 }
                 break;

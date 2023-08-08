@@ -9,7 +9,6 @@ public struct SaveData
 {
     public SaveData(int saveNum)
     {
-        this.saveNum = saveNum;
         SpriteData = new SpriteData[4];
         Background = null;
 
@@ -26,8 +25,6 @@ public struct SaveData
         specialEvent = SpecialEvent.none;
         specialEventData = null;
     }
-
-    int saveNum;
 
     public SpriteData[] SpriteData;
     public string Background;
@@ -217,7 +214,7 @@ public class UserData : MonoBehaviour
 
         IEnumerator i_sprite_unload = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
-            //PackageConntector.instance.IDisconnectAllPackages(),
+            PackageConntector.instance.IDisconnectAllPackages(),
             SpriteController.instance.IUnloadSprites(),
         });
 

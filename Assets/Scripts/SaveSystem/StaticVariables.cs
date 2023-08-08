@@ -8,6 +8,8 @@ public static class StaticVariables
 
     public static bool OverlayPanelActive { get; set; } = false;
 
+    public static bool GameIsStarting { get; set; } = true;
+
     public enum MMContinueButtonState
     {
         ButtonDeleted,

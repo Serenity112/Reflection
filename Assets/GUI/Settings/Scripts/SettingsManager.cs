@@ -126,11 +126,16 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
                 case Settings.soundVolume:
                     SmoothMusicOnStart("SoundVol", data);
                     break;
+                case Settings.FullScreenMode:
+                    // Не применять, переносится с мейн меню
+                    break;
+                case Settings.Resolution:
+                    // Не применять, переносится с мейн меню
+                    break;
                 default:
                     InstantApplySpecificSetting(setting, value, data);
                     break;
             }
-
         }
     }
 
