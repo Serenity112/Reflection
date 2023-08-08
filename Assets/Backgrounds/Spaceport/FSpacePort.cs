@@ -7,19 +7,11 @@ namespace Fungus
                    "FSpacePort")]
     public class FSpacePort : Command
     {
-        [SerializeField]
-        private SpacePortState State;
-
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            switch (State)
-            {
-                case SpacePortState.Launch:
-                    ((SpacePort)SpecialEventManager.instance.currentEvent).RocketLaunch();
-                    break;
-            }
+            ((SpacePort)SpecialEventManager.instance.currentEvent).RocketLaunch();
 
             Continue();
         }

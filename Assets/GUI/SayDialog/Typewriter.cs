@@ -91,6 +91,11 @@ public class Typewriter : MonoBehaviour
         }
     }
 
+    public void AddText(string text)
+    {
+        _text.text += text;
+    }
+
     public IEnumerator SayExtend(string extendedText, string prevText)
     {
         _text.text = prevText + " ";

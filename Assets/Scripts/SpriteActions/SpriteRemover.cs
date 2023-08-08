@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -25,18 +26,25 @@ public class SpriteRemover : MonoBehaviour
         SpriteMove.instance.StopSpriteMoving();
         SpriteController.instance.SkipSpriteActions();
 
-        int spriteNum = SpriteController.instance.GetSpriteByName(characterName);
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteNumByName(characterName);
 
-        GameObject Current = SpriteController.instance.GetSprite(spriteNum);
-        GameObject Face1 = Current.transform.GetChild(0).gameObject;
+        if (sprite_obj == null)
+        {
+            yield break;
+        }
 
-        StartCoroutine(SpriteFade.instance.ISetFadingSprite(Current, false, speed, skip));
-        yield return StartCoroutine(SpriteFade.instance.ISetFadingSprite(Face1, false, speed, skip));
+        GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
 
-        Addressables.ReleaseInstance(SpriteController.instance.GameSpriteData[spriteNum].handles[0]);
-        Addressables.ReleaseInstance(SpriteController.instance.GameSpriteData[spriteNum].handles[1]);
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            SpriteFade.instance.ISetFadingSprite(sprite.ByPart(SpritePart.Body), false, speed, skip),
+            SpriteFade.instance.ISetFadingSprite(sprite.ByPart(SpritePart.Face1), false, speed, skip)
+        }));
 
-        SpriteController.instance.DelActivity(spriteNum);
+        Addressables.Release(SpriteController.instance.GameSprites[sprite.num].Handlers[0]);
+        Addressables.Release(SpriteController.instance.GameSprites[sprite.num].Handlers[1]);
+
+        SpriteController.instance.DelActivity(sprite.num);
         PackageConntector.instance.DisconnectPackage(characterName);
     }
 }

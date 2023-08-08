@@ -61,6 +61,7 @@ public class SpecialEventManager : MonoBehaviour
     public IEnumerator ILoadCurrentEventByState(SpecialEvent specialEvent, string data)
     {
         SetEventEnum(specialEvent);
+
         if (currentEventEnum == SpecialEvent.none)
         {
             yield break;

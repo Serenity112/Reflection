@@ -13,19 +13,13 @@ public class TextBoxController : MonoBehaviour
 
     private AsyncOperationHandle<GameObject> _textBoxThemeHandler;
 
-    public enum TextBoxStyle
-    {
-        Default,
-        Blackfade,
-    }
-
     public enum ThemeStyle
     {
         Light,
         Dark,
     }
 
-    void Start()
+    void Awake()
     {
         if (instance == null)
         {
@@ -35,6 +29,11 @@ public class TextBoxController : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    public IEnumerator ISetDefaultTheme()
+    {
+        yield return StartCoroutine(IChangeTheme(ThemeStyle.Light, 0.8f));
     }
 
     public IEnumerator IChangeTheme(ThemeStyle theme, float alpha)
@@ -64,13 +63,5 @@ public class TextBoxController : MonoBehaviour
     public void SetStoryText(string text)
     {
         StoryText.GetComponent<Text>().text = text;
-    }
-
-    public void SetTextBoxStyle(TextBoxStyle style)
-    {
-        switch (style)
-        {
-
-        }
     }
 }

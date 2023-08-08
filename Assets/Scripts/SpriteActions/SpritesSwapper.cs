@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using Fungus;
 using System;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class SpritesSwapper : MonoBehaviour
 {
@@ -23,83 +23,92 @@ public class SpritesSwapper : MonoBehaviour
 
     private int ignoreXval = -1;
 
-    public IEnumerator SwapSprites(string spriteName, int pose, int emotion, Vector3 newPosition, float disappearSpeed, float appearSpeed, float moveSpeed, bool skip, bool waitForFinished)
+    public IEnumerator SwapSprites(string spriteName, int pose, int emotion, Vector3 newPosition, float disappearSpeed, float appearSpeed, float moveSpeed, bool skip, bool waitForFinished, bool stopPrev)
     {
-        SpriteMove.instance.StopSpriteMoving();
-        SpriteFade.instance.StopSpritesFading();
-        SpriteController.instance.SkipSpriteActions();
+        if (stopPrev)
+        {
+            SpriteMove.instance.StopSpriteMoving();
+            SpriteFade.instance.StopSpritesFading();
+            SpriteController.instance.SkipSpriteActions();
+        }
 
-        int sprite1 = SpriteController.instance.GetSpriteByName(spriteName);
+        GameSpriteObject? sprite1_obj = SpriteController.instance.GetSpriteNumByName(spriteName);
 
-        bool ChangePose = SpriteController.instance.GameSpriteData[sprite1].pose != pose;
+        if (sprite1_obj == null)
+        {
+            yield break;
+        }
+
+        GameSpriteObject sprite1 = (GameSpriteObject)sprite1_obj;
+
+        bool ChangePose = SpriteController.instance.GameSpriteData[sprite1.num].pose != pose;
 
         if (ChangePose)
         {
-            int sprite2 = SpriteController.instance.GetAvaliableSpriteNum(spriteName);
-            //SpriteController.instance.GameSpriteData[sprite2].prevSprite = sprite1;
+            GameSpriteObject? sprite2_obj = SpriteController.instance.GetAvaliableSprite(spriteName);
 
-            SpriteController.instance.SaveSpriteData(sprite1, 0f);
-            SpriteController.instance.SaveSpriteData(sprite2, spriteName, pose, emotion);
-            SpriteController.instance.SaveSpriteData(sprite2, 1f);
-
-            GameObject Current1 = SpriteController.instance.GetSprite(sprite1);
-            GameObject Current2 = SpriteController.instance.GetSprite(sprite2);
-
-            GameObject Face1_1 = Current1.transform.GetChild(0).gameObject;
-            GameObject Face1_2 = Current2.transform.GetChild(0).gameObject;
-
-            if (SpriteController.instance.GameSpriteData[sprite1].expanded)
+            if (sprite2_obj == null)
             {
-                SpriteController.instance.SaveSpriteData(sprite2, true);
-                SpriteController.instance.SetNewScale(Current2, spriteName, SpriteExpand.instance.expand_coefficient);
+                yield break;
+            }
+
+            GameSpriteObject sprite2 = (GameSpriteObject)sprite2_obj;
+
+            SpriteController.instance.SaveSpriteData(sprite1.num, 0f);
+            SpriteController.instance.SaveSpriteData(sprite2.num, spriteName, pose, emotion);
+            SpriteController.instance.SaveSpriteData(sprite2.num, 1f);
+
+            if (SpriteController.instance.GameSpriteData[sprite1.num].expanded)
+            {
+                SpriteController.instance.SaveSpriteData(sprite2.num, true);
+                SpriteController.instance.SetScaleByName(sprite2, spriteName, SpriteExpand.instance.expand_coefficient);
             }
             else
             {
-                SpriteController.instance.SetDefaultScale(Current2, spriteName);
+                SpriteController.instance.SetScaleByName(sprite2, spriteName);
             }
 
-            Current2.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
-            Face1_2.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
+            sprite2.SetAlpha(0f);
 
             // Изменить, если добавится гарантированное смещение в зависимости от поз
-            Current2.transform.localPosition = Current1.transform.localPosition;
+            sprite2.SetScale(sprite1.GetScale());
 
-            yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Current2, sprite2, spriteName, pose, emotion));
+            yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(sprite2, spriteName, pose, emotion));
 
             bool move = false;
             if (newPosition.x == ignoreXval)
             {
-                SpriteController.instance.SaveSpriteData(sprite2, Current1.transform.localPosition);
+                SpriteController.instance.SaveSpriteData(sprite2.num, sprite1.GetPosition());
             }
             else
             {
                 move = true;
-                SpriteController.instance.SaveSpriteData(sprite2, newPosition);
+                SpriteController.instance.SaveSpriteData(sprite2.num, newPosition);
             }
 
             // IEnumerators
             List<IEnumerator> enumerators = new List<IEnumerator>
             {
-                SpriteFade.instance.ISetFadingSprite(Current1, false, disappearSpeed, skip),
-                SpriteFade.instance.ISetFadingSprite(Face1_1, false, disappearSpeed, skip),
-                SpriteFade.instance.ISetFadingSprite(Current2, true, appearSpeed, skip),
-                SpriteFade.instance.ISetFadingSprite(Face1_2, true, appearSpeed, skip)
+                SpriteFade.instance.ISetFadingSprite(sprite1.ByPart(SpritePart.Body), false, disappearSpeed, skip),
+                SpriteFade.instance.ISetFadingSprite(sprite1.ByPart(SpritePart.Face1), false, disappearSpeed, skip),
+                SpriteFade.instance.ISetFadingSprite(sprite2.ByPart(SpritePart.Body), true, appearSpeed, skip),
+                SpriteFade.instance.ISetFadingSprite(sprite2.ByPart(SpritePart.Face1), true, appearSpeed, skip)
             };
 
             if (move)
             {
-                enumerators.Add(SpriteMove.instance.IMoveSprite(Current1, newPosition, moveSpeed, skip));
-                enumerators.Add(SpriteMove.instance.IMoveSprite(Current2, newPosition, moveSpeed, skip));
+                enumerators.Add(SpriteMove.instance.IMoveSprite(sprite1, newPosition, moveSpeed, skip));
+                enumerators.Add(SpriteMove.instance.IMoveSprite(sprite2, newPosition, moveSpeed, skip));
             }
 
             // Actions
             List<Action> postActions = new List<Action>
             {
-                 delegate { Addressables.ReleaseInstance(SpriteController.instance.GameSpriteData[sprite1].handles[0]); },
-                 delegate { Addressables.ReleaseInstance(SpriteController.instance.GameSpriteData[sprite1].handles[1]); },
+                 delegate { Addressables.Release(SpriteController.instance.GameSprites[sprite1.num].Handlers[0]); },
+                 delegate { Addressables.Release(SpriteController.instance.GameSprites[sprite1.num].Handlers[1]); },
                  delegate { Resources.UnloadUnusedAssets(); },
-                 delegate { SpriteController.instance.DelActivity(sprite1); },
-                 delegate {Typewriter.Instance.denyNextDialog = false; },
+                 delegate { SpriteController.instance.DelActivity(sprite1.num); },
+                 delegate { Typewriter.Instance.denyNextDialog = false; },
             };
 
             if (waitForFinished)
@@ -115,46 +124,43 @@ public class SpritesSwapper : MonoBehaviour
         }
         else
         {
-            SpriteController.instance.SaveSpriteData(sprite1, spriteName, pose, emotion);
+            SpriteController.instance.SaveSpriteData(sprite1.num, spriteName, pose, emotion);
 
-            GameObject Current = SpriteController.instance.GetSprite(sprite1);
-            GameObject Face1 = Current.transform.GetChild(0).gameObject;
-            GameObject Face2 = Current.transform.GetChild(1).gameObject;
+            //Используем oldHandler как буффер
+            AsyncOperationHandle<Sprite> oldFaceHandler = SpriteController.instance.GameSprites[sprite1.num].Handlers[1];
 
-            //Используем 2й handle как буффер
-            SpriteController.instance.GameSpriteData[sprite1].handles[2] = SpriteController.instance.GameSpriteData[sprite1].handles[1];
-            Face2.GetComponent<SpriteRenderer>().sprite = Face1.GetComponent<SpriteRenderer>().sprite;
+            sprite1.SetImage(SpritePart.Face2, sprite1.GetImage(SpritePart.Face1));
+            sprite1.SetAlpha(SpritePart.Face2, 1f);
+            sprite1.SetAlpha(SpritePart.Face1, 0f);
+            sprite1.SetImage(SpritePart.Face1, null);
 
-            Face2.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
-            Face1.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
-
-            yield return StartCoroutine(SpriteController.instance.ILoadSpriteOfSpecificObject(Face1, sprite1, spriteName, pose, emotion, SpritePart.FACE1));
+            yield return StartCoroutine(SpriteController.instance.ILoadSpriteOfSpecificObject(sprite1, SpritePart.Face1, spriteName, pose, emotion));
 
             bool move = false;
             if (newPosition.x != ignoreXval)
             {
                 move = true;
-                SpriteController.instance.SaveSpriteData(sprite1, newPosition);
+                SpriteController.instance.SaveSpriteData(sprite1.num, newPosition);
             }
 
             // IEnumerators
             List<IEnumerator> enumerators = new List<IEnumerator>
             {
-                SpriteFade.instance.ISetFadingSprite(Face1, true, disappearSpeed, skip),
-                SpriteFade.instance.ISetFadingSprite(Face2, false, appearSpeed, skip),
+                SpriteFade.instance.ISetFadingSprite(sprite1.ByPart(SpritePart.Face1), true, disappearSpeed, skip),
+                SpriteFade.instance.ISetFadingSprite(sprite1.ByPart(SpritePart.Face2), false, appearSpeed, skip),
             };
 
             if (move)
             {
-                enumerators.Add(SpriteMove.instance.IMoveSprite(Current, newPosition, moveSpeed, skip));
+                enumerators.Add(SpriteMove.instance.IMoveSprite(sprite1, newPosition, moveSpeed, skip));
             }
 
             // Actions
             List<Action> postActions = new List<Action>
             {
-                 delegate { Addressables.ReleaseInstance(SpriteController.instance.GameSpriteData[sprite1].handles[2]); },
+                 delegate { Addressables.ReleaseInstance(oldFaceHandler); },
                  delegate { Resources.UnloadUnusedAssets(); },
-                 delegate {Typewriter.Instance.denyNextDialog = false; },
+                 delegate { Typewriter.Instance.denyNextDialog = false; },
             };
 
             if (waitForFinished)
@@ -172,11 +178,12 @@ public class SpritesSwapper : MonoBehaviour
 
     private IEnumerator IDelayedActions(List<IEnumerator> enumerators, List<Action> actions)
     {
-        yield return CoroutineWaitForAll.instance.WaitForAll(enumerators);
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators));
 
         foreach (Action action in actions)
         {
             action.Invoke();
+            yield return null;
         }
     }
 }

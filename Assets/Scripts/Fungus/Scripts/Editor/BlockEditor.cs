@@ -366,7 +366,7 @@ namespace Fungus.EditorUtils
 
         private void LoadBuilderBlock()
         {
-            string filePath = Application.dataPath + "/StreamingAssets/pasha_d1.xml";
+            string filePath = Application.dataPath + "/StreamingAssets/d1_beginning.xml";
 
             XmlDocument xDoc = new XmlDocument();
 
@@ -377,10 +377,12 @@ namespace Fungus.EditorUtils
 
             int counter = 0;
             string prevText = string.Empty;
+            string prevCommand = string.Empty;
 
             foreach (XmlNode key in xDoc["Keys"].ChildNodes)
             {
                 counter++;
+                prevCommand = key.Attributes["Command"].Value;
                 switch (key.Attributes["Command"].Value)
                 {
                     // Dialog

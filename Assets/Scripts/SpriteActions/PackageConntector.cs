@@ -34,7 +34,7 @@ public class PackageConntector : MonoBehaviour
 
         if (handlers.ContainsKey(address))
         {
-            Addressables.ReleaseInstance(handlers[address]);
+            Addressables.Release(handlers[address]);
             handlers.Remove(address);
         }
         else
@@ -47,12 +47,11 @@ public class PackageConntector : MonoBehaviour
     {
         foreach (KeyValuePair<string, AsyncOperationHandle<Sprite>> handler in handlers)
         {
-            yield return Addressables.ReleaseInstance(handler.Value);
+            Addressables.Release(handler.Value);
+            yield return null;
         }
 
         handlers.Clear();
-
-        yield return null;
     }
 
     public IEnumerator IConnectPackage(string packageName)

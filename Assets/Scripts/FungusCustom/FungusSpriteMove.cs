@@ -19,20 +19,10 @@ namespace Fungus
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
-            // Скип идёт от сюда, т.к. нет класса типо SpriteMover. SpriteMove и SpriteFade вспомогательные классы, в которых писать пропуск не хочется.
-            SpriteMove.instance.StopSpriteMoving();
-            SpriteFade.instance.StopSpritesFading();
-            SpriteController.instance.SkipSpriteActions();
 
-           Typewriter.Instance.denyNextDialog = true; // Запрет отключтся в конце выполнения SetMovementSprites
+            Typewriter.Instance.denyNextDialog = true; // Запрет отключтся в конце выполнения SetMovementSprites
 
-            int spriteNum = SpriteController.instance.GetSpriteByName(CharacterName);
-
-            SpriteController.instance.SaveSpriteData(spriteNum, Position);
-
-            GameObject sprite = SpriteController.instance.GetSprite(spriteNum);
-
-            SpriteMove.instance.SetMovementSprites(sprite, Position, MovementTime, Typewriter.Instance.skipping);
+            SpriteMove.instance.SetSpriteMovement(CharacterName, Position, MovementTime, Typewriter.Instance.skipping);
 
             Continue();
         }
@@ -41,6 +31,5 @@ namespace Fungus
         {
             return new Color32(96, 100, 200, 255);
         }
-
     }
 }

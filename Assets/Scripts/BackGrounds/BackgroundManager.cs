@@ -107,7 +107,8 @@ public class BackgroundManager : MonoBehaviour
 
         bg_handler = Addressables.InstantiateAsync(bg_adress, _backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
-        bg_handler.Result.GetComponent<CanvasGroup>().alpha = 1f;
+
+        //bg_handler.Result.GetComponent<CanvasGroup>().alpha = 1f;
 
         yield return new WaitForSeconds(delay);
 

@@ -93,6 +93,11 @@ public class UserData : MonoBehaviour
         SaveFileName = SaveSystemUtils.SaveFileName;
         SaveFilesFolder = SaveSystemUtils.SaveFilesFolder;
         SaveFilesData = SaveSystemUtils.SaveFilesData;
+
+        if (StaticVariables.StartingLoadSaveFile == -1)
+        {
+
+        }
     }
 
     private void Start()
@@ -100,7 +105,7 @@ public class UserData : MonoBehaviour
         // Сейв, заданный в главном меню
         if (StaticVariables.StartingLoadSaveFile == -1)
         {
-            LoadGameFromStart();
+            StartCoroutine(ILoadGameFromStart());
         }
         else
         {
@@ -143,11 +148,12 @@ public class UserData : MonoBehaviour
         //newSave.LogBlocks = LogBlocks;
     }
 
-    private void LoadGameFromStart()
+    private IEnumerator ILoadGameFromStart()
     {
         Flowchart flowchart = PanelsManager.instance.flowchart;
         Block targetBlock = flowchart.FindBlock(_startingDayName);
         flowchart.ExecuteBlock(targetBlock);
+        yield return null;
     }
 
     private IEnumerator ILoadGameWithFade(int actualSaveNum)
@@ -185,28 +191,45 @@ public class UserData : MonoBehaviour
 
         CurrentCommandIndex = newSave.CurrentCommandIndex;
 
-        // Special event
-        IEnumerator i_specialevent = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+        // Backgrounds + special event
+        CurrentBG = newSave.Background;
+
+        IEnumerator i_bg_unload = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
             SpecialEventManager.instance.IReleaseCurrentEvent(),
-            SpecialEventManager.instance.ILoadCurrentEventByState(newSave.specialEvent, newSave.specialEventData),
+            BackgroundManager.instance.IReleaseBackground(),
         });
 
-        // Backgrounds
-        CurrentBG = newSave.Background;
+        IEnumerator i_bg_load = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            BackgroundManager.instance.ILoadBackground(CurrentBG),
+            SpecialEventManager.instance.ILoadCurrentEventByState(newSave.specialEvent, newSave.specialEventData)
+        });
+
         IEnumerator i_bg = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
         {
-            BackgroundManager.instance.IReleaseBackground(),
-            BackgroundManager.instance.ILoadBackground(CurrentBG)
+            i_bg_unload,
+            i_bg_load,
         });
 
+
         // Sprites
+
+        IEnumerator i_sprite_unload = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            //PackageConntector.instance.IDisconnectAllPackages(),
+            SpriteController.instance.IUnloadSprites(),
+        });
+
+        IEnumerator i_sprite_load = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            SpriteController.instance.LoadSprites(newSave.SpriteData),
+        });
+
         IEnumerator i_sprite = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
         {
-            PackageConntector.instance.IDisconnectAllPackages(),
-            SpriteController.instance.IUnloadSprites(),
-            SpriteController.instance.AutoConnectData(newSave.SpriteData),
-            SpriteController.instance.LoadSprites(),
+            i_sprite_unload,
+            i_sprite_load,
         });
 
 
@@ -242,10 +265,10 @@ public class UserData : MonoBehaviour
 
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
-            i_specialevent,
             i_bg,
             i_sprite
         }));
+
 
         flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex);
         CurrentCommandIndex--;

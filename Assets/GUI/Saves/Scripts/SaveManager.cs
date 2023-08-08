@@ -66,7 +66,7 @@ public class SaveManager : MonoBehaviour
         SaveFileName = SaveSystemUtils.SaveFileName;
         ScreenshotsFolder = SaveSystemUtils.ScreenshotsFolder;
 
-        GameObject Files = transform.GetChild(0).gameObject;
+        GameObject Files = transform.GetChild(1).gameObject;
 
         for (int i = 0; i < savesPerPage; i++)
         {

@@ -23,6 +23,12 @@ namespace Fungus
         [SerializeField]
         private float AppearSpeed = 3f;
 
+        [SerializeField]
+        private bool WaitForFinished = true;
+
+        [SerializeField]
+        private bool StopPrev = true;
+
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
@@ -32,7 +38,7 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            yield return StartCoroutine(SpriteApearer.instance.SpriteAppear(CharacterName, Pose, Emotion, Position, AppearSpeed, Typewriter.Instance.skipping));
+            yield return StartCoroutine(SpriteApearer.instance.SpriteAppear(CharacterName, Pose, Emotion, Position, AppearSpeed, Typewriter.Instance.skipping, WaitForFinished, StopPrev));
 
             Continue();
         }

@@ -1,9 +1,6 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using System;
-using Fungus;
 
 public class SpriteMove : MonoBehaviour
 {
@@ -26,16 +23,36 @@ public class SpriteMove : MonoBehaviour
         StopAllCoroutines();
     }
 
-    public void SetMovementSprites(GameObject sprite, Vector3 vector, float smoothTime, bool skip)
+    public void SetSpriteMovement(string name, Vector3 vector, float smoothTime, bool skip)
     {
-        StartCoroutine(IMoveSprite(sprite, vector, smoothTime, skip));
+        StartCoroutine(IMoveSprite(name, vector, smoothTime, skip));
     }
 
-    public IEnumerator IMoveSprite(GameObject sprite, Vector3 targetVect, float smoothTime, bool skip)
+    public IEnumerator IMoveSprite(string name, Vector3 targetVect, float smoothTime, bool skip)
     {
-        if (skip || sprite.transform.localPosition == targetVect)
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteNumByName(name);
+
+        if (sprite_obj == null)
         {
-            sprite.transform.localPosition = targetVect;
+            yield break;
+        }
+
+        GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
+
+        yield return StartCoroutine(IMoveSprite(sprite, targetVect, smoothTime, skip));
+    }
+
+    public IEnumerator IMoveSprite(GameSpriteObject sprite, Vector3 targetVect, float smoothTime, bool skip)
+    {
+        StopSpriteMoving();
+        SpriteFade.instance.StopSpritesFading();
+        SpriteController.instance.SkipSpriteActions();
+
+        SpriteController.instance.SaveSpriteData(sprite.num, targetVect);
+
+        if (skip || sprite.GetPosition() == targetVect)
+        {
+            sprite.SetPosition(targetVect);
 
             yield return null;
         }
@@ -43,25 +60,25 @@ public class SpriteMove : MonoBehaviour
         {
             Vector3 velocity = Vector3.zero;
 
-            bool targetGstart = targetVect.x > sprite.transform.localPosition.x;
+            bool targetGstart = targetVect.x > sprite.GetPosition().x;
 
-            while (sprite.transform.localPosition != targetVect)
+            while (sprite.GetPosition() != targetVect)
             {
-                float diff = targetGstart ? targetVect.x - sprite.transform.localPosition.x : sprite.transform.localPosition.x - targetVect.x;
+                float diff = targetGstart ? targetVect.x - sprite.GetPosition().x : sprite.GetPosition().x - targetVect.x;
 
                 if (Math.Abs(diff) < 1)
                 {
-                    sprite.transform.localPosition = targetVect;
-                   Typewriter.Instance.denyNextDialog = false;
+                    sprite.SetPosition(targetVect);
+                    Typewriter.Instance.denyNextDialog = false;
                     yield break;
                 }
 
-                sprite.transform.localPosition = Vector3.SmoothDamp(sprite.transform.localPosition, targetVect, ref velocity, smoothTime);
+                sprite.SetPosition(Vector3.SmoothDamp(sprite.GetPosition(), targetVect, ref velocity, smoothTime));
 
                 yield return null;
             }
         }
 
-       Typewriter.Instance.denyNextDialog = false;
+        Typewriter.Instance.denyNextDialog = false;
     }
 }

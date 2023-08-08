@@ -30,7 +30,10 @@ namespace Fungus
         private float MovementTime = 0.1f;
 
         [SerializeField]
-        private bool waitForFinished = false;
+        private bool WaitForFinished = false;
+
+        [SerializeField]
+        private bool StopPrev = true;
 
         public override void OnEnter()
         {
@@ -41,9 +44,11 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-           Typewriter.Instance.denyNextDialog = true; // разрешение будет в конце выполнения SwapSprites.
+            Typewriter.Instance.denyNextDialog = true; // разрешение будет в конце выполнения SwapSprites.
 
-            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, Typewriter.Instance.skipping, waitForFinished));
+            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, Typewriter.Instance.skipping, WaitForFinished, StopPrev));
+
+            SpriteController.instance.printData();
 
             Continue();
         }

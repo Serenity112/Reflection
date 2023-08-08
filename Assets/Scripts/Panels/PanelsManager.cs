@@ -69,8 +69,8 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     // LOAD
     public IEnumerator ILoadGame(int saveNum)
     {
-        FadeManager.FadeObject(BlackPanel, true);
-        yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, savesSpeed));
+       // FadeManager.FadeObject(BlackPanel, true);
+       // yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, savesSpeed));
 
         SaveManager.instance.ClearCurrent();
         Addressables.ReleaseInstance(savePanelHandler);
@@ -84,8 +84,8 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         // yield return'ы не работают тут по какой-то причине
         //yield return new WaitForSeconds(0.5f);
 
-        FadeManager.FadeObject(blackPanelPanels, false);
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, savesSpeed));
+       // FadeManager.FadeObject(blackPanelPanels, false);
+      //  yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, savesSpeed));
     }
 
     // SAVES

@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
 using System;
-using Fungus;
+using System.Collections;
+using Unity.VisualScripting;
+using UnityEngine;
 
 
 public class SpriteExpand : MonoBehaviour
@@ -43,28 +41,29 @@ public class SpriteExpand : MonoBehaviour
 
         StopAllCoroutines();
 
-        SpriteController.instance.LoadSpritesExpandings();
+        SpriteController.instance.SkipSpritesExpanding();
     }
 
     public void SetExpanding(string characterName, bool skip)
     {
         bool allowExpand = SettingsConfig.chosenOptions[Settings.SpriteExpand].data == 1;
 
-        int spriteNum = SpriteController.instance.GetSpriteByName(characterName);
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteNumByName(characterName);
 
-        if (spriteNum != -1)
+        if (sprite_obj != null)
         {
+            GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
+
             if (lastExpandedSpriteName != characterName)
             {
-                GameObject newSprite = SpriteController.instance.GetSprite(spriteNum);
                 Vector3 newScale = SpriteController.instance.CharactersScales[characterName] * expand_coefficient;
 
                 if (!skip)
                 {
-                    SpriteController.instance.SaveSpriteData(spriteNum, true);
+                    SpriteController.instance.SaveSpriteData(sprite.num, true);
                 }
 
-                int linkedSprite = SpriteController.instance.GameSpriteData[spriteNum].prevSprite;
+                int linkedSprite = SpriteController.instance.GameSpriteData[sprite.num].prevSprite;
                 if (linkedSprite != -1)
                 {
                     if (allowExpand && !skip)
@@ -75,7 +74,7 @@ public class SpriteExpand : MonoBehaviour
 
                 if (allowExpand && !skip)
                 {
-                    StartCoroutine(Expand(newSprite, newScale, expand_time));
+                    StartCoroutine(Expand(sprite.ByPart(SpritePart.Body), newScale, expand_time));
                 }
 
                 if (lastExpandedSpriteName != null)
@@ -99,24 +98,23 @@ public class SpriteExpand : MonoBehaviour
 
     private void shrinkOldSprite(bool skip)
     {
-        int oldSpriteNum = SpriteController.instance.GetSpriteByName(lastExpandedSpriteName);
+        GameSpriteObject? old_sprite = SpriteController.instance.GetSpriteNumByName(lastExpandedSpriteName);
 
-        if (oldSpriteNum != -1)
+        if (old_sprite != null)
         {
-            GameObject oldSprite = SpriteController.instance.GetSprite(oldSpriteNum);
+            GameSpriteObject sprite = (GameSpriteObject)old_sprite;
 
-            SpriteController.instance.SaveSpriteData(oldSpriteNum, false);
+            SpriteController.instance.SaveSpriteData(sprite.num, false);
 
-            int linkedSprite = SpriteController.instance.GameSpriteData[oldSpriteNum].prevSprite;
+            int linkedSprite = SpriteController.instance.GameSpriteData[sprite.num].prevSprite;
             if (linkedSprite != -1)
             {
                 StartCoroutine(Expand(SpriteController.instance.GetSprite(linkedSprite), SpriteController.instance.CharactersScales[lastExpandedSpriteName], expand_time));
             }
 
-            StartCoroutine(Expand(oldSprite, SpriteController.instance.CharactersScales[lastExpandedSpriteName], expand_time));
+            StartCoroutine(Expand(sprite.ByPart(SpritePart.Body), SpriteController.instance.CharactersScales[lastExpandedSpriteName], expand_time));
         }
     }
-
 
     private IEnumerator Expand(GameObject sprite, Vector3 newScale, float smoothTime)
     {

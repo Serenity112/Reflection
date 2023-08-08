@@ -184,6 +184,8 @@ public class SaveChoiseAnimator : MonoBehaviour
         }));
 
         FadeManager.FadeObject(UnSavedPanel, true);
+        saveChoiseIconAnimator.InstantHideAll();
+        DeleteCross.GetComponent<CanvasGroup>().alpha = 0f;
 
         SaveManager.instance.RemoveDateTime(saveNum);
         SaveManager.instance.DeleteSave(saveNum);

@@ -18,52 +18,47 @@ public class SpriteApearer : MonoBehaviour
         }
     }
 
-    public IEnumerator SpriteAppear(string characterName, int pose, int emotion, Vector3 position, float speed, bool skip)
+    public IEnumerator SpriteAppear(string characterName, int pose, int emotion, Vector3 position, float speed, bool skip, bool waitForFinished, bool stopPrev)
     {
-        int newSpriteNum = SpriteController.instance.GetAvaliableSpriteNum(characterName);
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetAvaliableSprite(characterName);
 
-        if (newSpriteNum != -1)
+        if (stopPrev)
         {
             SpriteMove.instance.StopSpriteMoving();
             SpriteFade.instance.StopSpritesFading();
             SpriteController.instance.SkipSpriteActions();
+        }
 
-            SpriteController.instance.SaveSpriteData(newSpriteNum, characterName, pose, emotion, position, 1f, false);
+        if (sprite_obj == null)
+        {
+            yield break;
+        }
 
-            GameObject Sprite = SpriteController.instance.GetSprite(newSpriteNum);
-            GameObject Face1 = Sprite.transform.GetChild(0).gameObject;
-            GameObject Face2 = Sprite.transform.GetChild(1).gameObject;
+        GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
 
-            Sprite.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
-            Face1.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
-            Face2.GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 0f);
+        SpriteController.instance.SaveSpriteData(sprite.num, characterName, pose, emotion, position, 1f, false);
 
-            SpriteController.instance.SetDefaultScale(Sprite, characterName);
+        sprite.SetAlpha(0f);
 
-            Sprite.transform.localPosition = position;
+        SpriteController.instance.SetScaleByName(sprite, characterName);
 
-            yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(Sprite, newSpriteNum, characterName, pose, emotion));
+        sprite.SetPosition(position);
 
-            // Можно добавить опционпльность синк/асинк появления, но вроде синк лучше всегда
+        yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(sprite, characterName, pose, emotion));
 
-            if (skip)
-            {
-                Sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
-                Face1.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
-                yield return null;
-            }
-            else
-            {
-                yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
-                {
-                    FadeManager.ColorAlphaFadeObject(Sprite, true, speed),
-                    FadeManager.ColorAlphaFadeObject(Face1, true, speed)
-                }));
-            }
+        List<IEnumerator> list = new List<IEnumerator>()
+        {
+            SpriteFade.instance.ISetFadingSprite(sprite.ByPart(SpritePart.Body), true, speed, skip),
+            SpriteFade.instance.ISetFadingSprite(sprite.ByPart(SpritePart.Face1), true, speed, skip)
+        };
+
+        if (waitForFinished)
+        {
+            yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
         }
         else
         {
-            yield return null;
+            StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
         }
     }
 }

@@ -1,21 +1,105 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Reflection;
 using System.Text;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-public enum SpritePart
+// Представляет собой игровой объект и его части для упрощения доступа к ним
+public struct GameSpriteObject
 {
-    BASE,
-    FACE1,
-    FACE2,
+    public GameSpriteObject(int num, GameObject spriteObject)
+    {
+        this.num = num;
+
+        Parts = new Dictionary<SpritePart, GameObject>()
+        {
+            { SpritePart.Body, spriteObject },
+            { SpritePart.Face1, spriteObject.transform.GetChild(0).gameObject },
+            { SpritePart.Face2, spriteObject.transform.GetChild(1).gameObject }
+        };
+
+        Handlers = new AsyncOperationHandle<Sprite>[2];
+    }
+
+    public int num;
+    public Dictionary<SpritePart, GameObject> Parts;
+    public AsyncOperationHandle<Sprite>[] Handlers;
+
+    #region alpha
+
+    public void SetAlpha(SpritePart part, float alpha)
+    {
+        Parts[part].GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, alpha);
+    }
+
+    public void SetAlpha(float alpha)
+    {
+        foreach (var part in Parts)
+        {
+            part.Value.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, alpha);
+        }
+    }
+
+    public void SetAlpha(float alpha1, float alpha2, float alpha3)
+    {
+        Parts[SpritePart.Body].GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, alpha1);
+        Parts[SpritePart.Face1].GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, alpha2);
+        Parts[SpritePart.Face2].GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, alpha3);
+    }
+
+    #endregion
+
+    #region rect
+
+    public void SetScale(Vector3 scale)
+    {
+        Parts[SpritePart.Body].GetComponent<RectTransform>().localScale = scale;
+    }
+
+    public Vector3 GetScale()
+    {
+        return Parts[SpritePart.Body].GetComponent<RectTransform>().localScale;
+    }
+
+    public void SetPosition(Vector3 scale)
+    {
+        Parts[SpritePart.Body].GetComponent<RectTransform>().localPosition = scale;
+    }
+
+    public Vector3 GetPosition()
+    {
+        return Parts[SpritePart.Body].GetComponent<RectTransform>().localPosition;
+    }
+
+    public GameObject ByPart(SpritePart part)
+    {
+        return Parts[part];
+    }
+
+    public void SetImage(SpritePart part, Sprite sprite)
+    {
+        Parts[part].GetComponent<SpriteRenderer>().sprite = sprite;
+    }
+
+    public Sprite GetImage(SpritePart part)
+    {
+        return Parts[part].GetComponent<SpriteRenderer>().sprite;
+    }
+
+    #endregion
 }
 
+public enum SpritePart
+{
+    Body,
+    Face1,
+    Face2,
+}
+
+// Представляет данные о спрайте, используется в системе сохранений
 public struct SpriteData
 {
     public SpriteData(int SaveNum)
@@ -27,8 +111,6 @@ public struct SpriteData
         alpha = 0;
         expanded = false;
         prevSprite = -1;
-
-        handles = new AsyncOperationHandle<Sprite>[3];
     }
 
     public string name;
@@ -38,67 +120,23 @@ public struct SpriteData
     public float alpha;
     public bool expanded;
     public int prevSprite;
-
-    public AsyncOperationHandle<Sprite>[] handles;
 }
-
 
 public class SpriteController : MonoBehaviour
 {
     public static SpriteController instance = null;
 
-    [SerializeField] private Dictionary<(string name, int pose_num), List<AssetReference>> characterAssets = new Dictionary<(string, int), List<AssetReference>>();
-
-    [SerializeField] private List<AssetReference> Pasha1;//Clothes pose1
-    [SerializeField] private List<AssetReference> Pasha2;//Clothes pose2
-    [SerializeField] private List<AssetReference> Pasha3;//Clothes pose3
-    [SerializeField] private List<AssetReference> Pasha4;//Pose1 dry
-    [SerializeField] private List<AssetReference> Pasha5;//Pose1 wet
-    [SerializeField] private List<AssetReference> Pasha6;//Pose2 dry
-    [SerializeField] private List<AssetReference> Pasha7;//Pose2 wet
-    [SerializeField] private List<AssetReference> Pasha8;//Pose3 dry
-    [SerializeField] private List<AssetReference> Pasha9;//Pose3 wet
-
-    [SerializeField] private List<AssetReference> Katya1;
-    [SerializeField] private List<AssetReference> Katya2;
-    [SerializeField] private List<AssetReference> Katya3;
-    [SerializeField] private List<AssetReference> Katya4;
-    [SerializeField] private List<AssetReference> Katya5;
-    [SerializeField] private List<AssetReference> Katya6;
-    [SerializeField] private List<AssetReference> Katya7;
-    [SerializeField] private List<AssetReference> Katya8;
-    [SerializeField] private List<AssetReference> Katya9;
-
-    [SerializeField] private List<AssetReference> Nastya1;
-    [SerializeField] private List<AssetReference> Nastya2;
-    [SerializeField] private List<AssetReference> Nastya3;
-
-    [SerializeField] private List<AssetReference> Evelina1;
-    [SerializeField] private List<AssetReference> Evelina2;
-    [SerializeField] private List<AssetReference> Evelina3;
-
-    [SerializeField] private List<AssetReference> Tanya1;
-    [SerializeField] private List<AssetReference> Tanya2;
-    [SerializeField] private List<AssetReference> Tanya3;
-
-    [SerializeField] private List<AssetReference> Raketnikov1;
-
-    [SerializeField] private List<AssetReference> Tumanov1; //pose 1 glasses
-    [SerializeField] private List<AssetReference> Tumanov2; //pose 1 no glasses
-    [SerializeField] private List<AssetReference> Tumanov3; //pose 2 glasses
-    [SerializeField] private List<AssetReference> Tumanov4; //pose 2 no glasses
-
-    [HideInInspector] public GameObject Sprites;
+    //[SerializeField] private Dictionary<(string name, int pose_num), List<AssetReference>> characterAssets = new Dictionary<(string, int), List<AssetReference>>();
 
     private const int maxSpritesOnScreen = 4;
 
-    public SpriteData[] GameSpriteData;
+    [HideInInspector] public SpriteData[] GameSpriteData;
 
-    [HideInInspector] public AsyncOperationHandle<Sprite> _SpriteOperationHandler;
+    [HideInInspector] public Dictionary<string, Vector3> CharactersScales;
 
-    [HideInInspector] public Dictionary<string, AsyncOperationHandle<Sprite>[]> handles = new Dictionary<string, AsyncOperationHandle<Sprite>[]>();
+    public GameObject Sprites;
 
-    [HideInInspector] public Dictionary<string, Vector3> CharactersScales = new Dictionary<string, Vector3>();
+    [HideInInspector] public GameSpriteObject[] GameSprites;
 
     void Awake()
     {
@@ -117,22 +155,27 @@ public class SpriteController : MonoBehaviour
             GameSpriteData[i] = new SpriteData(i);
         }
 
-        CharactersScales.Add("Pasha", new Vector3(36f, 36f, 0f));
-        CharactersScales.Add("Nastya", new Vector3(45f, 45f, 0f));
-        CharactersScales.Add("Evelina", new Vector3(40f, 40f, 0f));
-        CharactersScales.Add("Tanya", new Vector3(41f, 41f, 0f));
-        CharactersScales.Add("Katya", new Vector3(37f, 37f, 0f));
-        CharactersScales.Add("Raketnikov", new Vector3(35f, 35f, 0f));
-        CharactersScales.Add("Tumanov", new Vector3(33f, 33f, 0f));
+        GameSprites = new GameSpriteObject[maxSpritesOnScreen];
+        for (int i = 0; i < maxSpritesOnScreen; i++)
+        {
+            GameSprites[i] = new GameSpriteObject(i, Sprites.transform.GetChild(i).gameObject);
+        }
 
-        // Assets       
-        InitAssetByName("Pasha", 9);
-        InitAssetByName("Nastya", 3);
-        InitAssetByName("Katya", 3);
-        InitAssetByName("Evelina", 3);
-        InitAssetByName("Tanya", 3);
-        InitAssetByName("Raketnikov", 1);
-        InitAssetByName("Tumanov", 4);
+        InitScales();
+    }
+
+    private void InitScales()
+    {
+        CharactersScales = new Dictionary<string, Vector3>
+        {
+            { "Pasha", new Vector3(36f, 36f, 0f) },
+            { "Nastya", new Vector3(45f, 45f, 0f) },
+            { "Evelina", new Vector3(40f, 40f, 0f) },
+            { "Tanya", new Vector3(41f, 41f, 0f) },
+            { "Katya", new Vector3(37f, 37f, 0f) },
+            { "Raketnikov", new Vector3(35f, 35f, 0f) },
+            { "Tumanov", new Vector3(33f, 33f, 0f) }
+        };
     }
 
     private void InitAssetByName(string assetName, int len)
@@ -143,7 +186,7 @@ public class SpriteController : MonoBehaviour
             FieldInfo fieldInfo = type.GetField(assetName + i, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (fieldInfo != null)
             {
-                characterAssets.Add((assetName, i), (List<AssetReference>)fieldInfo.GetValue(this));
+                //characterAssets.Add((assetName, i), (List<AssetReference>)fieldInfo.GetValue(this));
             }
         }
     }
@@ -164,7 +207,7 @@ public class SpriteController : MonoBehaviour
             }
         }
 
-        //Debug.Log(builder.ToString());
+        Debug.Log(builder.ToString());
     }
 
     // SaveSpriteData
@@ -200,56 +243,56 @@ public class SpriteController : MonoBehaviour
     }
 
     // Scale
-    public void SetDefaultScale(GameObject obj, string Name)
+    public void SetScaleByName(GameSpriteObject sprite, string name)
     {
-        SetNewScale(obj, Name, 1f);
+        SetScaleByName(sprite, name, 1f);
     }
 
-    public void SetNewScale(GameObject obj, string Name, float coefficient)
+    public void SetScaleByName(GameSpriteObject sprite, string name, float coefficient)
     {
-        obj.GetComponent<RectTransform>().localScale = CharactersScales[Name] * coefficient;
+        sprite.SetScale(CharactersScales[name] * coefficient);
     }
 
     // Activity
-    public int GetSpriteByName(string name)
+    public GameSpriteObject? GetSpriteNumByName(string name)
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             if (GameSpriteData[i].name == name)
             {
-                return i;
+                return GameSprites[i];
             }
         }
 
-        return -1;
+        return null;
     }
 
-    public int GetAvaliableSpriteNum(string name)
+    public GameSpriteObject? GetAvaliableSprite(string name)
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             if (GameSpriteData[i].name == null)
             {
                 GameSpriteData[i].name = name;
-                return i;
+                return GameSprites[i];
             }
         }
 
-        return -1;
+        return null;
     }
 
-    public void DelActivity(int i)
+    public void DelActivity(int num)
     {
-        GameSpriteData[i] = new SpriteData(i);
+        GameSpriteData[num] = new SpriteData(num);
         return;
     }
 
     public GameObject GetSprite(int num)
     {
-        return Sprites.transform.GetChild(num).gameObject;
+        return GameSprites[num].Parts[SpritePart.Body];
     }
 
-    public void LoadSpritesExpandings()
+    public void SkipSpritesExpanding()
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
@@ -276,13 +319,13 @@ public class SpriteController : MonoBehaviour
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
-            GameObject sprite = GetSprite(i);
+            GameSpriteObject sprite = GameSprites[i];
 
             SpriteData data = GameSpriteData[i];
 
             if (data.name != null)
             {
-                sprite.transform.localPosition = data.postion;
+                sprite.SetPosition(data.postion);
 
                 Vector3 scale = CharactersScales[data.name];
 
@@ -291,126 +334,110 @@ public class SpriteController : MonoBehaviour
                     scale *= SpriteExpand.instance.expand_coefficient;
                 }
 
-                sprite.transform.localScale = scale;
-                sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, data.alpha);
+                sprite.SetScale(scale);
 
-                sprite.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, data.alpha);
-                sprite.transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
+                sprite.SetAlpha(data.alpha, data.alpha, 0);
 
             }
             else
             {
                 if (data.alpha == 0f)
                 {
-                    sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0f);
-                    sprite.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0f);
-                    sprite.transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0f);
+                    sprite.SetAlpha(0);
                 }
             }
         }
     }
 
     // Загрузка спрайтов для сейв системы
-    public IEnumerator LoadSprites()
-    {
-        for (int i = 0; i < maxSpritesOnScreen; i++)
-        {
-            GameObject sprite = GetSprite(i);
-
-            SpriteData data = GameSpriteData[i];
-
-            if (data.name != null)
-            {
-                // Position
-                sprite.transform.localPosition = data.postion;
-
-                // Color
-                sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, data.alpha);
-                sprite.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, data.alpha);
-                sprite.transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
-
-                // Scale
-                Vector3 scale = CharactersScales[data.name];
-                if (data.expanded)
-                {
-                    scale *= SpriteExpand.instance.expand_coefficient;
-                }
-                sprite.transform.localScale = scale;
-
-                // Loading
-                yield return LoadCurrSprite(sprite, i, data.name, data.pose, data.emotion);
-            }
-        }
-    }
-
-    public IEnumerator AutoConnectData(SpriteData[] data)
+    public IEnumerator LoadSprites(SpriteData[] data)
     {
         GameSpriteData = data;
 
+        List<IEnumerator> list = new List<IEnumerator>();
+
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
-            if (GameSpriteData[i].name != null)
+            SpriteData i_data = GameSpriteData[i];
+
+            GameSpriteObject sprite = GameSprites[i];
+
+            if (i_data.name != null)
             {
-                yield return StartCoroutine(PackageConntector.instance.IConnectPackage(GameSpriteData[i].name));
+                // Position
+                sprite.SetPosition(i_data.postion);
+
+                // Color
+                sprite.SetAlpha(i_data.alpha, i_data.alpha, 0);
+
+                // Scale
+                Vector3 scale = CharactersScales[i_data.name];
+                if (i_data.expanded)
+                {
+                    scale *= SpriteExpand.instance.expand_coefficient;
+                }
+                sprite.SetScale(scale);
+
+                // Loading
+                //StartCoroutine(PackageConntector.instance.IConnectPackage(i_data.name));
+                list.Add(LoadSpriteByParts(sprite, i_data.name, i_data.pose, i_data.emotion));
             }
+
+            yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
         }
     }
 
     public IEnumerator IUnloadSprites()
     {
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             if (GameSpriteData[i].name != null)
             {
-                yield return Addressables.ReleaseInstance(GameSpriteData[i].handles[0]);
-                yield return Addressables.ReleaseInstance(GameSpriteData[i].handles[1]);
+                GameSpriteObject sprite = GameSprites[i];
 
-                GameObject sprite = Sprites.transform.GetChild(i).gameObject;
+                if (sprite.Handlers[0].Status == AsyncOperationStatus.Succeeded)
+                {
+                    Addressables.Release(sprite.Handlers[0]);
+                }
 
-                sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
-                sprite.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
-                sprite.transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0);
+                if (sprite.Handlers[1].Status == AsyncOperationStatus.Succeeded)
+                {
+                    Addressables.Release(sprite.Handlers[1]);
+                }
+
+                yield return null;
+
+                sprite.SetAlpha(0f);
             }
         }
     }
 
-    // Загрузка текстур в данный спрайт
-    public IEnumerator LoadCurrSprite(GameObject currSprite, int spriteNum, string character, int pose, int emotion)
+    public IEnumerator LoadSpriteByParts(GameSpriteObject sprite, string character, int pose, int emotion)
     {
-        yield return StartCoroutine(LoadSpriteByParts(currSprite, spriteNum, character, pose, emotion));
-    }
-
-    public IEnumerator LoadSpriteByParts(GameObject spriteToLoad, int spriteNum, string character, int pose, int emotion)
-    {
-        GameObject Face = spriteToLoad.transform.GetChild(0).gameObject;
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
-            ILoadSpriteOfSpecificObject(spriteToLoad, spriteNum, character, pose, 0, SpritePart.BASE),
-            ILoadSpriteOfSpecificObject(Face, spriteNum, character, pose, emotion, SpritePart.FACE1)
+            ILoadSpriteOfSpecificObject(sprite, SpritePart.Body, character, pose, 0),
+            ILoadSpriteOfSpecificObject(sprite, SpritePart.Face1, character, pose, emotion)
         }));
     }
 
-    public IEnumerator ILoadSpriteOfSpecificObject(GameObject obj, int spriteNum, string characterName, int pose, int emotion, SpritePart part)
+    public IEnumerator ILoadSpriteOfSpecificObject(GameSpriteObject sprite, SpritePart part, string name, int pose, int emotion)
     {
-        AssetReference spriteReference = characterAssets[(characterName, pose)][emotion];
+        // AssetReference spriteReference = characterAssets[(name, pose)][emotion];
 
-        AsyncOperationHandle<Sprite> newHandle = spriteReference.LoadAssetAsync<Sprite>();
-
+        AsyncOperationHandle<Sprite> newHandle = Addressables.LoadAssetAsync<Sprite>($"{name}{pose}_p{emotion}");
         yield return newHandle;
 
         switch (part)
         {
-            case SpritePart.BASE:
-                GameSpriteData[spriteNum].handles[0] = newHandle;
+            case SpritePart.Body:
+                sprite.Handlers[0] = newHandle;
                 break;
-            case SpritePart.FACE1:
-                GameSpriteData[spriteNum].handles[1] = newHandle;
-                break;
-            default:
-                Debug.Log($"Error in sprite {characterName} loading!");
+            case SpritePart.Face1:
+                sprite.Handlers[1] = newHandle;
                 break;
         }
 
-        obj.GetComponent<SpriteRenderer>().sprite = newHandle.Result;
+        sprite.SetImage(part, newHandle.Result);
     }
 }
