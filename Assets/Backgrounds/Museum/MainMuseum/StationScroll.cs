@@ -28,14 +28,14 @@ public class StationScroll : MonoBehaviour, ISpecialEvent
     {
         currentData = ((int)StationScrollState.Scroll).ToString();
 
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, false, speed));
+        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed));
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed));
 
         StationPanel.GetComponent<Animator>().Play("Scroll");
         yield return new WaitForSeconds(2.1f);
         TextBoxController.instance.SetStoryText("");
 
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, true, speed));
+        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed));
         yield return StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed));
     }
 

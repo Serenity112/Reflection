@@ -6,7 +6,7 @@ public class CoroutineWaitForAll : MonoBehaviour
 {
     public static CoroutineWaitForAll instance;
 
-    private void Start()
+    private void Awake()
     {
         instance = this;
     }

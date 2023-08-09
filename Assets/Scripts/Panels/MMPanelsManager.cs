@@ -18,8 +18,6 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     public GameObject AboutUs;
 
-    private float FadingSpeed = 5f;
-
     [SerializeField] Camera GameCamera;
 
     private AsyncOperationHandle<GameObject> savesPanelHandler;
@@ -27,6 +25,9 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
     private AsyncOperationHandle<GameObject> aboutUsHandler;
 
     private string SaveFilesData;
+
+    // Скорости
+    private float FadingSpeed = 5f;
 
     private void Awake()
     {
@@ -41,10 +42,16 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         PanelsConfig.CurrentManager = this;
 
+        // Флаг того, что произошёл переход игра => меню. В этом случае нужна доп. анимация
+        if (StaticVariables.ifInMainMenu == false)
+        {
+            FadeManager.FadeObject(BlackPanel, true);
+            StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
+        }
+
         StaticVariables.ifInMainMenu = true;
 
         // Иначе нет гарантии, что ActivePanels внутри WarningPanel проиницализируется раньше, чем скрипт обратится к ней
-
         SaveFilesData = SaveSystemUtils.SaveFilesData;
     }
 
@@ -222,8 +229,6 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
         StaticVariables.StartingLoadSaveFile = actualSaveNum;
-
-        StaticVariables.ifInMainMenu = false;
 
         AsyncOperation asyncLoadLevel = SceneManager.LoadSceneAsync("Game", LoadSceneMode.Single);
 

@@ -105,7 +105,7 @@ public class HideButton : MonoBehaviour
             StopCoroutine(gui2in);
         }
 
-        gui1out = FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, false, shadesSpeed / 2.5f);
+        gui1out = FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, shadesSpeed / 2.5f);
         gui2out = FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, shadesSpeed / 2.5f);
 
         StartCoroutine(gui1out);
@@ -136,7 +136,7 @@ public class HideButton : MonoBehaviour
             StopCoroutine(gui2out);
         }
 
-        gui1in = FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, true, shadesSpeed / 2f);
+        gui1in = FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, shadesSpeed / 2f);
         gui2in = FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, shadesSpeed / 2f);
 
         StartCoroutine(gui1in);

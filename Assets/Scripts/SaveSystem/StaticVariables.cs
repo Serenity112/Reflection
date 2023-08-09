@@ -17,5 +17,6 @@ public static class StaticVariables
         AppearAnimation,
         ButtonAdded,
     }
+
     public static MMContinueButtonState MainMenuContinueButtonAnimationTrigger { get; set; } = MMContinueButtonState.ButtonDeleted;
 }

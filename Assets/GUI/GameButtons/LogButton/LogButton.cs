@@ -109,7 +109,7 @@ public class LogButton : MonoBehaviour
 
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.ChatLog, true, shadesSpeed));
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, shadesSpeed));
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, false, shadesSpeed));
+        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, shadesSpeed));
         PanelsManager.instance.ChatLog.GetComponent<CanvasGroup>().blocksRaycasts = true;
 
 

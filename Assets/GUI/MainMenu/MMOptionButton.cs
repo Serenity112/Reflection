@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class MMOptionButton : MonoBehaviour, IEndDragHandler, IBeginDragHandler
+public class MMOptionButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
     private float speed = 5f;
 
@@ -15,7 +15,7 @@ public class MMOptionButton : MonoBehaviour, IEndDragHandler, IBeginDragHandler
     private IEnumerator _appear = null;
     private IEnumerator _disappear = null;
 
-    private bool dragging = false;
+    private bool pointer_down = false;
     private bool enter = false;
 
     private void Awake()
@@ -29,22 +29,37 @@ public class MMOptionButton : MonoBehaviour, IEndDragHandler, IBeginDragHandler
         MMButtonsManager.instance.MainMenuOptionButtons.Add(gameObject);
     }
 
-    private void OnMouseEnter()
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        pointer_down = true;
+    }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        pointer_down = false;
+
+        if (!enter)
+        {
+            Disappear();
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
     {
         enter = true;
 
-        if (!StaticVariables.OverlayPanelActive && !dragging)
+        if (!StaticVariables.OverlayPanelActive && !pointer_down)
         {
             //ScrollSource.Play();
             Appear();
         }
     }
 
-    private void OnMouseExit()
+    public void OnPointerExit(PointerEventData eventData)
     {
         enter = false;
 
-        if (!StaticVariables.OverlayPanelActive && !dragging)
+        if (!StaticVariables.OverlayPanelActive && !pointer_down)
         {
             Disappear();
         }
@@ -70,20 +85,5 @@ public class MMOptionButton : MonoBehaviour, IEndDragHandler, IBeginDragHandler
 
         _disappear = FadeManager.FadeObject(spacing, false, speed);
         StartCoroutine(_disappear);
-    }
-
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        dragging = false;
-
-        if (!enter)
-        {
-            Disappear();
-        }
-    }
-
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-        dragging = true;  
     }
 }

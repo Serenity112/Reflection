@@ -15,8 +15,13 @@ public class Typewriter : MonoBehaviour
     public bool wasCurrentDialogRead = false;
     public bool skipping = false;
 
+    // Флаг для кнопок Space и Return
+    public bool continueClickedFlag = true;
+
+    // Флаг для запрета скипа кнопкой Tab
     public bool denySkip { get; set; } = false;
 
+    // Флаг похож на denySkip, однако для анимации Skip кнопки выделен отдельно
     public bool denyNextDialog { get; set; } = false;
 
     [SerializeField] private SkipButton skipButton;
@@ -63,6 +68,19 @@ public class Typewriter : MonoBehaviour
                 skipping = false;
             }
         }
+
+        if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.Return))
+        {
+            if (!denySkip && !denyNextDialog && continueClickedFlag)
+            {
+                continueClickedFlag = false;
+                SetClickFlag();
+            }
+        }
+        else
+        {
+            continueClickedFlag = true;
+        }
     }
 
     public void SetTextSpeed(float value)
@@ -91,9 +109,9 @@ public class Typewriter : MonoBehaviour
         }
     }
 
-    public void AddText(string text)
+    public void SetText(string text)
     {
-        _text.text += text;
+        _text.text = text;
     }
 
     public IEnumerator SayExtend(string extendedText, string prevText)

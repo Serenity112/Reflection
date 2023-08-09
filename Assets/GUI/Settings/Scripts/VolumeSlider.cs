@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System;
 
-public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, ISettingsOption
+public class VolumeSlider : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, ISettingsOption
 {
     [SerializeField]
     private Settings setting;
@@ -24,7 +24,7 @@ public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, I
 
     private Animator mutedAnimator;
 
-    private bool dragging = false;
+    private bool pointer_down = false;
     private bool enter = false;
     private bool ismuted = false;
 
@@ -82,14 +82,14 @@ public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, I
         mutedAnimator.Play("UnMute");
     }
 
-    public void OnBeginDrag(PointerEventData eventData)
+    public void OnPointerDown(PointerEventData eventData)
     {
-        dragging = true;
+        pointer_down = true;
     }
 
-    public void OnEndDrag(PointerEventData eventData)
+    public void OnPointerUp(PointerEventData eventData)
     {
-        dragging = false;
+        pointer_down = false;
 
         if (!enter)
         {
@@ -102,7 +102,7 @@ public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, I
     {
         enter = true;
 
-        if (!dragging)
+        if (!pointer_down)
         {
             if (SettingsConfig.chosenOptions[setting].data == 0)
             {
@@ -119,7 +119,7 @@ public class VolumeSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, I
     {
         enter = false;
 
-        if (!dragging)
+        if (!pointer_down)
         {
             HideMutedImg();
             HideText();

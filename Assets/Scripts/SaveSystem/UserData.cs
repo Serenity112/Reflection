@@ -90,11 +90,6 @@ public class UserData : MonoBehaviour
         SaveFileName = SaveSystemUtils.SaveFileName;
         SaveFilesFolder = SaveSystemUtils.SaveFilesFolder;
         SaveFilesData = SaveSystemUtils.SaveFilesData;
-
-        if (StaticVariables.StartingLoadSaveFile == -1)
-        {
-
-        }
     }
 
     private void Start()
@@ -156,12 +151,15 @@ public class UserData : MonoBehaviour
     private IEnumerator ILoadGameWithFade(int actualSaveNum)
     {
         FadeManager.FadeObject(PanelsManager.instance.BlackPanel, true);
-        yield return StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.blackPanelPanels, true, speed));
+        FadeManager.FadeObject(PanelsManager.instance.blackPanelPanels, false);
+
+        //yield return StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.blackPanelPanels, true, speed));
 
         yield return StartCoroutine(ILoadGame(actualSaveNum));
 
-        FadeManager.FadeObject(PanelsManager.instance.blackPanelPanels, false);
         yield return StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.BlackPanel, false, speed));
+
+        StartCoroutine(PanelsManager.instance.EnableGuiOnStart(true));
     }
 
     public IEnumerator ILoadGame(int actualSaveNum)

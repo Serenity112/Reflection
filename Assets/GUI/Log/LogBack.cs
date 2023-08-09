@@ -60,7 +60,7 @@ public class LogBack : MonoBehaviour
 
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.ChatLog, false, speed));
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed));
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.gameGuiPanel, true, speed));
+        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed));
         PanelsManager.instance.ChatLog.GetComponent<CanvasGroup>().blocksRaycasts = false;
 
 
