@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using static MMButtonsManager;
 
-public class MMOptionButton : IDraggableButton
+public class MMOptionButton : IButtonGroup
 {
     private float speed = 5f;
 
@@ -18,16 +18,11 @@ public class MMOptionButton : IDraggableButton
     private IEnumerator _appear = null;
     private IEnumerator _disappear = null;
 
-    private void Awake()
+    public override void OnAwake()
     {
         spacing = transform.GetChild(0).gameObject;
         GetComponent<Button>().onClick.AddListener(OnClick);
         //GetComponent<Button>().onClick.AddListener(() => ClickSource.Play());
-    }
-
-    void Start()
-    {
-        MMButtonsManager.instance.SubscribeButton(gameObject);
     }
 
     public override void EnterActioin()
@@ -52,26 +47,15 @@ public class MMOptionButton : IDraggableButton
         StartCoroutine(_disappear);
     }
 
-    public override void PrePointerDown()
-    {
-        MMButtonsManager.instance.ButtonSelected = true;
-    }
-
-    public override void PrePointerUp()
-    {
-        MMButtonsManager.instance.ButtonSelected = false;
-        MMButtonsManager.instance.AppearActualButton();
-    }
-
-    public override bool PointerEnterCondition()
-    {
-        return !MMButtonsManager.instance.ButtonSelected;
-    }
-
     public override IEnumerator IClick()
     {
         MMButtonsManager.instance.DisableButtons();
         MMButtonsManager.instance.ExecuteOption(option);
         yield return null;
+    }
+
+    public override void RegisterManager()
+    {
+        SetManager(MMButtonsManager.instance);
     }
 }

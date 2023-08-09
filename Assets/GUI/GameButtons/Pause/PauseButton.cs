@@ -1,13 +1,12 @@
-using Fungus;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PauseButton : MonoBehaviour
+public class PauseButton : IButtonGroup
 {
-    [SerializeField]
-    private float speed;
+    private float speed = 5f;
+    private float expandTime = 0.05f;
 
     private GameObject buttonParent;
 
@@ -16,18 +15,31 @@ public class PauseButton : MonoBehaviour
 
     private Vector3 origScale;
     private Vector3 expandedScale;
+
+    private Vector3 parentOrigScale;
+    private Vector3 parentShrinkScale;
+
     private Animator animator;
 
-    private void Awake()
+    public override void OnAwake()
     {
         buttonParent = transform.parent.gameObject;
 
         animator = GetComponent<Animator>();
+
         origScale = gameObject.GetComponent<RectTransform>().localScale;
         expandedScale = origScale * 1.1f;
+
+        parentOrigScale = buttonParent.GetComponent<RectTransform>().localScale;
+        parentShrinkScale = parentOrigScale * 0.85f;
     }
 
-    private void OnMouseEnter()
+    public override void RegisterManager()
+    {
+        SetManager(GameButtonsManager.instance);
+    }
+
+    public override void EnterActioin()
     {
         if (shrinkOnExit != null)
             StopCoroutine(shrinkOnExit);
@@ -36,7 +48,7 @@ public class PauseButton : MonoBehaviour
         StartCoroutine(expandOnEnter);
     }
 
-    private void OnMouseExit()
+    public override void ExitActioin()
     {
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
@@ -45,17 +57,12 @@ public class PauseButton : MonoBehaviour
         StartCoroutine(shrinkOnExit);
     }
 
-    public void OnClick()
+    public override IEnumerator IClick()
     {
         gameObject.GetComponent<Button>().interactable = false;
 
         Typewriter.Instance.denyNextDialog = true;
 
-        StartCoroutine(IOnClick());
-    }
-
-    private IEnumerator IOnClick()
-    {
         animator.Play("pauseanim");
         ButtonsManager.instance.unlinePauseButtons();
 
@@ -63,9 +70,8 @@ public class PauseButton : MonoBehaviour
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed * 0.5f));
         StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.pausePanel, true, speed));
 
-        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.9f, 0.05f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
 
         GetComponent<Button>().interactable = true;
     }

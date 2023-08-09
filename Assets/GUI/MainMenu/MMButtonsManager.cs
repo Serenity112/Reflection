@@ -2,13 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MMButtonsManager : MonoBehaviour
+public class MMButtonsManager : IButtonManager
 {
     public static MMButtonsManager instance = null;
-
-    private List<GameObject> MainMenuOptionButtons;
-
-    [HideInInspector] public bool ButtonSelected = false;
 
     public enum MainMenuOption
     {
@@ -22,32 +18,20 @@ public class MMButtonsManager : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
 
-        MainMenuOptionButtons = new List<GameObject>();
+        GameButtons = new List<GameObject>();
     }
 
     private void Start()
     {
         EnableButtons();
-        UnlineButtons();
+        UnSelectButtons();
     }
 
-    public void SubscribeButton(GameObject button)
+    public override void UnSelectButtons()
     {
-        MainMenuOptionButtons.Add(button);
-    }
-
-    public void UnlineButtons()
-    {
-        foreach (GameObject button in MainMenuOptionButtons)
+        foreach (GameObject button in GameButtons)
         {
             MMOptionButton underlineButton = button.GetComponent<MMOptionButton>();
             underlineButton.StopAllCoroutines();
@@ -57,9 +41,9 @@ public class MMButtonsManager : MonoBehaviour
         }
     }
 
-    public void AppearActualButton()
+    public override void AppearActualButton()
     {
-        foreach (GameObject button_obj in MainMenuOptionButtons)
+        foreach (GameObject button_obj in GameButtons)
         {
             MMOptionButton button = button_obj.GetComponent<MMOptionButton>();
             button.StopAllCoroutines();
@@ -67,18 +51,18 @@ public class MMButtonsManager : MonoBehaviour
         }
     }
 
-    public void EnableButtons()
+    public override void EnableButtons()
     {
-        foreach (GameObject button_obj in MainMenuOptionButtons)
+        foreach (GameObject button_obj in GameButtons)
         {
             button_obj.GetComponent<BoxCollider>().enabled = true;
             button_obj.GetComponent<Button>().enabled = true;
         }
     }
 
-    public void DisableButtons()
+    public override void DisableButtons()
     {
-        foreach (GameObject button_obj in MainMenuOptionButtons)
+        foreach (GameObject button_obj in GameButtons)
         {
             button_obj.GetComponent<BoxCollider>().enabled = false;
             button_obj.GetComponent<Button>().enabled = false;

@@ -1,9 +1,8 @@
 using System.Collections;
 using UnityEngine;
 
-public class SkipButton : IDraggableButton
+public class SkipButton : IButtonGroup
 {
-    public static SkipButton instance = null;
     private enum State
     {
         DoSkip,
@@ -36,17 +35,8 @@ public class SkipButton : IDraggableButton
     private IEnumerator shrink;
     private IEnumerator expand;
 
-    private void Awake()
+    public override void OnAwake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
-
         buttonParent = transform.parent.gameObject;
 
         ShadeTriangle = transform.GetChild(0).transform.GetChild(0).gameObject;
@@ -63,25 +53,9 @@ public class SkipButton : IDraggableButton
         parentShrinkScale = parentOrigScale * 0.85f;
     }
 
-    private void Start()
+    public override void RegisterManager()
     {
-        GameButtonsManager.instance.SubscribeButton(gameObject);
-    }
-
-    public override void PrePointerDown()
-    {
-        GameButtonsManager.instance.ButtonSelected = true;
-    }
-
-    public override void PrePointerUp()
-    {
-        GameButtonsManager.instance.ButtonSelected = false;
-        GameButtonsManager.instance.AppearActualButton();
-    }
-
-    public override bool PointerEnterCondition()
-    {
-        return !GameButtonsManager.instance.ButtonSelected;
+        SetManager(GameButtonsManager.instance);
     }
 
     public override void EnterActioin()

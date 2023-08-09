@@ -191,7 +191,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
     private IEnumerator IOpenSaveMenu()
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
-        MMButtonsManager.instance.UnlineButtons();
+        MMButtonsManager.instance.UnSelectButtons();
 
         savesPanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return savesPanelHandler;

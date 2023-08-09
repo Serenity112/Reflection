@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HideButton : IDraggableButton
+public class HideButton : IButtonGroup
 {
     private float shadesSpeed = 5f;
     private float expandTime = 0.05f;
@@ -37,7 +37,7 @@ public class HideButton : IDraggableButton
     private Vector3 parentOrigScale;
     private Vector3 parentShrinkScale;
 
-    private void Awake()
+    public override void OnAwake()
     {
         buttonParent = transform.parent.gameObject;
 
@@ -53,25 +53,9 @@ public class HideButton : IDraggableButton
         LineShade = transform.GetChild(1).transform.GetChild(0).gameObject;
     }
 
-    private void Start()
+    public override void RegisterManager()
     {
-        GameButtonsManager.instance.SubscribeButton(gameObject);
-    }
-
-    public override void PrePointerDown()
-    {
-        GameButtonsManager.instance.ButtonSelected = true;
-    }
-
-    public override void PrePointerUp()
-    {
-        GameButtonsManager.instance.ButtonSelected = false;
-        GameButtonsManager.instance.AppearActualButton();
-    }
-
-    public override bool PointerEnterCondition()
-    {
-        return !GameButtonsManager.instance.ButtonSelected;
+        SetManager(GameButtonsManager.instance);
     }
 
     public override void EnterActioin()

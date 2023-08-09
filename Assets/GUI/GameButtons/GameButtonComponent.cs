@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class GameButtonComponent : MonoBehaviour
 {
-    [SerializeField] private IDraggableButton GameButton;
+    [SerializeField] private IButtonGroup GameButton;
 
     public void AppearIfEntered()
     {
