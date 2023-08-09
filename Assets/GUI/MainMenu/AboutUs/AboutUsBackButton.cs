@@ -1,8 +1,9 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class AboutUsBackButton : MonoBehaviour
+public class AboutUsBackButton : IDraggableButton
 {
     private Animator animator;
 
@@ -14,7 +15,7 @@ public class AboutUsBackButton : MonoBehaviour
     private Vector3 origScale;
     private Vector3 expandedScale;
 
-    void Start()
+    void Awake()
     {
         animator = GetComponent<Animator>();
 
@@ -24,7 +25,7 @@ public class AboutUsBackButton : MonoBehaviour
         expandedScale = origScale * 1.1f;
     }
 
-    void OnMouseEnter()
+    public override void EnterActioin()
     {
         if (shrinkOnEnter != null)
             StopCoroutine(shrinkOnEnter);
@@ -32,7 +33,7 @@ public class AboutUsBackButton : MonoBehaviour
         StartCoroutine(expandOnEnter);
     }
 
-    void OnMouseExit()
+    public override void ExitActioin()
     {
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
@@ -40,21 +41,16 @@ public class AboutUsBackButton : MonoBehaviour
         StartCoroutine(shrinkOnEnter);
     }
 
-    public void Click()
-    {
-        StartCoroutine(IClick());
-    }
-
-    public IEnumerator IClick()
+    public override IEnumerator IClick()
     {
         GetComponent<Button>().interactable = false;
 
         animator.Play("Back");
         MMPanelsManager.instance.CloseInfoMenu();
 
-        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;        
+        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
-       
+
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
 
         GetComponent<Button>().interactable = true;

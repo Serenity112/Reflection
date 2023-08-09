@@ -192,7 +192,6 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
         MMButtonsManager.instance.UnlineButtons();
-        MMButtonsManager.instance.DisableColliders();
 
         savesPanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return savesPanelHandler;
@@ -215,7 +214,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         Addressables.ReleaseInstance(savesPanelHandler);
 
-        MMButtonsManager.instance.EnableColliders();
+        MMButtonsManager.instance.EnableButtons();
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
 
@@ -267,6 +266,8 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
         Addressables.ReleaseInstance(aboutUsHandler);
+
+        MMButtonsManager.instance.EnableButtons();
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
 

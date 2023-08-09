@@ -46,7 +46,7 @@ namespace Fungus
         {
             Typewriter.Instance.denyNextDialog = true; // разрешение будет в конце выполнения SwapSprites.
 
-            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, Typewriter.Instance.skipping, WaitForFinished, StopPrev));
+            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, Typewriter.Instance.isSkipping, WaitForFinished, StopPrev));
 
             SpriteController.instance.printData();
 

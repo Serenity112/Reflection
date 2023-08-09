@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SaveBackButton : MonoBehaviour
+public class SaveBackButton : IDraggableButton
 {
     private Animator animator;
 
@@ -26,7 +26,7 @@ public class SaveBackButton : MonoBehaviour
         expandedScale = origScale * 1.1f;
     }
 
-    void OnMouseEnter()
+    public override void EnterActioin()
     {
         if (shrinkOnEnter != null)
             StopCoroutine(shrinkOnEnter);
@@ -34,7 +34,7 @@ public class SaveBackButton : MonoBehaviour
         StartCoroutine(expandOnEnter);
     }
 
-    void OnMouseExit()
+    public override void ExitActioin()
     {
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
@@ -42,12 +42,7 @@ public class SaveBackButton : MonoBehaviour
         StartCoroutine(shrinkOnEnter);
     }
 
-    public void Click()
-    {
-        StartCoroutine(IClick());
-    }
-
-    public IEnumerator IClick()
+    public override IEnumerator IClick()
     {
         GetComponent<Button>().interactable = false;
 

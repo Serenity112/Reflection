@@ -57,8 +57,6 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
 
     private IEnumerator IOpenSettings()
     {
-        MMButtonsManager.instance.DisableColliders();
-
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
         handler = Addressables.InstantiateAsync("SettingsGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
@@ -76,9 +74,9 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
     }
     private IEnumerator ICloseSettings()
     {
-        MMButtonsManager.instance.EnableColliders();
-
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
+
+        MMButtonsManager.instance.EnableButtons();
 
         Addressables.ReleaseInstance(handler);
 

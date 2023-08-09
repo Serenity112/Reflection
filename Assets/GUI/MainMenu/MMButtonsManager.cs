@@ -1,28 +1,48 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MMButtonsManager : MonoBehaviour
 {
     public static MMButtonsManager instance = null;
 
-    public List<GameObject> MainMenuOptionButtons;
+    private List<GameObject> MainMenuOptionButtons;
 
-    public void DisableColliders()
+    [HideInInspector] public bool ButtonSelected = false;
+
+    public enum MainMenuOption
     {
-        foreach (GameObject button in MainMenuOptionButtons)
-        {
-            BoxCollider collider = button.GetComponent<BoxCollider>();
-            collider.enabled = false;
-        }
+        Continue,
+        NewGame,
+        Saves,
+        Settings,
+        AboutUs,
+        Quit
     }
 
-    public void EnableColliders()
+    private void Awake()
     {
-        foreach (GameObject button in MainMenuOptionButtons)
+        if (instance == null)
         {
-            BoxCollider collider = button.GetComponent<BoxCollider>();
-            collider.enabled = true;
+            instance = this;
         }
+        else if (instance == this)
+        {
+            Destroy(gameObject);
+        }
+
+        MainMenuOptionButtons = new List<GameObject>();
+    }
+
+    private void Start()
+    {
+        EnableButtons();
+        UnlineButtons();
+    }
+
+    public void SubscribeButton(GameObject button)
+    {
+        MainMenuOptionButtons.Add(button);
     }
 
     public void UnlineButtons()
@@ -37,17 +57,56 @@ public class MMButtonsManager : MonoBehaviour
         }
     }
 
-    void Awake()
+    public void AppearActualButton()
     {
-        if (instance == null)
+        foreach (GameObject button_obj in MainMenuOptionButtons)
         {
-            instance = this;
+            MMOptionButton button = button_obj.GetComponent<MMOptionButton>();
+            button.StopAllCoroutines();
+            button.AppearIfEntered();
         }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+    }
 
-        MainMenuOptionButtons = new List<GameObject>();
+    public void EnableButtons()
+    {
+        foreach (GameObject button_obj in MainMenuOptionButtons)
+        {
+            button_obj.GetComponent<BoxCollider>().enabled = true;
+            button_obj.GetComponent<Button>().enabled = true;
+        }
+    }
+
+    public void DisableButtons()
+    {
+        foreach (GameObject button_obj in MainMenuOptionButtons)
+        {
+            button_obj.GetComponent<BoxCollider>().enabled = false;
+            button_obj.GetComponent<Button>().enabled = false;
+        }
+    }
+
+    public void ExecuteOption(MainMenuOption option)
+    {
+        switch (option)
+        {
+            case MainMenuOption.NewGame:
+                MMPanelsManager.instance.StartNewGame();
+                break;
+            case MainMenuOption.Continue:
+                MMPanelsManager.instance.ContinueGame();
+                break;
+            case MainMenuOption.Saves:
+                MMPanelsManager.instance.OpenSaveMenu();
+                break;
+            case MainMenuOption.Settings:
+                MMSettingsManager.instance.OpenSettings();
+                break;
+            case MainMenuOption.AboutUs:
+                MMPanelsManager.instance.OpenInfoMenu();
+                break;
+            case MainMenuOption.Quit:
+                MMPanelsManager.instance.QuitGame();
+                break;
+        }
     }
 }

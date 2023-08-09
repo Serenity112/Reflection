@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SettingsBackButton : MonoBehaviour
+public class SettingsBackButton : IDraggableButton
 {
     private Animator animator;
 
@@ -25,25 +25,7 @@ public class SettingsBackButton : MonoBehaviour
         expandedScale = origScale * 1.1f;
     }
 
-    void OnMouseEnter()
-    {
-        if (shrinkOnEnter != null)
-            StopCoroutine(shrinkOnEnter);
-        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
-        StartCoroutine(expandOnEnter);
-    }
-
-    void OnMouseExit()
-    {
-        if (expandOnEnter != null)
-            StopCoroutine(expandOnEnter);
-        shrinkOnEnter = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
-        StartCoroutine(shrinkOnEnter);
-    }
-
-    public void Click() => StartCoroutine(IClick());
-
-    public IEnumerator IClick()
+    public override IEnumerator IClick()
     {
         GetComponent<Button>().interactable = false;
 
@@ -56,5 +38,21 @@ public class SettingsBackButton : MonoBehaviour
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
 
         GetComponent<Button>().interactable = true;
+    }
+
+    public override void EnterActioin()
+    {
+        if (shrinkOnEnter != null)
+            StopCoroutine(shrinkOnEnter);
+        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
+        StartCoroutine(expandOnEnter);
+    }
+
+    public override void ExitActioin()
+    {
+        if (expandOnEnter != null)
+            StopCoroutine(expandOnEnter);
+        shrinkOnEnter = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
+        StartCoroutine(shrinkOnEnter);
     }
 }

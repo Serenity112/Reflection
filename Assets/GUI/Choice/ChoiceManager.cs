@@ -123,7 +123,7 @@ public class ChoiceManager : MonoBehaviour
     {
         yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
-            GameButtonsManager.instance.ShowTextBoxButtons(speed),
+            //GameButtonsManager.instance.ShowTextBoxButtons(speed),
             FadeManager.FadeOnly(gameObject, false, speed),
             FadeManager.FadeObject(TextBox, true, speed)
         });

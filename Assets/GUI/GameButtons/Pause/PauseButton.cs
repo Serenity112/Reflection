@@ -18,7 +18,7 @@ public class PauseButton : MonoBehaviour
     private Vector3 expandedScale;
     private Animator animator;
 
-    private void Start()
+    private void Awake()
     {
         buttonParent = transform.parent.gameObject;
 

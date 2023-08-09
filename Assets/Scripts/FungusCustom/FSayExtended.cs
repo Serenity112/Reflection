@@ -33,7 +33,7 @@ namespace Fungus
             UserData.instance.CurrentCommandIndex += 1;
 
             SpriteExpand.instance.StopPrev();
-            SpriteExpand.instance.SetExpanding(speaker, Typewriter.Instance.skipping);
+            SpriteExpand.instance.SetExpanding(speaker, Typewriter.Instance.isSkipping);
 
              LogManager.instance.NewMessageExtended(extendedText, speaker);
 

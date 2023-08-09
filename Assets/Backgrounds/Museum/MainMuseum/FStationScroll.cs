@@ -26,7 +26,7 @@ namespace Fungus
             switch (State)
             {
                 case StationScrollState.Scroll:
-                    yield return StartCoroutine(((StationScroll)SpecialEventManager.instance.currentEvent).IScrollBg(Speed, Typewriter.Instance.skipping));
+                    yield return StartCoroutine(((StationScroll)SpecialEventManager.instance.currentEvent).IScrollBg(Speed, Typewriter.Instance.isSkipping));
                     break;
             }
 

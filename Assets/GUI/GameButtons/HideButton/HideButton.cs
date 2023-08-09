@@ -1,16 +1,15 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HideButton : MonoBehaviour
+public class HideButton : IDraggableButton
 {
     private float shadesSpeed = 5f;
+    private float expandTime = 0.05f;
 
     [SerializeField]
     private GameObject HideOverlayButton;
-
-    [SerializeField]
-    private GameObject ContinueButton;
 
     private Animator animator;
 
@@ -35,23 +34,51 @@ public class HideButton : MonoBehaviour
     private Vector3 origScale;
     private Vector3 expandedScale;
 
-    void Start()
+    private Vector3 parentOrigScale;
+    private Vector3 parentShrinkScale;
+
+    private void Awake()
     {
         buttonParent = transform.parent.gameObject;
 
         animator = GetComponent<Animator>();
+
         origScale = gameObject.GetComponent<RectTransform>().localScale;
         expandedScale = origScale * 1.1f;
+
+        parentOrigScale = buttonParent.GetComponent<RectTransform>().localScale;
+        parentShrinkScale = parentOrigScale * 0.85f;
 
         CircleShade = transform.GetChild(0).transform.GetChild(0).gameObject;
         LineShade = transform.GetChild(1).transform.GetChild(0).gameObject;
     }
 
-    void OnMouseEnter()
+    private void Start()
+    {
+        GameButtonsManager.instance.SubscribeButton(gameObject);
+    }
+
+    public override void PrePointerDown()
+    {
+        GameButtonsManager.instance.ButtonSelected = true;
+    }
+
+    public override void PrePointerUp()
+    {
+        GameButtonsManager.instance.ButtonSelected = false;
+        GameButtonsManager.instance.AppearActualButton();
+    }
+
+    public override bool PointerEnterCondition()
+    {
+        return !GameButtonsManager.instance.ButtonSelected;
+    }
+
+    public override void EnterActioin()
     {
         if (shrinkOnEnter != null)
             StopCoroutine(shrinkOnEnter);
-        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
+        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(expandOnEnter);
 
         if (shades1out != null)
@@ -67,11 +94,11 @@ public class HideButton : MonoBehaviour
         StartCoroutine(shades2in);
     }
 
-    void OnMouseExit()
+    public override void ExitActioin()
     {
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
-        shrinkOnEnter = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
+        shrinkOnEnter = ExpandManager.ExpandObject(gameObject, origScale, expandTime);
         StartCoroutine(shrinkOnEnter);
 
         if (shades1in != null)
@@ -87,16 +114,12 @@ public class HideButton : MonoBehaviour
         StartCoroutine(shades2out);
     }
 
-    public void Click()
+    public override IEnumerator IClick()
     {
         Typewriter.Instance.denySkip = true;
-        StartCoroutine(IClick());
-    }
+        Typewriter.Instance.buttonAutoSkip = false;
 
-    public IEnumerator IClick()
-    {
-        ContinueButton.GetComponent<Button>().interactable = false;
-        GetComponent<Button>().interactable = false;
+        HideOverlayButton.SetActive(true);
         animator.Play("Hide");
 
         if (gui1in != null)
@@ -105,29 +128,22 @@ public class HideButton : MonoBehaviour
             StopCoroutine(gui2in);
         }
 
-        gui1out = FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, shadesSpeed / 2.5f);
-        gui2out = FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, shadesSpeed / 2.5f);
+        gui1out = FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, shadesSpeed / 2f);
+        gui2out = FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, shadesSpeed / 2f);
 
         StartCoroutine(gui1out);
         StartCoroutine(gui2out);
 
-        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
 
-        GetComponent<Button>().interactable = true;
-        ContinueButton.GetComponent<Button>().interactable = true;
-        HideOverlayButton.SetActive(true);
+        HideOverlayButton.GetComponent<Button>().interactable = true;
     }
 
-    public void ShowHiddeUI()
-    {
-        StartCoroutine(IShowHiddenUI());
-    }
+    public void ShowHiddeUI() => StartCoroutine(IShowHiddenUI());
 
     IEnumerator IShowHiddenUI()
     {
-        HideOverlayButton.GetComponent<Button>().interactable = false;
         animator.Play("Unhide");
 
         if (gui1out != null)
@@ -139,12 +155,14 @@ public class HideButton : MonoBehaviour
         gui1in = FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, shadesSpeed / 2f);
         gui2in = FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, shadesSpeed / 2f);
 
-        StartCoroutine(gui1in);
-        yield return StartCoroutine(gui2in);
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            gui1in,
+            gui2in
+        }));
 
-        HideOverlayButton.GetComponent<Button>().interactable = true;
+        HideOverlayButton.GetComponent<Button>().interactable = false;
         HideOverlayButton.SetActive(false);
         Typewriter.Instance.denySkip = false;
     }
 }
-        

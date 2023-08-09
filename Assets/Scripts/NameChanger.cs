@@ -35,7 +35,7 @@ public class NameChanger : MonoBehaviour
 
     public void SetName(string name)
     {
-        if (name == null || name == string.Empty || !_localizedNames.ContainsKey(name))
+        if (name == null || !_localizedNames.ContainsKey(name))
         {
             SetNameText("");
         }

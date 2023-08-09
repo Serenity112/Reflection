@@ -1,9 +1,7 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
-using Fungus;
 
-public class SkipButton : MonoBehaviour
+public class SkipButton : IDraggableButton
 {
     public static SkipButton instance = null;
     private enum State
@@ -12,17 +10,22 @@ public class SkipButton : MonoBehaviour
         ReturnSkip
     }
 
-    [SerializeField]
-    private float shadesSpeed;
+    private float shadesSpeed = 5f;
+    private float expandTime = 0.05f;
 
     private Animator animator;
     private GameObject buttonParent;
     private GameObject ShadeTriangle;
     private GameObject ShadeArrow;
     private GameObject ShadeArrowCopy;
+
     private State state;
+
     private Vector3 origScale;
     private Vector3 expandedScale;
+
+    private Vector3 parentOrigScale;
+    private Vector3 parentShrinkScale;
 
     private IEnumerator shade1in;
     private IEnumerator shade2in;
@@ -33,7 +36,7 @@ public class SkipButton : MonoBehaviour
     private IEnumerator shrink;
     private IEnumerator expand;
 
-    private void Start()
+    private void Awake()
     {
         if (instance == null)
         {
@@ -45,6 +48,7 @@ public class SkipButton : MonoBehaviour
         }
 
         buttonParent = transform.parent.gameObject;
+
         ShadeTriangle = transform.GetChild(0).transform.GetChild(0).gameObject;
         ShadeArrow = transform.GetChild(1).transform.GetChild(0).gameObject;
         ShadeArrowCopy = transform.GetChild(2).transform.GetChild(0).gameObject;
@@ -54,13 +58,37 @@ public class SkipButton : MonoBehaviour
 
         origScale = GetComponent<RectTransform>().localScale;
         expandedScale = origScale * 1.1f;
+
+        parentOrigScale = buttonParent.GetComponent<RectTransform>().localScale;
+        parentShrinkScale = parentOrigScale * 0.85f;
     }
 
-    private void OnMouseEnter()
+    private void Start()
+    {
+        GameButtonsManager.instance.SubscribeButton(gameObject);
+    }
+
+    public override void PrePointerDown()
+    {
+        GameButtonsManager.instance.ButtonSelected = true;
+    }
+
+    public override void PrePointerUp()
+    {
+        GameButtonsManager.instance.ButtonSelected = false;
+        GameButtonsManager.instance.AppearActualButton();
+    }
+
+    public override bool PointerEnterCondition()
+    {
+        return !GameButtonsManager.instance.ButtonSelected;
+    }
+
+    public override void EnterActioin()
     {
         if (shrink != null)
             StopCoroutine(shrink);
-        expand = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
+        expand = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(expand);
 
         if (shade1out != null)
@@ -79,11 +107,11 @@ public class SkipButton : MonoBehaviour
         StartCoroutine(shade3in);
     }
 
-    private void OnMouseExit()
+    public override void ExitActioin()
     {
         if (expand != null)
             StopCoroutine(expand);
-        shrink = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
+        shrink = ExpandManager.ExpandObject(gameObject, origScale, expandTime);
         StartCoroutine(shrink);
 
 
@@ -103,36 +131,31 @@ public class SkipButton : MonoBehaviour
         StartCoroutine(shade3out);
     }
 
-    public void Click()
+    public override IEnumerator IClick()
     {
-        StartCoroutine(IClick());
-    }
-
-    private IEnumerator IClick()
-    {
-        //GetComponent<Button>().interactable = false;
+        StopAllCoroutines();
+        StartCoroutine(IClickAnimation());
 
         switch (state)
         {
             case State.ReturnSkip:
-                DialogMod.autoSkip = true;
-                buttonParent.GetComponent<RectTransform>().localScale = new Vector3(0.85f, 0.85f, 0.85f);
+                Typewriter.Instance.buttonAutoSkip = true;
                 EnableSkip();
                 break;
             case State.DoSkip:
-                DialogMod.autoSkip = false;
-                buttonParent.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
+                Typewriter.Instance.buttonAutoSkip = false;
                 DisableSkip();
                 break;
         }
 
-        StopAllCoroutines();
-        
-        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
 
-        //GetComponent<Button>().interactable = true;
+        yield return null;
+    }
+
+    private IEnumerator IClickAnimation()
+    {
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
     }
 
     public void EnableSkip()

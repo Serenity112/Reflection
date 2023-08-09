@@ -1,10 +1,13 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using static MMButtonsManager;
 
-public class MMOptionButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
+public class MMOptionButton : IDraggableButton
 {
     private float speed = 5f;
+
+    [SerializeField] private MainMenuOption option;
 
     [HideInInspector]
     public GameObject spacing;
@@ -15,57 +18,19 @@ public class MMOptionButton : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     private IEnumerator _appear = null;
     private IEnumerator _disappear = null;
 
-    private bool pointer_down = false;
-    private bool enter = false;
-
     private void Awake()
     {
         spacing = transform.GetChild(0).gameObject;
+        GetComponent<Button>().onClick.AddListener(OnClick);
         //GetComponent<Button>().onClick.AddListener(() => ClickSource.Play());
     }
 
     void Start()
     {
-        MMButtonsManager.instance.MainMenuOptionButtons.Add(gameObject);
+        MMButtonsManager.instance.SubscribeButton(gameObject);
     }
 
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        pointer_down = true;
-    }
-
-    public void OnPointerUp(PointerEventData eventData)
-    {
-        pointer_down = false;
-
-        if (!enter)
-        {
-            Disappear();
-        }
-    }
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        enter = true;
-
-        if (!StaticVariables.OverlayPanelActive && !pointer_down)
-        {
-            //ScrollSource.Play();
-            Appear();
-        }
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        enter = false;
-
-        if (!StaticVariables.OverlayPanelActive && !pointer_down)
-        {
-            Disappear();
-        }
-    }
-
-    private void Appear()
+    public override void EnterActioin()
     {
         if (_disappear != null)
         {
@@ -76,7 +41,7 @@ public class MMOptionButton : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         StartCoroutine(_appear);
     }
 
-    private void Disappear()
+    public override void ExitActioin()
     {
         if (_appear != null)
         {
@@ -85,5 +50,28 @@ public class MMOptionButton : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
         _disappear = FadeManager.FadeObject(spacing, false, speed);
         StartCoroutine(_disappear);
+    }
+
+    public override void PrePointerDown()
+    {
+        MMButtonsManager.instance.ButtonSelected = true;
+    }
+
+    public override void PrePointerUp()
+    {
+        MMButtonsManager.instance.ButtonSelected = false;
+        MMButtonsManager.instance.AppearActualButton();
+    }
+
+    public override bool PointerEnterCondition()
+    {
+        return !MMButtonsManager.instance.ButtonSelected;
+    }
+
+    public override IEnumerator IClick()
+    {
+        MMButtonsManager.instance.DisableButtons();
+        MMButtonsManager.instance.ExecuteOption(option);
+        yield return null;
     }
 }

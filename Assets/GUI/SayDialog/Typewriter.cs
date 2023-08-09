@@ -11,17 +11,17 @@ public class Typewriter : MonoBehaviour
 
     private Text _text;
 
-    public bool autoSkip = false;
+    public bool buttonAutoSkip = false;
     public bool wasCurrentDialogRead = false;
-    public bool skipping = false;
+    public bool isSkipping = false;
 
     // Флаг для кнопок Space и Return
     public bool continueClickedFlag = true;
 
-    // Флаг для запрета скипа кнопкой Tab
+    // Глобальный флаг для запрета скипа кнопкой Tab
     public bool denySkip { get; set; } = false;
 
-    // Флаг похож на denySkip, однако для анимации Skip кнопки выделен отдельно
+    // Локальный флаг для запрета скипа кнопкой Tab, сохрнаяет изменение режима isSkipping и анимации skip кнопки
     public bool denyNextDialog { get; set; } = false;
 
     [SerializeField] private SkipButton skipButton;
@@ -47,12 +47,19 @@ public class Typewriter : MonoBehaviour
 
     private void Update()
     {
-        if ((Input.GetKey(KeyCode.Tab) || autoSkip) && (SettingsConfig.skipEverything || wasCurrentDialogRead) && !denySkip)
+        bool tabSkip = Input.GetKey(KeyCode.Tab);
+
+        if (tabSkip && buttonAutoSkip && isSkipping)
         {
-            if (!skipping)
+            CancelButtonAutoSkip();
+        }
+
+        if ((tabSkip || buttonAutoSkip) && (SettingsConfig.skipEverything || wasCurrentDialogRead) && !denySkip)
+        {
+            if (!isSkipping)
             {
                 skipButton.EnableSkip();
-                skipping = true;
+                isSkipping = true;
             }
 
             if (!denyNextDialog)
@@ -62,15 +69,19 @@ public class Typewriter : MonoBehaviour
         }
         else
         {
-            if (skipping)
+            // Отжатие авто-скипа
+            if (isSkipping)
             {
+                CancelButtonAutoSkip();
                 skipButton.DisableSkip();
-                skipping = false;
+                isSkipping = false;
             }
         }
 
         if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.Return))
         {
+            CancelButtonAutoSkip();
+
             if (!denySkip && !denyNextDialog && continueClickedFlag)
             {
                 continueClickedFlag = false;
@@ -96,6 +107,22 @@ public class Typewriter : MonoBehaviour
         }
     }
 
+    private void CancelButtonAutoSkip()
+    {
+        if (buttonAutoSkip)
+        {
+            buttonAutoSkip = false;
+        }
+    }
+
+    // Метод вызываемый кнопкой в игре
+    public void ContinueButtonInput()
+    {
+        CancelButtonAutoSkip();
+        SetClickFlag();
+    }
+
+    // Флаг о том, что надо скипать диалог
     public void SetClickFlag()
     {
         clickFlag = true;

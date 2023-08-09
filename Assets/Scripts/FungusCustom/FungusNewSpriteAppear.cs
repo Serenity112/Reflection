@@ -38,7 +38,7 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            yield return StartCoroutine(SpriteApearer.instance.SpriteAppear(CharacterName, Pose, Emotion, Position, AppearSpeed, Typewriter.Instance.skipping, WaitForFinished, StopPrev));
+            yield return StartCoroutine(SpriteApearer.instance.SpriteAppear(CharacterName, Pose, Emotion, Position, AppearSpeed, Typewriter.Instance.isSkipping, WaitForFinished, StopPrev));
 
             Continue();
         }
