@@ -1,27 +1,62 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using static PauseButtonsManager;
 
-public class PauseOptionButton : MonoBehaviour
+public class PauseOptionButton : IButtonGroup
 {
-    [SerializeField]
-    private float speed;
+    private float speed = 5f;
 
-    public GameObject spacing;    
-    void Start()
+    [SerializeField] private PauseOptions option;
+
+    public GameObject spacing;
+
+    private IEnumerator _appear = null;
+    private IEnumerator _disappear = null;
+
+    public PauseOptionButton() : base()
     {
-        spacing = transform.GetChild(0).gameObject;
-
-        PauseButtonsManager.instance.underlinedPauseButtons.Add(gameObject);
+        OnAwakeActions(new List<Action>
+        {
+            delegate { spacing = transform.GetChild(0).gameObject; },
+            delegate { GetComponent<Button>().onClick.AddListener(OnClick); },
+        });
     }
 
-    private void OnMouseEnter()
+    public override void RegisterManager()
     {
-        StopAllCoroutines();        
-        StartCoroutine(FadeManager.FadeObject(spacing, true, speed));
+        SetManager(PauseButtonsManager.instance);
     }
 
-    private void OnMouseExit()
+    public override void EnterAction()
+    {
+        if (_disappear != null)
+        {
+            StopCoroutine(_disappear);
+        }
+
+        _appear = FadeManager.FadeOnly(spacing, true, speed);
+        StartCoroutine(_appear);
+    }
+
+    public override void ExitAction()
+    {
+        if (_appear != null)
+        {
+            StopCoroutine(_appear);
+        }
+
+        _disappear = FadeManager.FadeOnly(spacing, false, speed);
+        StartCoroutine(_disappear);
+    }
+
+    public override IEnumerator IClick()
     {
         StopAllCoroutines();
-        StartCoroutine(FadeManager.FadeObject(spacing, false, speed));
+        PauseButtonsManager.instance.DisableButtons();
+        PauseButtonsManager.instance.ExecuteOption(option);
+        yield return null;
     }
 }

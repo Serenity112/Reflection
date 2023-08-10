@@ -18,6 +18,12 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
 
     public virtual bool PointerEnterCondition() { return true; }
 
+    public void ResetFlags()
+    {
+        pointer_down = false;
+        enter = false;
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         enter = true;

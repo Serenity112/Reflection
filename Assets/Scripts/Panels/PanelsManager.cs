@@ -27,7 +27,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     public GameObject ChatLog;
 
-    public GameObject pausePanel;
+    public GameObject PausePanel;
 
     public GameObject PanelsCanvas;
 
@@ -40,7 +40,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     // handlers
     private AsyncOperationHandle<GameObject> savePanelHandler;
 
-    private float speed = 5f;
+    private float speed = 4f;
 
     private void Awake()
     {
@@ -132,7 +132,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         SaveManager.instance.ClearCurrent();
         Addressables.ReleaseInstance(savePanelHandler);
 
-        PauseButtonsManager.instance.unlinePauseButtons();
+        PauseButtonsManager.instance.UnSelectButtons();
         PanelsCamera.enabled = false;
 
         Resources.UnloadUnusedAssets();
@@ -155,8 +155,8 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     }
     private IEnumerator IopenSaveMenu()
     {
-        FadeManager.FadeObject(blackPanelPanels, true);
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
+        FadeManager.FadeObject(blackPanelPanels, true);
 
         savePanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return savePanelHandler;
@@ -165,7 +165,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         {
             // Включаем игровое гуи и выключаем паузу для корректных скриншотов
 
-            FadeManager.FadeObject(pausePanel, false);
+            FadeManager.FadeObject(PausePanel, false);
             GameGuiPanel.GetComponent<CanvasGroup>().alpha = 1f;
             GameButtons.GetComponent<CanvasGroup>().alpha = 1f;
             PanelsCamera.enabled = true;
@@ -175,9 +175,10 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
             Debug.Log("Error loading");
         }
 
+        yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, speed));
         FadeManager.FadeObject(BlackPanel, false);
-        StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, speed));
     }
+
     private IEnumerator IcloseSaveMenu()
     {
         FadeManager.FadeObject(BlackPanel, true);
@@ -186,8 +187,10 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         SaveManager.instance.ClearCurrent();
         Addressables.ReleaseInstance(savePanelHandler);
 
-        PauseButtonsManager.instance.unlinePauseButtons();
-        FadeManager.FadeObject(pausePanel, true);
+        PauseButtonsManager.instance.EnableButtons();
+        PauseButtonsManager.instance.UnSelectButtons();
+
+        FadeManager.FadeObject(PausePanel, true);
         GameGuiPanel.GetComponent<CanvasGroup>().alpha = 0f;
         GameButtons.GetComponent<CanvasGroup>().alpha = 0f;
         PanelsCamera.enabled = false;

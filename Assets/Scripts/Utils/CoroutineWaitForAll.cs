@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -38,6 +39,16 @@ public class CoroutineWaitForAll : MonoBehaviour
         foreach (IEnumerator c in coroutines)
         {
             yield return StartCoroutine(c);
+        }
+    }
+
+    public IEnumerator WaitForSequenceDelayed(List<IEnumerator> coroutines, List<Action> actions)
+    {
+        yield return WaitForAll(coroutines);
+
+        foreach (var action in actions)
+        {
+            action.Invoke();
         }
     }
 }

@@ -62,7 +62,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
 
     public void CloseSettings()
     {
-        PauseButtonsManager.instance.unlinePauseButtons();
+        PauseButtonsManager.instance.UnSelectButtons();
 
         StartCoroutine(ICloseSettings());
     }
@@ -96,6 +96,9 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
 
         Addressables.ReleaseInstance(settingsPanelHandler);
         PanelsCamera.enabled = false;
+
+        PauseButtonsManager.instance.EnableButtons();
+        PauseButtonsManager.instance.UnSelectButtons();
 
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, false, settingsSpeed));
         FadeManager.FadeObject(blackPanelPanels, false);

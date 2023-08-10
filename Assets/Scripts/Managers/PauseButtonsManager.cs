@@ -1,32 +1,97 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class PauseButtonsManager : MonoBehaviour
+public class PauseButtonsManager : IButtonManager
 {
     public static PauseButtonsManager instance = null;
 
-    public List<GameObject> underlinedPauseButtons = new List<GameObject>();
+    private float speed = 5f;
 
-    public void unlinePauseButtons()
+    public enum PauseOptions
     {
-        foreach(GameObject button in underlinedPauseButtons)
+        Continue,
+        Saves,
+        Settings,
+        Quit
+    }
+
+    private void Awake()
+    {
+        instance = this;
+
+        GameButtons = new List<GameObject>();
+    }
+
+    public override void AppearActualButton()
+    {
+        foreach (GameObject button_obj in GameButtons)
+        {
+            PauseOptionButton button = button_obj.GetComponent<PauseOptionButton>();
+            button.AppearIfEntered();
+        }
+    }
+
+    public override void DisableButtons()
+    {
+        foreach (GameObject button_obj in GameButtons)
+        {
+            button_obj.GetComponent<BoxCollider>().enabled = false;
+            button_obj.GetComponent<Button>().interactable = false;
+        }
+    }
+
+    public override void EnableButtons()
+    {
+        foreach (GameObject button_obj in GameButtons)
+        {
+            button_obj.GetComponent<BoxCollider>().enabled = enabled;
+            button_obj.GetComponent<Button>().interactable = enabled;
+        }
+    }
+
+    public override void UnSelectButtons()
+    {
+        foreach (GameObject button in GameButtons)
         {
             PauseOptionButton underlineButton = button.GetComponent<PauseOptionButton>();
-            underlineButton.StopAllCoroutines();
+            underlineButton.ResetFlags();
             GameObject spacing = underlineButton.spacing;
             spacing.GetComponent<CanvasGroup>().alpha = 0f;
         }
     }
-    void Start()
+
+    public void ExecuteOption(PauseOptions option)
     {
-        if (instance == null)
+        switch (option)
         {
-            instance = this;
+            case PauseOptions.Continue:
+                StartCoroutine(IContinue());
+                break;
+            case PauseOptions.Saves:
+                PanelsManager.instance.OpenSaveMenu();
+                break;
+            case PauseOptions.Settings:
+                SettingsManager.instance.OpenSettings();
+                break;
+            case PauseOptions.Quit:
+                PanelsManager.instance.QuitToMainMenu();
+                break;
         }
-        else if (instance == this)
+    }
+
+    private IEnumerator IContinue()
+    {
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
-            Destroy(gameObject);
-        }
+            FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed),
+            FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed * 0.5f),
+            FadeManager.FadeObject(PanelsManager.instance.PausePanel, false, speed)
+        }));
+
+        UnSelectButtons();
+
+        Typewriter.Instance.denyNextDialog = false;
     }
 }

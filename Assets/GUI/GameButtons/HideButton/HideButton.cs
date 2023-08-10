@@ -22,13 +22,15 @@ public class HideButton : IExpandableButtonGroup
     private IEnumerator gui1out;
     private IEnumerator gui2out;
 
+    private IEnumerator waitForInput;
+
     private GameObject CircleShade;
     private GameObject LineShade;
 
     public HideButton() : base()
     {
         OnAwakeActions(new List<Action>
-        {  
+        {
             delegate { CircleShade = transform.GetChild(0).transform.GetChild(0).gameObject; },
             delegate { LineShade = transform.GetChild(1).transform.GetChild(0).gameObject; },
         });
@@ -103,11 +105,45 @@ public class HideButton : IExpandableButtonGroup
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
 
         HideOverlayButton.GetComponent<Button>().interactable = true;
+
+        StopinputWait();
+        waitForInput = IWaitForInput();
+        StartCoroutine(waitForInput);
     }
 
-    public void ShowHiddeUI() => StartCoroutine(IShowHiddenUI());
+    private void StopinputWait()
+    {
+        if (waitForInput != null)
+        {
+            StopCoroutine(waitForInput);
+        }
+    }
 
-    IEnumerator IShowHiddenUI()
+    private IEnumerator IWaitForInput()
+    {
+        bool inputFlag = false;
+
+        while (!inputFlag)
+        {
+            if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.Tab))
+            {
+                inputFlag = true;
+            }
+
+            yield return null;
+        }
+
+        ShowHiddeUI();
+    }
+
+    public void ShowHiddeUI()
+    {
+        StopinputWait();
+        HideOverlayButton.GetComponent<Button>().interactable = false;
+        StartCoroutine(IShowHiddenUI());
+    }
+
+    private IEnumerator IShowHiddenUI()
     {
         animator.Play("Unhide");
 
@@ -126,7 +162,6 @@ public class HideButton : IExpandableButtonGroup
             gui2in
         }));
 
-        HideOverlayButton.GetComponent<Button>().interactable = false;
         HideOverlayButton.SetActive(false);
         Typewriter.Instance.denySkip = false;
     }

@@ -34,8 +34,7 @@ public class MMButtonsManager : IButtonManager
         foreach (GameObject button in GameButtons)
         {
             MMOptionButton underlineButton = button.GetComponent<MMOptionButton>();
-            underlineButton.StopAllCoroutines();
-
+            underlineButton.ResetFlags();
             GameObject spacing = underlineButton.spacing;
             spacing.GetComponent<CanvasGroup>().alpha = 0f;
         }
@@ -46,7 +45,6 @@ public class MMButtonsManager : IButtonManager
         foreach (GameObject button_obj in GameButtons)
         {
             MMOptionButton button = button_obj.GetComponent<MMOptionButton>();
-            button.StopAllCoroutines();
             button.AppearIfEntered();
         }
     }
@@ -56,7 +54,7 @@ public class MMButtonsManager : IButtonManager
         foreach (GameObject button_obj in GameButtons)
         {
             button_obj.GetComponent<BoxCollider>().enabled = true;
-            button_obj.GetComponent<Button>().enabled = true;
+            button_obj.GetComponent<Button>().interactable = true;
         }
     }
 
@@ -65,7 +63,7 @@ public class MMButtonsManager : IButtonManager
         foreach (GameObject button_obj in GameButtons)
         {
             button_obj.GetComponent<BoxCollider>().enabled = false;
-            button_obj.GetComponent<Button>().enabled = false;
+            button_obj.GetComponent<Button>().interactable = false;
         }
     }
 

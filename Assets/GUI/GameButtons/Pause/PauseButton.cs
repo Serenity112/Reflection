@@ -47,31 +47,17 @@ public class PauseButton : IExpandableButtonGroup
         Typewriter.Instance.denyNextDialog = true;
 
         animator.Play("pauseanim");
-        PauseButtonsManager.instance.unlinePauseButtons();
 
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed));
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed * 0.5f));
-        StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.pausePanel, true, speed));
+        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed * 0.75f));
+        StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.PausePanel, true, speed));
+
+        PauseButtonsManager.instance.EnableButtons();
+        PauseButtonsManager.instance.UnSelectButtons();
 
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
 
         GetComponent<Button>().interactable = true;
-    }
-
-    public void ContinueGame() => StartCoroutine(IContinue());
-
-    private IEnumerator IContinue()
-    {
-        PauseButtonsManager.instance.unlinePauseButtons();
-
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
-        {
-            FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed),
-            FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed * 0.5f),
-            FadeManager.FadeObject(PanelsManager.instance.pausePanel, false, speed)
-        });
-
-        Typewriter.Instance.denyNextDialog = false;
     }
 }
