@@ -8,9 +8,9 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
     protected bool pointer_down = false;
     protected bool enter = false;
 
-    public abstract void EnterActioin();
+    public abstract void EnterAction();
 
-    public abstract void ExitActioin();
+    public abstract void ExitAction();
 
     public abstract IEnumerator IClick();
 
@@ -24,7 +24,7 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
 
         if (!StaticVariables.OverlayPanelActive && !pointer_down && PointerEnterCondition())
         {
-            EnterActioin();
+            EnterAction();
         }
     }
 
@@ -34,7 +34,7 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
 
         if (!StaticVariables.OverlayPanelActive && !pointer_down)
         {
-            ExitActioin();
+            ExitAction();
         }
     }
 
@@ -57,7 +57,7 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
 
         if (!enter)
         {
-            ExitActioin();
+            ExitAction();
         }
     }
 
@@ -65,7 +65,7 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
     {
         if (!StaticVariables.OverlayPanelActive && enter)
         {
-            EnterActioin();
+            EnterAction();
         }
     }
 }

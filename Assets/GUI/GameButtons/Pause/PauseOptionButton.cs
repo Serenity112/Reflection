@@ -10,7 +10,7 @@ public class PauseOptionButton : MonoBehaviour
     {
         spacing = transform.GetChild(0).gameObject;
 
-        ButtonsManager.instance.underlinedPauseButtons.Add(gameObject);
+        PauseButtonsManager.instance.underlinedPauseButtons.Add(gameObject);
     }
 
     private void OnMouseEnter()

@@ -132,7 +132,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         SaveManager.instance.ClearCurrent();
         Addressables.ReleaseInstance(savePanelHandler);
 
-        ButtonsManager.instance.unlinePauseButtons();
+        PauseButtonsManager.instance.unlinePauseButtons();
         PanelsCamera.enabled = false;
 
         Resources.UnloadUnusedAssets();
@@ -186,7 +186,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         SaveManager.instance.ClearCurrent();
         Addressables.ReleaseInstance(savePanelHandler);
 
-        ButtonsManager.instance.unlinePauseButtons();
+        PauseButtonsManager.instance.unlinePauseButtons();
         FadeManager.FadeObject(pausePanel, true);
         GameGuiPanel.GetComponent<CanvasGroup>().alpha = 0f;
         GameButtons.GetComponent<CanvasGroup>().alpha = 0f;

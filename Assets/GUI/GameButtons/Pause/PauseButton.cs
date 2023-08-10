@@ -1,37 +1,20 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PauseButton : IButtonGroup
+public class PauseButton : IExpandableButtonGroup
 {
-    private float speed = 5f;
-    private float expandTime = 0.05f;
-
-    private GameObject buttonParent;
-
     private IEnumerator expandOnEnter;
     private IEnumerator shrinkOnExit;
 
-    private Vector3 origScale;
-    private Vector3 expandedScale;
-
-    private Vector3 parentOrigScale;
-    private Vector3 parentShrinkScale;
-
-    private Animator animator;
-
-    public override void OnAwake()
+    public PauseButton() : base()
     {
-        buttonParent = transform.parent.gameObject;
-
-        animator = GetComponent<Animator>();
-
-        origScale = gameObject.GetComponent<RectTransform>().localScale;
-        expandedScale = origScale * 1.1f;
-
-        parentOrigScale = buttonParent.GetComponent<RectTransform>().localScale;
-        parentShrinkScale = parentOrigScale * 0.85f;
+        OnAwakeActions(new List<Action>
+        {
+            delegate { animator = GetComponent<Animator>(); },
+        });
     }
 
     public override void RegisterManager()
@@ -39,7 +22,7 @@ public class PauseButton : IButtonGroup
         SetManager(GameButtonsManager.instance);
     }
 
-    public override void EnterActioin()
+    public override void EnterAction()
     {
         if (shrinkOnExit != null)
             StopCoroutine(shrinkOnExit);
@@ -48,7 +31,7 @@ public class PauseButton : IButtonGroup
         StartCoroutine(expandOnEnter);
     }
 
-    public override void ExitActioin()
+    public override void ExitAction()
     {
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
@@ -64,7 +47,7 @@ public class PauseButton : IButtonGroup
         Typewriter.Instance.denyNextDialog = true;
 
         animator.Play("pauseanim");
-        ButtonsManager.instance.unlinePauseButtons();
+        PauseButtonsManager.instance.unlinePauseButtons();
 
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed));
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed * 0.5f));
@@ -80,7 +63,7 @@ public class PauseButton : IButtonGroup
 
     private IEnumerator IContinue()
     {
-        ButtonsManager.instance.unlinePauseButtons();
+        PauseButtonsManager.instance.unlinePauseButtons();
 
         yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {

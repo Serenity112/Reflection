@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class SkipButton : IButtonGroup
+public class SkipButton : IExpandableButtonGroup
 {
     private enum State
     {
@@ -9,22 +11,11 @@ public class SkipButton : IButtonGroup
         ReturnSkip
     }
 
-    private float shadesSpeed = 5f;
-    private float expandTime = 0.05f;
-
-    private Animator animator;
-    private GameObject buttonParent;
     private GameObject ShadeTriangle;
     private GameObject ShadeArrow;
     private GameObject ShadeArrowCopy;
 
     private State state;
-
-    private Vector3 origScale;
-    private Vector3 expandedScale;
-
-    private Vector3 parentOrigScale;
-    private Vector3 parentShrinkScale;
 
     private IEnumerator shade1in;
     private IEnumerator shade2in;
@@ -35,22 +26,17 @@ public class SkipButton : IButtonGroup
     private IEnumerator shrink;
     private IEnumerator expand;
 
-    public override void OnAwake()
+    public SkipButton() : base()
     {
-        buttonParent = transform.parent.gameObject;
-
-        ShadeTriangle = transform.GetChild(0).transform.GetChild(0).gameObject;
-        ShadeArrow = transform.GetChild(1).transform.GetChild(0).gameObject;
-        ShadeArrowCopy = transform.GetChild(2).transform.GetChild(0).gameObject;
+        OnAwakeActions(new List<Action>
+        {
+            delegate { animator = GetComponent<Animator>(); },
+            delegate { ShadeTriangle = transform.GetChild(0).transform.GetChild(0).gameObject; },
+            delegate { ShadeArrow = transform.GetChild(1).transform.GetChild(0).gameObject; },
+            delegate { ShadeArrowCopy = transform.GetChild(2).transform.GetChild(0).gameObject; },
+        });
 
         state = State.ReturnSkip;
-        animator = GetComponent<Animator>();
-
-        origScale = GetComponent<RectTransform>().localScale;
-        expandedScale = origScale * 1.1f;
-
-        parentOrigScale = buttonParent.GetComponent<RectTransform>().localScale;
-        parentShrinkScale = parentOrigScale * 0.85f;
     }
 
     public override void RegisterManager()
@@ -58,7 +44,7 @@ public class SkipButton : IButtonGroup
         SetManager(GameButtonsManager.instance);
     }
 
-    public override void EnterActioin()
+    public override void EnterAction()
     {
         if (shrink != null)
             StopCoroutine(shrink);
@@ -72,16 +58,16 @@ public class SkipButton : IButtonGroup
             StopCoroutine(shade3out);
         }
 
-        shade1in = FadeManager.FadeObject(ShadeTriangle, true, shadesSpeed);
-        shade2in = FadeManager.FadeObject(ShadeArrow, true, shadesSpeed);
-        shade3in = FadeManager.FadeObject(ShadeArrowCopy, true, shadesSpeed);
+        shade1in = FadeManager.FadeObject(ShadeTriangle, true, speed);
+        shade2in = FadeManager.FadeObject(ShadeArrow, true, speed);
+        shade3in = FadeManager.FadeObject(ShadeArrowCopy, true, speed);
 
         StartCoroutine(shade1in);
         StartCoroutine(shade2in);
         StartCoroutine(shade3in);
     }
 
-    public override void ExitActioin()
+    public override void ExitAction()
     {
         if (expand != null)
             StopCoroutine(expand);
@@ -96,9 +82,9 @@ public class SkipButton : IButtonGroup
             StopCoroutine(shade3in);
         }
 
-        shade1out = FadeManager.FadeObject(ShadeTriangle, false, shadesSpeed);
-        shade2out = FadeManager.FadeObject(ShadeArrow, false, shadesSpeed);
-        shade3out = FadeManager.FadeObject(ShadeArrowCopy, false, shadesSpeed);
+        shade1out = FadeManager.FadeObject(ShadeTriangle, false, speed);
+        shade2out = FadeManager.FadeObject(ShadeArrow, false, speed);
+        shade3out = FadeManager.FadeObject(ShadeArrowCopy, false, speed);
 
         StartCoroutine(shade1out);
         StartCoroutine(shade2out);

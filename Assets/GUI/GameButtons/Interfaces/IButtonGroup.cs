@@ -1,4 +1,5 @@
-using UnityEngine;
+using System;
+using System.Collections.Generic;
 
 public abstract class IButtonGroup : IDraggableButton
 {
@@ -10,21 +11,32 @@ public abstract class IButtonGroup : IDraggableButton
 
     public abstract void RegisterManager();
 
+    private List<Action> OnAwakeActionsList = new List<Action>();
+
+    private List<Action> OnStartActionsList = new List<Action>();
+
+    public void OnAwakeActions(List<Action> actions)
+    {
+        OnAwakeActionsList.AddRange(actions);
+    }
+
+    public void OnStartActions(List<Action> actions)
+    {
+        OnStartActionsList.AddRange(actions);
+    }
+
+    public void Awake()
+    {
+        OnAwakeActionsList.ForEach(x => x.Invoke());
+    }
+
     public void Start()
     {
         RegisterManager();
         GetManager().SubscribeButton(gameObject);
-        OnStart();
+
+        OnStartActionsList.ForEach(x => x.Invoke());
     }
-
-    public virtual void OnStart() { }
-
-    public void Awake()
-    {
-        OnAwake();
-    }
-
-    public abstract void OnAwake();
 
     public override void PrePointerDown()
     {

@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ButtonsManager : MonoBehaviour
+public class PauseButtonsManager : MonoBehaviour
 {
-    public static ButtonsManager instance = null;
+    public static PauseButtonsManager instance = null;
 
     public List<GameObject> underlinedPauseButtons = new List<GameObject>();
 

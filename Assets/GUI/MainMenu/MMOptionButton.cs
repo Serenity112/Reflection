@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using static MMButtonsManager;
@@ -18,14 +20,16 @@ public class MMOptionButton : IButtonGroup
     private IEnumerator _appear = null;
     private IEnumerator _disappear = null;
 
-    public override void OnAwake()
+    public MMOptionButton() : base()
     {
-        spacing = transform.GetChild(0).gameObject;
-        GetComponent<Button>().onClick.AddListener(OnClick);
-        //GetComponent<Button>().onClick.AddListener(() => ClickSource.Play());
+        OnAwakeActions(new List<Action>
+        {
+            delegate { spacing = transform.GetChild(0).gameObject; },
+            delegate { GetComponent<Button>().onClick.AddListener(OnClick); },
+        });
     }
 
-    public override void EnterActioin()
+    public override void EnterAction()
     {
         if (_disappear != null)
         {
@@ -36,7 +40,7 @@ public class MMOptionButton : IButtonGroup
         StartCoroutine(_appear);
     }
 
-    public override void ExitActioin()
+    public override void ExitAction()
     {
         if (_appear != null)
         {

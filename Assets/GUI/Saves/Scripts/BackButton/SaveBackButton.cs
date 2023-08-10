@@ -26,7 +26,7 @@ public class SaveBackButton : IDraggableButton
         expandedScale = origScale * 1.1f;
     }
 
-    public override void EnterActioin()
+    public override void EnterAction()
     {
         if (shrinkOnEnter != null)
             StopCoroutine(shrinkOnEnter);
@@ -34,7 +34,7 @@ public class SaveBackButton : IDraggableButton
         StartCoroutine(expandOnEnter);
     }
 
-    public override void ExitActioin()
+    public override void ExitAction()
     {
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
