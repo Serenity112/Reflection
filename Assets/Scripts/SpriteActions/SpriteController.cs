@@ -368,7 +368,7 @@ public class SpriteController : MonoBehaviour
                 }
                 sprite.SetScale(scale);
 
-                StartCoroutine(PackageConntector.instance.IConnectPackage(i_data.name));
+                StartCoroutine(PackageConntector.instance.IConnectPackage(i_data.name, i_data.pose));
                 list.Add(LoadSpriteByParts(sprite, i_data.name, i_data.pose, i_data.emotion));
             }
 

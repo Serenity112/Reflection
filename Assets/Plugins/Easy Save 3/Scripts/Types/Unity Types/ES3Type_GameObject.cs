@@ -55,10 +55,14 @@ namespace ES3Types
 
             List<Component> components;
 
+            var es3GameObject = instance.GetComponent<ES3GameObject>();
+
             // If there's an ES3AutoSave attached and Components are marked to be saved, save these.
             if (es3AutoSave != null)
                 components = es3AutoSave.componentsToSave;
-
+            // If there's an ES3GameObject attached, save these.
+            else if (es3GameObject != null)
+                components = es3GameObject.components;
             // Otherwise, only save explicitly-supported Components, /*or those explicitly marked as Serializable*/.
             else
             {
@@ -225,9 +229,9 @@ namespace ES3Types
                         // Else, create a new Component.
                         else
                         {
-                            var component = ES3TypeMgr.GetOrCreateES3Type(type).Read<Component>(reader);
-                            if(component != null)
-                                ES3ReferenceMgrBase.Current.Add((Component)component, componentRef);
+                            var component = go.AddComponent(type);
+                            ES3TypeMgr.GetOrCreateES3Type(type).ReadInto<Component>(reader, component);
+                            ES3ReferenceMgrBase.Current.Add(component, componentRef);
                         }
                         break;
                     }

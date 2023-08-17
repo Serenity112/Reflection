@@ -45,6 +45,6 @@ public class SpriteRemover : MonoBehaviour
         Addressables.Release(SpriteController.instance.GameSprites[sprite.num].Handlers[1]);
 
         SpriteController.instance.DelActivity(sprite.num);
-        PackageConntector.instance.DisconnectPackage(characterName);
+        PackageConntector.instance.DisconnectPackageGroup(characterName);
     }
 }

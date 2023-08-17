@@ -33,7 +33,7 @@ public class StationScroll : MonoBehaviour, ISpecialEvent
 
         StationPanel.GetComponent<Animator>().Play("Scroll");
         yield return new WaitForSeconds(2.1f);
-        TextBoxController.instance.SetStoryText("");
+        Typewriter.Instance.SetText("");
 
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed));
         yield return StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed));

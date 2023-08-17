@@ -223,6 +223,11 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         UpdateContinueButtonState();
     }
 
+    public void ReleaseSaveMenu()
+    {
+        Addressables.ReleaseInstance(savesPanelHandler);
+    }
+
     public IEnumerator ILoadGameFromMainMenu(int actualSaveNum)
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));

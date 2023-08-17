@@ -12,5 +12,7 @@ public interface IPanelsManager
 
     void CloseSaveMenu();
 
+    public void ReleaseSaveMenu();
+
     Camera GetGameCamera();
 }

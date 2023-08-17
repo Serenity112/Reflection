@@ -9,9 +9,22 @@ public class TextBoxController : MonoBehaviour
     public static TextBoxController instance = null;
 
     [SerializeField]
-    private GameObject StoryText;
+    private GameObject TextBoxGui1;
+
+    [SerializeField]
+    private GameObject TextBoxGui2;
+
+    [SerializeField]
+    private AssetReference TextBoxLightRef;
+    private AsyncOperationHandle<Sprite> _handlerLight;
+
+    [SerializeField]
+    private AssetReference TextBoxDarkRef;
+    private AsyncOperationHandle<Sprite> _handlerDark;
 
     private AsyncOperationHandle<GameObject> _textBoxThemeHandler;
+
+    private ThemeStyle _currentTheme = ThemeStyle.Light;
 
     public enum ThemeStyle
     {
@@ -21,14 +34,7 @@ public class TextBoxController : MonoBehaviour
 
     void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
     }
 
     public IEnumerator ISetDefaultTheme()
@@ -36,8 +42,15 @@ public class TextBoxController : MonoBehaviour
         yield return StartCoroutine(IChangeTheme(ThemeStyle.Light, 0.8f));
     }
 
-    public IEnumerator IChangeTheme(ThemeStyle theme, float alpha)
+    public void ChangeTheme()
     {
+
+    }
+
+    public IEnumerator IChangeTheme(ThemeStyle theme, float targetAlpha)
+    {
+        bool skip = Typewriter.Instance.isSkipping;
+
         if (_textBoxThemeHandler.IsValid())
         {
             yield return Addressables.ReleaseInstance(_textBoxThemeHandler);
@@ -55,13 +68,8 @@ public class TextBoxController : MonoBehaviour
 
             Image image = result.GetComponent<Image>();
             Color tempColor = image.color;
-            tempColor.a = alpha;
+            tempColor.a = targetAlpha;
             image.color = tempColor;
         }
-    }
-
-    public void SetStoryText(string text)
-    {
-        StoryText.GetComponent<Text>().text = text;
     }
 }

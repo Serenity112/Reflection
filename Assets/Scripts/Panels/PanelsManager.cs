@@ -201,6 +201,11 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         Resources.UnloadUnusedAssets();
     }
 
+    public void ReleaseSaveMenu()
+    {
+        Addressables.ReleaseInstance(savePanelHandler);
+    }
+
     // Выход в главное меню
     public void QuitToMainMenu()
     {
@@ -224,4 +229,9 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     public GameObject GetActivePanelsParent() => ActivePanels;
 
     public Camera GetGameCamera() => GameCamera;
+
+    public void ReleaseSettingsMenu()
+    {
+        throw new System.NotImplementedException();
+    }
 }

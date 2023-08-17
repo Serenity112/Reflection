@@ -79,6 +79,7 @@ public class SpritesSwapper : MonoBehaviour
             if (newPosition.x == ignoreXval)
             {
                 SpriteController.instance.SaveSpriteData(sprite2.num, sprite1.GetPosition());
+                sprite2.SetPosition(sprite1.GetPosition());
             }
             else
             {

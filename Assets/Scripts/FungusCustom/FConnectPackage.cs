@@ -8,13 +8,13 @@ namespace Fungus
     public class FConnectPackage : Command
     {
         [SerializeField]
-        private string packageName;
+        private string PackageName;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            PackageConntector.instance.ConnectPackage(packageName);
+            StartCoroutine(PackageConntector.instance.IConnectPackageGroup(PackageName));
 
             Continue();
         }

@@ -83,7 +83,7 @@ public class ChoiceManager : MonoBehaviour
 
     public IEnumerator LoadChoise(string blockName)
     {
-        TextBoxController.instance.SetStoryText("");
+        Typewriter.Instance.SetText("");
 
         yield return StartCoroutine(HideOptionsBox(_fadeSpeed));
         ReleaseChoiceBox();

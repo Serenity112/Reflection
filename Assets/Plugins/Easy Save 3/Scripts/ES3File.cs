@@ -82,6 +82,9 @@ public class ES3File
             this.settings = new ES3Settings();
         else
             this.settings = settings;
+
+        syncWithFile = true; // This ensures that the file won't be merged, which would prevent deleted keys from being deleted.
+
         SaveRaw(bytes, settings);
     }
 
@@ -156,8 +159,13 @@ public class ES3File
         unencryptedSettings.compressionType = ES3.CompressionType.None;
 
         // If T is object, use the value to get it's type. Otherwise, use T so that it works with inheritence.
+        Type type;
+        if (value == null)
+            type = typeof(T);
+        else
+            type = value.GetType();
 
-        cache[key] = new ES3Data(ES3TypeMgr.GetOrCreateES3Type(typeof(T)), ES3.Serialize(value, unencryptedSettings));
+        cache[key] = new ES3Data(ES3TypeMgr.GetOrCreateES3Type(type), ES3.Serialize(value, unencryptedSettings));
     }
 
     /// <summary>Merges the data specified by the bytes parameter into this ES3File.</summary>
@@ -383,11 +391,12 @@ public class ES3File
 
     internal static void CacheFile(ES3Settings settings)
     {
-        // If we're still using cached settings, default to file.
+        // If we're still using cached settings, set it to the default location.
         if (settings.location == ES3.Location.Cache)
         {
             settings = (ES3Settings)settings.Clone();
-            settings.location = ES3.Location.File;
+            // If the default settings are also set to cache, assume ES3.Location.File. Otherwise, set it to the default location.
+            settings.location = ES3Settings.defaultSettings.location == ES3.Location.Cache ? ES3.Location.File : ES3Settings.defaultSettings.location;
         }
 
         if (!ES3.FileExists(settings))
@@ -406,11 +415,12 @@ public class ES3File
     {
         if (settings == null)
             settings = new ES3Settings(ES3.Location.File);
-        // If we're still using cached settings, default to file.
+        // If we're still using cached settings, set it to the default location.
         else if (settings.location == ES3.Location.Cache)
         {
             settings = (ES3Settings)settings.Clone();
-            settings.location = ES3.Location.File;
+            // If the default settings are also set to cache, assume ES3.Location.File. Otherwise, set it to the default location.
+            settings.location = ES3Settings.defaultSettings.location == ES3.Location.Cache ? ES3.Location.File : ES3Settings.defaultSettings.location;
         }
 
         ES3File cachedFile;
