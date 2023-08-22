@@ -44,21 +44,4 @@ public class SpriteFade : MonoBehaviour
             yield return StartCoroutine(FadeManager.ColorAlphaFadeObject(obj, fadein, speed));
         }
     }
-
-    public IEnumerator IAppearFullSprite(GameObject Body, float speed, bool skip)
-    {
-        GameObject Face1 = Body.transform.GetChild(0).gameObject;
-
-        if (skip)
-        {
-            FadeManager.ColorAlphaFadeObject(Body, true);
-            FadeManager.ColorAlphaFadeObject(Face1, true);
-            yield return null;
-        }
-        else
-        {
-            StartCoroutine(FadeManager.ColorAlphaFadeObject(Body, true, speed));
-            yield return StartCoroutine(FadeManager.ColorAlphaFadeObject(Face1, true, speed));
-        }
-    }
 }

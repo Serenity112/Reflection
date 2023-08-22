@@ -153,13 +153,11 @@ public class UserData : MonoBehaviour
         FadeManager.FadeObject(PanelsManager.instance.BlackPanel, true);
         FadeManager.FadeObject(PanelsManager.instance.blackPanelPanels, false);
 
-        //yield return StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.blackPanelPanels, true, speed));
-
         yield return StartCoroutine(ILoadGame(actualSaveNum));
 
-        yield return StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.BlackPanel, false, speed));
-
         StartCoroutine(PanelsManager.instance.EnableGuiOnStart(true));
+
+        yield return StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.BlackPanel, false, 3f));
     }
 
     public IEnumerator ILoadGame(int actualSaveNum)
@@ -168,7 +166,7 @@ public class UserData : MonoBehaviour
         SaveData newSave = ES3.Load<SaveData>($"SaveFile{actualSaveNum}", fileName);
 
         Flowchart flowchart = PanelsManager.instance.flowchart;
-        Typewriter.Instance.denyNextDialog = false;
+        Typewriter.Instance.AllowSkip();
 
         // Block
         if (CurrentBlock != null)
@@ -193,6 +191,7 @@ public class UserData : MonoBehaviour
         {
             SpecialEventManager.instance.IReleaseCurrentEvent(),
             BackgroundManager.instance.IReleaseBackground(),
+            TextBoxController.instance.ClearThemes(),
         });
 
         IEnumerator i_bg_load = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
@@ -206,7 +205,6 @@ public class UserData : MonoBehaviour
             i_bg_unload,
             i_bg_load,
         });
-
 
         // Sprites
 
@@ -226,7 +224,6 @@ public class UserData : MonoBehaviour
             i_sprite_unload,
             i_sprite_load,
         });
-
 
         /*// Музыка
         // Отгрузка

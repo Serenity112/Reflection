@@ -4,38 +4,29 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Audio;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using Fungus;
 
 public class SettingsManager : MonoBehaviour, ISettingsManager
 {
     public static SettingsManager instance = null;
 
-    [SerializeField]
     private GameObject GameCanvas;
 
-    [SerializeField]
     private GameObject PanelsCanvas;
 
-    [SerializeField]
     private GameObject ActivePanels;
 
-    [SerializeField]
     private GameObject blackPanelGame;
 
-    [SerializeField]
     private GameObject blackPanelPanels;
 
     [SerializeField]
     private AudioMixer audioMixer;
 
-    [SerializeField]
     private Camera PanelsCamera;
 
-    [SerializeField]
-    private float settingsSpeed;
+    private float speed = 5f;
 
     private AsyncOperationHandle<GameObject> settingsPanelHandler;
-
 
     private void Awake()
     {
@@ -46,10 +37,18 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         else if (instance == this)
         {
             Destroy(gameObject);
-        }
+        }  
     }
+
     void Start()
     {
+        GameCanvas = PanelsManager.instance.GameCanvas;
+        PanelsCanvas = PanelsManager.instance.PanelsCanvas;
+        ActivePanels = PanelsManager.instance.ActivePanels;
+        blackPanelGame = PanelsManager.instance.BlackPanel;
+        blackPanelPanels = PanelsManager.instance.blackPanelPanels;
+        PanelsCamera = PanelsManager.instance.PanelsCamera;
+
         SettingsConfig.LoadSettingsFromMemory();
 
         ApplySettingsOnStart();
@@ -62,16 +61,15 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
 
     public void CloseSettings()
     {
-        PauseButtonsManager.instance.UnSelectButtons();
-
         StartCoroutine(ICloseSettings());
     }
     private IEnumerator IOpenSettings()
     {
+        PauseButtonsManager.instance.FreezeButtons = true;
         SettingsConfig.currentManager = GetComponent<SettingsManager>();
 
         FadeManager.FadeObject(blackPanelPanels, true);
-        yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, true, settingsSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, true, speed));
 
         settingsPanelHandler = Addressables.InstantiateAsync("SettingsGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return settingsPanelHandler;
@@ -80,19 +78,21 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         {
             settingsPanelHandler.Result.name = "SettingsGui";
             PanelsCamera.enabled = true;
-
-            yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, settingsSpeed));
-            FadeManager.FadeObject(blackPanelGame, false);
         }
         else
         {
             Debug.Log("Error loading");
         }
+
+        yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, speed));
+        FadeManager.FadeObject(blackPanelGame, false);
     }
     private IEnumerator ICloseSettings()
     {
+        PauseButtonsManager.instance.FreezeButtons = false;
+
         FadeManager.FadeObject(blackPanelGame, true);
-        yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, settingsSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, speed));
 
         Addressables.ReleaseInstance(settingsPanelHandler);
         PanelsCamera.enabled = false;
@@ -100,7 +100,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         PauseButtonsManager.instance.EnableButtons();
         PauseButtonsManager.instance.UnSelectButtons();
 
-        yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, false, settingsSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, false, speed));
         FadeManager.FadeObject(blackPanelPanels, false);
 
         Resources.UnloadUnusedAssets();

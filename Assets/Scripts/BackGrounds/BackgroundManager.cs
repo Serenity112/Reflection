@@ -5,7 +5,6 @@ using UnityEngine.UI;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using static TextBoxController;
-using Fungus;
 
 public enum bgSwapType
 {
@@ -25,6 +24,11 @@ public struct TextBoxTheme
     public ThemeStyle style;
     public float alpha;
 };
+
+public enum Backgrounds
+{
+    SpacePort,
+}
 
 public class BackgroundManager : MonoBehaviour
 {
@@ -54,8 +58,9 @@ public class BackgroundManager : MonoBehaviour
 
         _backgroundsPanel = gameObject;
 
-        _textBoxThemes.Add("AssemblyHall", new TextBoxTheme(ThemeStyle.Light, 0.75f));
-        _textBoxThemes.Add("Performance1", new TextBoxTheme(ThemeStyle.Light, 0.9f));
+        // _textBoxThemes.Add("SpacePort", new TextBoxTheme(ThemeStyle.Dark, 0.9f));
+        // _textBoxThemes.Add("AssemblyHall", new TextBoxTheme(ThemeStyle.Dark, 0.5f));
+        // _textBoxThemes.Add("SkverDay", new TextBoxTheme(ThemeStyle.Light, 0.75f));
     }
 
     private void Start()
@@ -102,7 +107,7 @@ public class BackgroundManager : MonoBehaviour
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
             SpecialEventManager.instance.IReleaseCurrentEvent(),
-            SetTextBoxTheme(bg_adress),
+            SetTextBoxTheme(bg_adress, true),
         }));
 
         bg_handler = Addressables.InstantiateAsync(bg_adress, _backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
@@ -167,6 +172,7 @@ public class BackgroundManager : MonoBehaviour
         newBg.GetComponent<CanvasGroup>().alpha = 0f;
         newBg.transform.SetSiblingIndex(newBg.transform.childCount - 1);
 
+        StartCoroutine(SetTextBoxTheme(bg_adress, false));
         yield return StartCoroutine(FadeManager.FadeObject(newBg, true, speed));
 
         if (old_handler.IsValid())
@@ -177,19 +183,22 @@ public class BackgroundManager : MonoBehaviour
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
             SpecialEventManager.instance.IReleaseCurrentEvent(),
-            //SetTextBoxTheme(bg_adress),
+
         }));
 
         Resources.UnloadUnusedAssets();
     }
 
-    // Для сейвов
+    // Для сейв системы
     public IEnumerator ILoadBackground(string bg_adress)
     {
         if (bg_handler.IsValid())
         {
             Addressables.ReleaseInstance(bg_handler);
         }
+
+        yield return StartCoroutine(SetTextBoxTheme(bg_adress, true));
+        Debug.Log("SetTextBoxTheme loaded");
 
         if (bg_adress != null)
         {
@@ -201,22 +210,20 @@ public class BackgroundManager : MonoBehaviour
                 Debug.Log("Error loading " + bg_adress);
             }
 
-            yield return StartCoroutine(SetTextBoxTheme(bg_adress));
-
             Resources.UnloadUnusedAssets();
         }
     }
 
-    private IEnumerator SetTextBoxTheme(string bg)
+    private IEnumerator SetTextBoxTheme(string bg, bool skip = false)
     {
         if (_textBoxThemes.ContainsKey(bg))
         {
             TextBoxTheme theme = _textBoxThemes[bg];
-            yield return StartCoroutine(TextBoxController.instance.IChangeTheme(theme.style, theme.alpha));
+            yield return StartCoroutine(TextBoxController.instance.IChangeTheme(theme.style, theme.alpha, skip));
         }
         else
         {
-            yield return StartCoroutine(TextBoxController.instance.IChangeTheme(ThemeStyle.Light, 0.8f)); // Стандартный текстбокс
+            yield return StartCoroutine(TextBoxController.instance.IChangeTheme(ThemeStyle.Light, 0.8f, skip)); // Стандартный текстбокс
         }
     }
 

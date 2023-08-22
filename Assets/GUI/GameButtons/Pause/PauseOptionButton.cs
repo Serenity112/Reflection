@@ -7,8 +7,6 @@ using static PauseButtonsManager;
 
 public class PauseOptionButton : IButtonGroup
 {
-    private float speed = 5f;
-
     [SerializeField] private PauseOptions option;
 
     public GameObject spacing;
@@ -43,13 +41,16 @@ public class PauseOptionButton : IButtonGroup
 
     public override void ExitAction()
     {
-        if (_appear != null)
+        if (!PauseButtonsManager.instance.FreezeButtons)
         {
-            StopCoroutine(_appear);
-        }
+            if (_appear != null)
+            {
+                StopCoroutine(_appear);
+            }
 
-        _disappear = FadeManager.FadeOnly(spacing, false, speed);
-        StartCoroutine(_disappear);
+            _disappear = FadeManager.FadeOnly(spacing, false, speed);
+            StartCoroutine(_disappear);
+        }
     }
 
     public override IEnumerator IClick()

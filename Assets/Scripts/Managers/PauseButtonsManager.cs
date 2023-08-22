@@ -9,6 +9,8 @@ public class PauseButtonsManager : IButtonManager
 
     private float speed = 5f;
 
+    public bool FreezeButtons = false;
+
     public enum PauseOptions
     {
         Continue,
@@ -46,8 +48,8 @@ public class PauseButtonsManager : IButtonManager
     {
         foreach (GameObject button_obj in GameButtons)
         {
-            button_obj.GetComponent<BoxCollider>().enabled = enabled;
-            button_obj.GetComponent<Button>().interactable = enabled;
+            button_obj.GetComponent<BoxCollider>().enabled = true;
+            button_obj.GetComponent<Button>().interactable = true;
         }
     }
 
@@ -92,6 +94,6 @@ public class PauseButtonsManager : IButtonManager
 
         UnSelectButtons();
 
-        Typewriter.Instance.denyNextDialog = false;
+        Typewriter.Instance.AllowSkip();
     }
 }

@@ -104,7 +104,11 @@ public class SkipButton : IExpandableButtonGroup
                 break;
             case State.DoSkip:
                 Typewriter.Instance.buttonAutoSkip = false;
-                DisableSkip();
+                Typewriter.Instance.ForceUpdateSkippingState();
+                if (!Typewriter.Instance.isSkipping)
+                {
+                    DisableSkip();
+                }
                 break;
         }
 

@@ -1,30 +1,21 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class TextBoxController : MonoBehaviour
 {
     public static TextBoxController instance = null;
 
     [SerializeField]
-    private GameObject TextBoxGui1;
+    private GameObject TextBoxGuiLight;
 
     [SerializeField]
-    private GameObject TextBoxGui2;
-
-    [SerializeField]
-    private AssetReference TextBoxLightRef;
-    private AsyncOperationHandle<Sprite> _handlerLight;
-
-    [SerializeField]
-    private AssetReference TextBoxDarkRef;
-    private AsyncOperationHandle<Sprite> _handlerDark;
-
-    private AsyncOperationHandle<GameObject> _textBoxThemeHandler;
+    private GameObject TextBoxGuiDark;
 
     private ThemeStyle _currentTheme = ThemeStyle.Light;
+
+    private float _speed = 5f;
 
     public enum ThemeStyle
     {
@@ -47,29 +38,78 @@ public class TextBoxController : MonoBehaviour
 
     }
 
-    public IEnumerator IChangeTheme(ThemeStyle theme, float targetAlpha)
+    public IEnumerator ClearThemes()
     {
-        bool skip = Typewriter.Instance.isSkipping;
+        TextBoxGuiLight.GetComponent<CanvasGroup>().alpha = 0f;
+        TextBoxGuiDark.GetComponent<CanvasGroup>().alpha = 0f;
+        yield return null;
+    }
 
-        if (_textBoxThemeHandler.IsValid())
+    public IEnumerator IChangeTheme(ThemeStyle newTheme, float targetAlpha, bool skip = false)
+    {
+        if (!skip && Typewriter.Instance.isSkipping)
         {
-            yield return Addressables.ReleaseInstance(_textBoxThemeHandler);
+            skip = true;
         }
 
-        string assetName = theme == ThemeStyle.Light ? "TextBoxLight" : "TextBoxDark";
-        _textBoxThemeHandler = Addressables.InstantiateAsync(assetName, gameObject.GetComponent<RectTransform>(), false, true);
-        yield return _textBoxThemeHandler;
-
-        if (_textBoxThemeHandler.Status == AsyncOperationStatus.Succeeded)
+        if (newTheme == _currentTheme)
         {
-            GameObject result = _textBoxThemeHandler.Result;
-            result.name = assetName;
-            result.transform.SetSiblingIndex(0); // Чтобы был в начале списка, под текстом итд.
+            GameObject mathingGui;
+            if (newTheme == ThemeStyle.Light)
+            {
+                mathingGui = TextBoxGuiLight;
+            }
+            else
+            {
+                mathingGui = TextBoxGuiDark;
+            }
 
-            Image image = result.GetComponent<Image>();
-            Color tempColor = image.color;
-            tempColor.a = targetAlpha;
-            image.color = tempColor;
+            if (skip)
+            {
+                mathingGui.GetComponent<CanvasGroup>().alpha = targetAlpha;
+                Debug.Log($"targetAlpha {targetAlpha} set");
+                yield return null;
+            }
+            else
+            {
+                yield return StartCoroutine(FadeManager.FadeToTargetAlpha(mathingGui, targetAlpha, _speed));
+            }
         }
+        else
+        {
+            GameObject oldGui;
+            GameObject newGui;
+
+            if (newTheme == ThemeStyle.Light && _currentTheme == ThemeStyle.Dark)
+            {
+                newGui = TextBoxGuiLight;
+                oldGui = TextBoxGuiDark;
+            }
+            else
+            {
+                newGui = TextBoxGuiDark;
+                oldGui = TextBoxGuiLight;
+            }
+
+            newGui.GetComponent<CanvasGroup>().alpha = 0f;
+            newGui.transform.SetSiblingIndex(0);
+
+            if (skip)
+            {
+                oldGui.GetComponent<CanvasGroup>().alpha = 0f;
+                newGui.GetComponent<CanvasGroup>().alpha = targetAlpha;
+                yield return null;
+            }
+            else
+            {
+                yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+                {
+                    FadeManager.FadeToTargetAlpha(oldGui, 0f, _speed),
+                    FadeManager.FadeToTargetAlpha(newGui, targetAlpha, _speed),
+                }));
+            }
+        }
+
+        _currentTheme = newTheme;
     }
 }

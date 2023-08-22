@@ -83,8 +83,7 @@ public class HideButton : IExpandableButtonGroup
 
     public override IEnumerator IClick()
     {
-        Typewriter.Instance.denySkip = true;
-        Typewriter.Instance.buttonAutoSkip = false;
+        Typewriter.Instance.DenySkip();
 
         HideOverlayButton.SetActive(true);
         animator.Play("Hide");
@@ -106,12 +105,12 @@ public class HideButton : IExpandableButtonGroup
 
         HideOverlayButton.GetComponent<Button>().interactable = true;
 
-        StopinputWait();
+        StopInputWait();
         waitForInput = IWaitForInput();
         StartCoroutine(waitForInput);
     }
 
-    private void StopinputWait()
+    private void StopInputWait()
     {
         if (waitForInput != null)
         {
@@ -138,7 +137,7 @@ public class HideButton : IExpandableButtonGroup
 
     public void ShowHiddeUI()
     {
-        StopinputWait();
+        StopInputWait();
         HideOverlayButton.GetComponent<Button>().interactable = false;
         StartCoroutine(IShowHiddenUI());
     }
@@ -163,6 +162,6 @@ public class HideButton : IExpandableButtonGroup
         }));
 
         HideOverlayButton.SetActive(false);
-        Typewriter.Instance.denySkip = false;
+        Typewriter.Instance.AllowSkip();
     }
 }

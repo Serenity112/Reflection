@@ -5,8 +5,6 @@ using UnityEngine.UI;
 
 public class FadeManager : MonoBehaviour
 {
-    public static FadeManager instance = null;
-
     public static IEnumerator FadeObject(GameObject obj, bool fadein, float speed)
     {
         obj.SetActive(true);
@@ -55,6 +53,18 @@ public class FadeManager : MonoBehaviour
                 yield return null;
             }
             obj.GetComponent<CanvasGroup>().alpha = 0;
+        }
+    }
+
+    public static void FadeOnly(GameObject obj, bool fadein)
+    {
+        if (fadein)
+        {
+            obj.GetComponent<CanvasGroup>().alpha = 1f;
+        }
+        else
+        {
+            obj.GetComponent<CanvasGroup>().alpha = 0f;
         }
     }
 

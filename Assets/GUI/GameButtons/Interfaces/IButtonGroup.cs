@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 public abstract class IButtonGroup : IDraggableButton
 {
+    protected float speed = 5f;
+
     private IButtonManager _manager;
 
     public void SetManager(IButtonManager manager) => _manager = manager;

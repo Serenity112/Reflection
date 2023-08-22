@@ -20,7 +20,12 @@ public class SpriteApearer : MonoBehaviour
 
     public IEnumerator SpriteAppear(string characterName, int pose, int emotion, Vector3 position, float speed, bool skip, bool waitForFinished, bool stopPrev)
     {
-        GameSpriteObject? sprite_obj = SpriteController.instance.GetAvaliableSprite(characterName);
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteNumByName(characterName);
+
+        if (sprite_obj == null)
+        {
+            yield break;
+        }
 
         if (stopPrev)
         {
@@ -29,12 +34,8 @@ public class SpriteApearer : MonoBehaviour
             SpriteController.instance.SkipSpriteActions();
         }
 
-        if (sprite_obj == null)
-        {
-            yield break;
-        }
-
         GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
+        SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, false);
 
         SpriteController.instance.SaveSpriteData(sprite.num, characterName, pose, emotion, position, 1f, false);
 

@@ -69,7 +69,7 @@ public class SpriteMove : MonoBehaviour
                 if (Math.Abs(diff) < 1)
                 {
                     sprite.SetPosition(targetVect);
-                    Typewriter.Instance.denyNextDialog = false;
+                    Typewriter.Instance.AllowSkip();
                     yield break;
                 }
 
@@ -79,6 +79,6 @@ public class SpriteMove : MonoBehaviour
             }
         }
 
-        Typewriter.Instance.denyNextDialog = false;
+        Typewriter.Instance.AllowSkip();
     }
 }

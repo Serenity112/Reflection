@@ -4,7 +4,6 @@ using UnityEngine;
 
 public abstract class IExpandableButtonGroup : IButtonGroup
 {
-    protected float speed = 5f;
     protected float expandTime = 0.05f;
 
     protected GameObject buttonParent;

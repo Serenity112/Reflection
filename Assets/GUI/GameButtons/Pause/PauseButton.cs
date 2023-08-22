@@ -27,7 +27,7 @@ public class PauseButton : IExpandableButtonGroup
         if (shrinkOnExit != null)
             StopCoroutine(shrinkOnExit);
 
-        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
+        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(expandOnEnter);
     }
 
@@ -36,7 +36,7 @@ public class PauseButton : IExpandableButtonGroup
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
 
-        shrinkOnExit = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
+        shrinkOnExit = ExpandManager.ExpandObject(gameObject, origScale, expandTime);
         StartCoroutine(shrinkOnExit);
     }
 
@@ -44,7 +44,7 @@ public class PauseButton : IExpandableButtonGroup
     {
         gameObject.GetComponent<Button>().interactable = false;
 
-        Typewriter.Instance.denyNextDialog = true;
+        Typewriter.Instance.DenySkip();
 
         animator.Play("pauseanim");
 

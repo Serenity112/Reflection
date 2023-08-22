@@ -19,7 +19,9 @@ public abstract class IButtonManager : MonoBehaviour
 
     public abstract void AppearActualButton();
 
+    // Включить взаимодействие с кнопоками
     public abstract void EnableButtons();
 
+    // Отключить взаимодействие с кнопоками
     public abstract void DisableButtons();
 }

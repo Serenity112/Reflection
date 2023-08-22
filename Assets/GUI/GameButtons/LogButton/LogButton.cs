@@ -86,7 +86,7 @@ public class LogButton : IExpandableButtonGroup
 
     public void Click()
     {
-        Typewriter.Instance.denyNextDialog = true;
+        Typewriter.Instance.DenySkip();
         StartCoroutine(IClick());
     }
 

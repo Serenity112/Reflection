@@ -19,10 +19,10 @@ public class Typewriter : MonoBehaviour
     public bool continueClickedFlag = true;
 
     // Глобальный флаг для запрета скипа кнопкой Tab
-    public bool denySkip { get; set; } = false;
+    public bool denySkip { get; private set; } = false;
 
     // Локальный флаг для запрета скипа кнопкой Tab, сохрнаяет изменение режима isSkipping и анимации skip кнопки
-    public bool denyNextDialog { get; set; } = false;
+    public bool denyNextDialog { get; private set; } = false;
 
     [SerializeField] private SkipButton skipButton;
 
@@ -92,6 +92,24 @@ public class Typewriter : MonoBehaviour
         {
             continueClickedFlag = true;
         }
+    }
+
+    public void AllowSkip()
+    {
+        denySkip = false;
+        denyNextDialog = false;
+    }
+
+    public void DenySkip()
+    {
+        denySkip = true;
+        denyNextDialog = true;
+        buttonAutoSkip = false;
+    }
+
+    public void ForceUpdateSkippingState()
+    {
+        Update();
     }
 
     public void SetTextSpeed(float value)

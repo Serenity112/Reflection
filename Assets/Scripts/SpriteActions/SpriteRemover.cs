@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 public class SpriteRemover : MonoBehaviour
 {
     public static SpriteRemover instance = null;
-    private void Start()
+
+    private void Awake()
     {
         if (instance == null)
         {
@@ -18,10 +18,8 @@ public class SpriteRemover : MonoBehaviour
         }
     }
 
-    public IEnumerator RemoveSprite(string characterName, float speed, bool skip)
+    public IEnumerator RemoveSprite(string characterName, float speed, bool skip, bool release)
     {
-        SpriteController.instance.printData();
-
         SpriteFade.instance.StopSpritesFading();
         SpriteMove.instance.StopSpriteMoving();
         SpriteController.instance.SkipSpriteActions();
@@ -41,10 +39,18 @@ public class SpriteRemover : MonoBehaviour
             SpriteFade.instance.ISetFadingSprite(sprite.ByPart(SpritePart.Face1), false, speed, skip)
         }));
 
-        Addressables.Release(SpriteController.instance.GameSprites[sprite.num].Handlers[0]);
-        Addressables.Release(SpriteController.instance.GameSprites[sprite.num].Handlers[1]);
+        if (release)
+        {
+            sprite.ReleaseHandler(SpritePart.Body);
+            sprite.ReleaseHandler(SpritePart.Face1);
 
-        SpriteController.instance.DelActivity(sprite.num);
-        PackageConntector.instance.DisconnectPackageGroup(characterName);
+            SpriteController.instance.ClearSpriteData(sprite.num);
+            PackageConntector.instance.DisconnectPackageGroup(characterName);
+            SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, false);
+        }
+        else
+        {
+            SpriteController.instance.SaveSpriteData(sprite.num, 0f);
+        }
     }
 }

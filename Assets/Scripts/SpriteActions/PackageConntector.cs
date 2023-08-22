@@ -1,14 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Net;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class PackageConntector : MonoBehaviour
 {
-    // Потрясающий класс, нужен для предзагрузки пакета с ассетами. Если его не применять, будет зажержка пару мс перед загрузкой первого ассета из пакета
-
     public static PackageConntector instance = null;
 
     private static Dictionary<string, AsyncOperationHandle<Sprite>> handlers;
@@ -35,30 +32,15 @@ public class PackageConntector : MonoBehaviour
         };
     }
 
-    // Для прелоада 1
-    public IEnumerator IConnectPackageGroup(string packageName, int mainNum)
+    public IEnumerator IConnectPackageGroup(string packageName)
     {
-        if (!packageSizes.ContainsKey(packageName))
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetAvaliableSprite(packageName);
+        if (sprite_obj == null)
         {
             yield break;
         }
-
-        List<IEnumerator> list = new List<IEnumerator>();
-        for (int i = 1; i <= packageSizes[packageName]; i++)
-        {
-            if (i != mainNum)
-            {
-                list.Add(IConnectSinglePackage($"{packageName}{i}_connector"));
-            }
-        }
-        StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
-        yield return StartCoroutine(IConnectSinglePackage($"{packageName}{mainNum}_connector"));
-    }
-
-    // Для прелоада 2
-    public IEnumerator IConnectPackageGroup(string packageName)
-    {
-        Debug.Log("Start connect " + packageName);
+        GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
+        SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, true);
 
         if (!packageSizes.ContainsKey(packageName))
         {
@@ -72,24 +54,27 @@ public class PackageConntector : MonoBehaviour
             list.Add(IConnectSinglePackage($"{packageName}{i}_connector"));
         }
 
+        Debug.Log("Start connect " + packageName);
+
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
 
-        Debug.Log("End connect " + packageName);
+        Debug.Log("Connected " + packageName);
     }
 
     private IEnumerator IConnectSinglePackage(string address)
     {
+        if (handlers.ContainsKey(address))
+        {
+            yield break;
+        }
+
         AsyncOperationHandle<Sprite> handler = Addressables.LoadAssetAsync<Sprite>(address);
         yield return handler;
-        if (handler.Status == AsyncOperationStatus.Succeeded && !handlers.ContainsKey(address))
+
+        if (handler.Status == AsyncOperationStatus.Succeeded)
         {
             handlers.Add(address, handler);
         }
-    }
-
-    public IEnumerator IConnectPackage(string packageName, int poseNum)
-    {
-        yield return StartCoroutine(IConnectSinglePackage($"{packageName}{poseNum}_connector"));
     }
 
     public void DisconnectPackageGroup(string packageName)
@@ -113,6 +98,9 @@ public class PackageConntector : MonoBehaviour
             yield return null;
         }
 
+        SpriteController.instance.SaveSpriteDataPreloaded(false);
         handlers.Clear();
+
+        Debug.Log("IDisconnectAllPackages ended");
     }
 }

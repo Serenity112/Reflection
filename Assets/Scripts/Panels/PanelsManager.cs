@@ -11,7 +11,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 {
     public static PanelsManager instance = null;
 
-    [SerializeField] private GameObject ActivePanels;
+    public GameObject ActivePanels;
 
     public Camera GameCamera;
 
@@ -40,7 +40,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     // handlers
     private AsyncOperationHandle<GameObject> savePanelHandler;
 
-    private float speed = 4f;
+    private float speed = 5f;
 
     private void Awake()
     {
@@ -62,6 +62,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     private void Start()
     {
+        Typewriter.Instance.DenySkip();
         ConfirmationPanel.instance.ActivePanels = ActivePanels;
         WarningPanel.instance.ActivePanels = ActivePanels;
     }
@@ -104,6 +105,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
             }));
         }
 
+        Typewriter.Instance.AllowSkip();
         GameButtonsActivate();
 
         yield return null;
@@ -111,19 +113,17 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     public void GameButtonsActivate()
     {
-        Typewriter.Instance.denySkip = false;
         GameButtons.GetComponent<GraphicRaycaster>().enabled = true;
     }
 
     public void GameButtonsDeactivate()
     {
-        Typewriter.Instance.denySkip = true;
         GameButtons.GetComponent<GraphicRaycaster>().enabled = false;
     }
 
     #endregion
 
-    // LOAD
+    // Загрузка из сейв системы внутри игры
     public IEnumerator ILoadGame(int saveNum)
     {
         FadeManager.FadeObject(BlackPanel, true);
@@ -139,24 +139,22 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
         yield return StartCoroutine(UserData.instance.ILoadGame(saveNum));
 
+
         FadeManager.FadeObject(blackPanelPanels, false);
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, speed));
     }
 
     // SAVES
-    public void OpenSaveMenu()
-    {
-        StartCoroutine(IopenSaveMenu());
-    }
-    public void CloseSaveMenu()
-    {
-        //ButtonsManager.unlinePauseButtons();
-        StartCoroutine(IcloseSaveMenu());
-    }
+    public void OpenSaveMenu() => StartCoroutine(IopenSaveMenu());
+
+    public void CloseSaveMenu() => StartCoroutine(IcloseSaveMenu());
+
     private IEnumerator IopenSaveMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
+        PauseButtonsManager.instance.FreezeButtons = true;
+
         FadeManager.FadeObject(blackPanelPanels, true);
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
 
         savePanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return savePanelHandler;
@@ -165,7 +163,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         {
             // Включаем игровое гуи и выключаем паузу для корректных скриншотов
 
-            FadeManager.FadeObject(PausePanel, false);
+            FadeManager.FadeOnly(PausePanel, false);
             GameGuiPanel.GetComponent<CanvasGroup>().alpha = 1f;
             GameButtons.GetComponent<CanvasGroup>().alpha = 1f;
             PanelsCamera.enabled = true;
@@ -181,6 +179,8 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator IcloseSaveMenu()
     {
+        PauseButtonsManager.instance.FreezeButtons = false;
+
         FadeManager.FadeObject(BlackPanel, true);
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, speed));
 
@@ -195,8 +195,8 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         GameButtons.GetComponent<CanvasGroup>().alpha = 0f;
         PanelsCamera.enabled = false;
 
-        FadeManager.FadeObject(blackPanelPanels, false);
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, speed));
+        FadeManager.FadeObject(blackPanelPanels, false);
 
         Resources.UnloadUnusedAssets();
     }
@@ -215,6 +215,12 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     private IEnumerator IQuitToMainMenu()
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, 5f));
+
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            PackageConntector.instance.IDisconnectAllPackages(),
+            SpriteController.instance.IUnloadSprites(),
+        }));
 
         var asyncLoadLevel = SceneManager.LoadSceneAsync("MainMenu", LoadSceneMode.Single);
 

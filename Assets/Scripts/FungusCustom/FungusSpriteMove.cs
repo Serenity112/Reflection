@@ -20,7 +20,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            Typewriter.Instance.denyNextDialog = true; // Запрет отключтся в конце выполнения SetMovementSprites
+            Typewriter.Instance.DenySkip(); // Запрет отключтся в конце выполнения SetMovementSprites
 
             SpriteMove.instance.SetSpriteMovement(CharacterName, Position, MovementTime, Typewriter.Instance.isSkipping);
 

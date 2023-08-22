@@ -9,7 +9,7 @@ public class SpritesSwapper : MonoBehaviour
 {
     public static SpritesSwapper instance = null;
 
-    void Start()
+    void Awake()
     {
         if (instance == null)
         {
@@ -25,18 +25,18 @@ public class SpritesSwapper : MonoBehaviour
 
     public IEnumerator SwapSprites(string spriteName, int pose, int emotion, Vector3 newPosition, float disappearSpeed, float appearSpeed, float moveSpeed, bool skip, bool waitForFinished, bool stopPrev)
     {
-        if (stopPrev)
-        {
-            SpriteMove.instance.StopSpriteMoving();
-            SpriteFade.instance.StopSpritesFading();
-            SpriteController.instance.SkipSpriteActions();
-        }
-
         GameSpriteObject? sprite1_obj = SpriteController.instance.GetSpriteNumByName(spriteName);
 
         if (sprite1_obj == null)
         {
             yield break;
+        }
+
+        if (stopPrev)
+        {
+            SpriteMove.instance.StopSpriteMoving();
+            SpriteFade.instance.StopSpritesFading();
+            SpriteController.instance.SkipSpriteActions();
         }
 
         GameSpriteObject sprite1 = (GameSpriteObject)sprite1_obj;
@@ -73,6 +73,12 @@ public class SpritesSwapper : MonoBehaviour
             // Изменить, если добавится гарантированное смещение в зависимости от поз
             sprite2.SetScale(sprite1.GetScale());
 
+            AsyncOperationHandle<Sprite> BodyHandler = sprite1.GetHandler(SpritePart.Body);
+            AsyncOperationHandle<Sprite> Face1Handler = sprite1.GetHandler(SpritePart.Face1);
+
+            Addressables.Release(BodyHandler);
+            Addressables.Release(Face1Handler);
+
             yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(sprite2, spriteName, pose, emotion));
 
             bool move = false;
@@ -105,11 +111,11 @@ public class SpritesSwapper : MonoBehaviour
             // Actions
             List<Action> postActions = new List<Action>
             {
-                 delegate { Addressables.Release(SpriteController.instance.GameSprites[sprite1.num].Handlers[0]); },
-                 delegate { Addressables.Release(SpriteController.instance.GameSprites[sprite1.num].Handlers[1]); },
+                 /*delegate { Addressables.Release(BodyHandler); },
+                 delegate { Addressables.Release(Face1Handler); },*/
                  delegate { Resources.UnloadUnusedAssets(); },
-                 delegate { SpriteController.instance.DelActivity(sprite1.num); },
-                 delegate { Typewriter.Instance.denyNextDialog = false; },
+                 delegate { SpriteController.instance.ClearSpriteData(sprite1.num); },
+                 delegate { Typewriter.Instance.AllowSkip(); },
             };
 
             if (waitForFinished)
@@ -127,14 +133,15 @@ public class SpritesSwapper : MonoBehaviour
         {
             SpriteController.instance.SaveSpriteData(sprite1.num, spriteName, pose, emotion);
 
-            //Используем oldHandler как буффер
-            AsyncOperationHandle<Sprite> oldFaceHandler = SpriteController.instance.GameSprites[sprite1.num].Handlers[1];
+            //Используем Face1Handler как буффер
+            AsyncOperationHandle<Sprite> Face1Handler = sprite1.GetHandler(SpritePart.Face1);
 
             sprite1.SetImage(SpritePart.Face2, sprite1.GetImage(SpritePart.Face1));
             sprite1.SetAlpha(SpritePart.Face2, 1f);
             sprite1.SetAlpha(SpritePart.Face1, 0f);
             sprite1.SetImage(SpritePart.Face1, null);
 
+            Addressables.ReleaseInstance(Face1Handler);
             yield return StartCoroutine(SpriteController.instance.ILoadSpriteOfSpecificObject(sprite1, SpritePart.Face1, spriteName, pose, emotion));
 
             bool move = false;
@@ -159,9 +166,9 @@ public class SpritesSwapper : MonoBehaviour
             // Actions
             List<Action> postActions = new List<Action>
             {
-                 delegate { Addressables.ReleaseInstance(oldFaceHandler); },
+                 //delegate { Addressables.ReleaseInstance(Face1Handler); },
                  delegate { Resources.UnloadUnusedAssets(); },
-                 delegate { Typewriter.Instance.denyNextDialog = false; },
+                 delegate { Typewriter.Instance.AllowSkip(); },
             };
 
             if (waitForFinished)
