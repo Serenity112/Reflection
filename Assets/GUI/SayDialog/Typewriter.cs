@@ -42,7 +42,7 @@ public class Typewriter : MonoBehaviour
 
     private string DialogSavesFile;
 
-    private Dictionary<string, List<int>> DialogSaves;
+    private Dictionary<string, List<int>> DialogSaves = new Dictionary<string, List<int>>();
 
     private void Awake()
     {
@@ -105,12 +105,14 @@ public class Typewriter : MonoBehaviour
 
     public void AllowSkip()
     {
+        //Debug.Log("Skip allowed");
         denySkip = false;
         denyNextDialog = false;
     }
 
     public void DenySkip()
     {
+        //Debug.Log("Skip denied");
         denySkip = true;
         denyNextDialog = true;
         buttonAutoSkip = false;
@@ -196,6 +198,7 @@ public class Typewriter : MonoBehaviour
     {
         SpriteExpand.instance.StopPrev();
         //SpriteExpand.instance.SetExpanding(speaker, Typewriter.Instance.isSkipping);
+
         NameChanger.instance.SetName(speaker);
 
         string curr_block = UserData.instance.CurrentBlock;
@@ -278,11 +281,11 @@ public class Typewriter : MonoBehaviour
     {
         if (ES3.KeyExists(DialogSavesFile, $"{DialogSavesFile}.es3"))
         {
-            DialogSaves = ES3.Load<Dictionary<string, List<int>>>(DialogSavesFile, $"{DialogSavesFile}.es3");
-        }
-        else
-        {
-            DialogSaves = new Dictionary<string, List<int>>();
+            var loaded = ES3.Load<Dictionary<string, List<int>>>(DialogSavesFile, $"{DialogSavesFile}.es3");
+            if (loaded != null)
+            {
+                DialogSaves = loaded;
+            }
         }
     }
 

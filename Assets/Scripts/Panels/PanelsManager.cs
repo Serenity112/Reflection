@@ -132,6 +132,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         SaveManager.instance.ClearCurrent();
         Addressables.ReleaseInstance(savePanelHandler);
 
+        PauseButtonsManager.instance.EnableButtons();
         PauseButtonsManager.instance.UnSelectButtons();
         PanelsCamera.enabled = false;
 
@@ -151,8 +152,6 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator IopenSaveMenu()
     {
-        PauseButtonsManager.instance.FreezeButtons = true;
-
         FadeManager.FadeObject(blackPanelPanels, true);
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
 
@@ -179,8 +178,6 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator IcloseSaveMenu()
     {
-        PauseButtonsManager.instance.FreezeButtons = false;
-
         FadeManager.FadeObject(BlackPanel, true);
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, speed));
 

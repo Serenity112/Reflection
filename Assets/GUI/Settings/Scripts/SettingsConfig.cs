@@ -280,6 +280,7 @@ public class SettingsConfig
         }
     }
 
+    [Obsolete]
     public static void ChangeResoulution(SettingsOptions value)
     {
         switch (value)

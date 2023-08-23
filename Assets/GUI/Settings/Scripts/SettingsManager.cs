@@ -37,7 +37,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         else if (instance == this)
         {
             Destroy(gameObject);
-        }  
+        }
     }
 
     void Start()
@@ -65,7 +65,6 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     }
     private IEnumerator IOpenSettings()
     {
-        PauseButtonsManager.instance.FreezeButtons = true;
         SettingsConfig.currentManager = GetComponent<SettingsManager>();
 
         FadeManager.FadeObject(blackPanelPanels, true);
@@ -89,8 +88,6 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     }
     private IEnumerator ICloseSettings()
     {
-        PauseButtonsManager.instance.FreezeButtons = false;
-
         FadeManager.FadeObject(blackPanelGame, true);
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, speed));
 
@@ -173,6 +170,16 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
                 SettingsConfig.ChangeTextSpeed(Typewriter.Instance, data);
                 break;
             case Settings.Language:
+                break;
+            case Settings.SpriteExpand:
+                if (data == 1)
+                {
+                    //SpriteController.instance.UnExpandAllSprites();
+                }
+                else
+                {
+
+                }
                 break;
         }
     }

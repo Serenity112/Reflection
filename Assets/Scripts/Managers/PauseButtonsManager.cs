@@ -9,7 +9,7 @@ public class PauseButtonsManager : IButtonManager
 
     private float speed = 5f;
 
-    public bool FreezeButtons = false;
+    public bool FreezeButtons { get; private set; } = false;
 
     public enum PauseOptions
     {
@@ -37,6 +37,7 @@ public class PauseButtonsManager : IButtonManager
 
     public override void DisableButtons()
     {
+        FreezeButtons = true;
         foreach (GameObject button_obj in GameButtons)
         {
             button_obj.GetComponent<BoxCollider>().enabled = false;
@@ -46,6 +47,7 @@ public class PauseButtonsManager : IButtonManager
 
     public override void EnableButtons()
     {
+        FreezeButtons = false;
         foreach (GameObject button_obj in GameButtons)
         {
             button_obj.GetComponent<BoxCollider>().enabled = true;

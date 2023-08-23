@@ -32,7 +32,7 @@ public class PackageConntector : MonoBehaviour
         };
     }
 
-    public IEnumerator IConnectPackageGroup(string packageName)
+    public IEnumerator IConnectPackageGroup(string packageName, bool preload = false)
     {
         GameSpriteObject? sprite_obj = SpriteController.instance.GetAvaliableSprite(packageName);
         if (sprite_obj == null)
@@ -40,7 +40,11 @@ public class PackageConntector : MonoBehaviour
             yield break;
         }
         GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
-        SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, true);
+
+        if (preload)
+        {
+            SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, true);
+        }
 
         if (!packageSizes.ContainsKey(packageName))
         {
@@ -97,8 +101,6 @@ public class PackageConntector : MonoBehaviour
             Addressables.Release(handler.Value);
             yield return null;
         }
-
-        SpriteController.instance.SaveSpriteDataPreloaded(false);
         handlers.Clear();
 
         //Debug.Log("IDisconnectAllPackages ended");
