@@ -198,7 +198,6 @@ public class BackgroundManager : MonoBehaviour
         }
 
         yield return StartCoroutine(SetTextBoxTheme(bg_adress, true));
-        Debug.Log("SetTextBoxTheme loaded");
 
         if (bg_adress != null)
         {

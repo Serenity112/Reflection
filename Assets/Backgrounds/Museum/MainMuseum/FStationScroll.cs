@@ -9,9 +9,6 @@ namespace Fungus
     public class FStationScroll : Command
     {
         [SerializeField]
-        private StationScrollState State;
-
-        [SerializeField]
         private float Speed = 3f;
 
         public override void OnEnter()
@@ -23,12 +20,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            switch (State)
-            {
-                case StationScrollState.Scroll:
-                    yield return StartCoroutine(((StationScroll)SpecialEventManager.instance.currentEvent).IScrollBg(Speed, Typewriter.Instance.isSkipping));
-                    break;
-            }
+            yield return StartCoroutine(((StationScroll)SpecialEventManager.instance.currentEvent).IScrollBg(Speed, Typewriter.Instance.isSkipping));
 
             Continue();
         }

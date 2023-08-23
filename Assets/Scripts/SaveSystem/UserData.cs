@@ -129,8 +129,13 @@ public class UserData : MonoBehaviour
         newSave.specialEvent = SpecialEventManager.instance.currentEventEnum;
         newSave.specialEventData = newSave.specialEvent == SpecialEvent.none ? null : SpecialEventManager.instance.currentEvent.GetData();
 
+        // Внешние сейвы
+        // Прочитанные диалоги
+        Typewriter.Instance.SaveDialogSaves();
+
         // Выборы
         ChoiceManager.instance.SaveChoices(actualSaveNum);
+
 
         new Thread(() =>
         {
@@ -249,6 +254,9 @@ public class UserData : MonoBehaviour
 
         // Лог
         LogManager.instance.DelLog();
+
+        // Прочитанные диалоги
+        Typewriter.Instance.LoadDialogSaves();
 
         // Выборы игрока
         //StartCoroutine(ChoiceManager.instance.HideOptionsBox(20f));

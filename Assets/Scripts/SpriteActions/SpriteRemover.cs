@@ -39,11 +39,11 @@ public class SpriteRemover : MonoBehaviour
             SpriteFade.instance.ISetFadingSprite(sprite.ByPart(SpritePart.Face1), false, speed, skip)
         }));
 
+        sprite.ReleaseHandler(SpritePart.Body);
+        sprite.ReleaseHandler(SpritePart.Face1);
+
         if (release)
         {
-            sprite.ReleaseHandler(SpritePart.Body);
-            sprite.ReleaseHandler(SpritePart.Face1);
-
             SpriteController.instance.ClearSpriteData(sprite.num);
             PackageConntector.instance.DisconnectPackageGroup(characterName);
             SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, false);

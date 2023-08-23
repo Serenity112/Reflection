@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,6 +9,7 @@ public class Typewriter : MonoBehaviour
     public static Typewriter Instance;
 
     [SerializeField] private GameObject StoryText;
+    [SerializeField] private SkipButton skipButton;
 
     private Text _text;
 
@@ -24,25 +26,32 @@ public class Typewriter : MonoBehaviour
     // Локальный флаг для запрета скипа кнопкой Tab, сохрнаяет изменение режима isSkipping и анимации skip кнопки
     public bool denyNextDialog { get; private set; } = false;
 
-    [SerializeField] private SkipButton skipButton;
-
     private Coroutine _say;
 
     private string currentText;
 
     private bool clickFlag = false;
 
+    // Задержка между буквами, контролируется из настроек
     private float defaultDelay;
 
+    // Флаг скорости для опции "бесконечно" в настройках
     private bool instantSpeed = false;
 
     public float TextSpeed { get; private set; }
+
+    private string DialogSavesFile;
+
+    private Dictionary<string, List<int>> DialogSaves;
 
     private void Awake()
     {
         Instance = this;
 
         _text = StoryText.GetComponent<Text>();
+
+        DialogSavesFile = SaveSystemUtils.DialogSavesFile;
+        LoadDialogSaves();
     }
 
     private void Update()
@@ -159,25 +168,60 @@ public class Typewriter : MonoBehaviour
         _text.text = text;
     }
 
-    public IEnumerator SayExtend(string extendedText, string prevText)
-    {
-        _text.text = prevText + " ";
-        currentText = prevText + " " + extendedText;
+    #region Typewriting
 
-        _say = StartCoroutine(ISay(extendedText));
-        yield return _say;
-    }
-
-    public IEnumerator Say(string storyText)
+    // Методы для вывода текста общего / экстенда
+    public IEnumerator ISayDialog(string storyText, string speaker)
     {
         _text.text = "";
         currentText = storyText;
 
-        _say = StartCoroutine(ISay(storyText));
+        LogManager.instance.NewMessage(storyText, speaker);
+
+        yield return StartCoroutine(ISayGeneric(storyText, speaker));
+    }
+
+    public IEnumerator ISayExtend(string prevText, string extendedText, string speaker)
+    {
+        _text.text = prevText + " ";
+        currentText = prevText + " " + extendedText;
+
+        LogManager.instance.NewMessageExtended(extendedText, speaker);
+
+        yield return StartCoroutine(ISayGeneric(extendedText, speaker));
+    }
+
+    // Обобщение вывода текста
+    private IEnumerator ISayGeneric(string textToWrite, string speaker)
+    {
+        SpriteExpand.instance.StopPrev();
+        //SpriteExpand.instance.SetExpanding(speaker, Typewriter.Instance.isSkipping);
+        NameChanger.instance.SetName(speaker);
+
+        string curr_block = UserData.instance.CurrentBlock;
+        int curr_ind = UserData.instance.CurrentCommandIndex;
+
+        if (!DialogSaves.ContainsKey(curr_block))
+        {
+            DialogSaves.Add(curr_block, new List<int>());
+        }
+
+        if (DialogSaves[curr_block].Contains(curr_ind))
+        {
+            wasCurrentDialogRead = true;
+        }
+        else
+        {
+            wasCurrentDialogRead = false;
+            DialogSaves[curr_block].Add(curr_ind);
+        }
+
+        _say = StartCoroutine(IDoTypewriting(textToWrite));
         yield return _say;
     }
 
-    private IEnumerator ISay(string storyText)
+    // Посимвольный вывод текста
+    private IEnumerator IDoTypewriting(string storyText)
     {
         float timeElapsed = 0f;
 
@@ -220,4 +264,32 @@ public class Typewriter : MonoBehaviour
 
         clickFlag = false;
     }
+
+    #endregion
+
+    #region SaveSystem
+
+    public void SaveDialogSaves()
+    {
+        ES3.Save<Dictionary<string, List<int>>>(DialogSavesFile, DialogSaves, $"{DialogSavesFile}.es3");
+    }
+
+    public void LoadDialogSaves()
+    {
+        if (ES3.KeyExists(DialogSavesFile, $"{DialogSavesFile}.es3"))
+        {
+            DialogSaves = ES3.Load<Dictionary<string, List<int>>>(DialogSavesFile, $"{DialogSavesFile}.es3");
+        }
+        else
+        {
+            DialogSaves = new Dictionary<string, List<int>>();
+        }
+    }
+
+    void OnApplicationQuit()
+    {
+        SaveDialogSaves();
+    }
+
+    #endregion
 }

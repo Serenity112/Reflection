@@ -163,7 +163,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         {
             // Включаем игровое гуи и выключаем паузу для корректных скриншотов
 
-            FadeManager.FadeOnly(PausePanel, false);
+            FadeManager.FadeObject(PausePanel, false);
             GameGuiPanel.GetComponent<CanvasGroup>().alpha = 1f;
             GameButtons.GetComponent<CanvasGroup>().alpha = 1f;
             PanelsCamera.enabled = true;

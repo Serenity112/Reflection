@@ -67,6 +67,7 @@ public class SpecialEventManager : MonoBehaviour
             yield break;
         }
 
+        //Debug.Log("if (currentEvent != null)");
         if (currentEvent != null)
         {
             yield return StartCoroutine(currentEvent.ILoadEventByData(data));

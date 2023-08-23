@@ -19,9 +19,7 @@ namespace Fungus
         private string extendedText = string.Empty;
 
         [SerializeField]
-        private string speaker = null;
-
-        public string saveString;
+        private string speaker = string.Empty;
 
         public override void OnEnter()
         {
@@ -32,27 +30,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            SpriteExpand.instance.StopPrev();
-            SpriteExpand.instance.SetExpanding(speaker, Typewriter.Instance.isSkipping);
-
-             LogManager.instance.NewMessageExtended(extendedText, speaker);
-
-            NameChanger.instance.SetName(speaker);
-
-            saveString = UserData.instance.CurrentBlock + "_" + UserData.instance.CurrentCommandIndex;
-
-            if (ES3.KeyExists(saveString, "DialogSaves.es3"))
-            {
-                Typewriter.Instance.wasCurrentDialogRead = true;
-            }
-            else
-            {
-                Typewriter.Instance.wasCurrentDialogRead = false;
-
-                ES3.Save<bool>(saveString, true, "DialogSaves.es3");
-            }
-
-            yield return StartCoroutine(Typewriter.Instance.SayExtend(extendedText, prevText));
+            yield return StartCoroutine(Typewriter.Instance.ISayExtend(prevText, extendedText, speaker));
 
             Continue();
         }

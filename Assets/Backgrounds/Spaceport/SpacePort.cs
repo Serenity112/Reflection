@@ -1,7 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using Fungus;
-using System;
 
 public enum SpacePortState
 {
@@ -27,6 +25,7 @@ public class SpacePort : MonoBehaviour, ISpecialEvent
     {
         currentData = ((int)SpacePortState.Start).ToString();
         SpecialEventManager.instance.SetEventEnum(SpecialEvent.SpacePort);
+        //Debug.Log("SetEventInstance");
         SpecialEventManager.instance.SetEventInstance(this);
     }
 

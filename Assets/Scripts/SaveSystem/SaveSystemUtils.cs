@@ -10,6 +10,8 @@ public static class SaveSystemUtils
     public static string ScreenshotsFolder = "ScreenShots";
     public static string SaveFilesFolder = "SaveFiles";
 
+    public static string DialogSavesFile = "DialogSaves";
+
     public static void InitialFilesCheck()
     {
 

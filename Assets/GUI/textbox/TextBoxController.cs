@@ -67,7 +67,6 @@ public class TextBoxController : MonoBehaviour
             if (skip)
             {
                 mathingGui.GetComponent<CanvasGroup>().alpha = targetAlpha;
-                Debug.Log($"targetAlpha {targetAlpha} set");
                 yield return null;
             }
             else
