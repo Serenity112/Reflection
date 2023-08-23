@@ -7,8 +7,6 @@ using static MMButtonsManager;
 
 public class MMOptionButton : IButtonGroup
 {
-    private float speed = 5f;
-
     [SerializeField] private MainMenuOption option;
 
     [HideInInspector]

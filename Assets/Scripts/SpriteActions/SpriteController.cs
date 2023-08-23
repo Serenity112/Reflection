@@ -425,50 +425,33 @@ public class SpriteController : MonoBehaviour
     // Загрузка спрайтов для сейв системы
     public IEnumerator LoadSprites(SpriteData[] data)
     {
-        Debug.Log("Start loading");
         GameSpriteData = data;
 
-        for (int i = 0; i < maxSpritesOnScreen; i++)
-        {
-            Debug.Log($"[{i}] new data: {data[i]}");
-        }
-
         List<IEnumerator> list = new List<IEnumerator>();
-
-
-
-       // yield return null;
 
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             SpriteData i_data = data[i];
             GameSpriteObject sprite = GameSprites[i];
-           // Debug.Log($"i_data: {i_data}");
 
-            if (i_data.name != string.Empty && !i_data.preloaded)
+            if (i_data.name != string.Empty)
             {
-                //Debug.Log("Found loadable sprite!");
-
-                sprite.SetPosition(i_data.postion);
-
-                sprite.SetAlpha(i_data.alpha, i_data.alpha, 0);
-
-                Vector3 scale = CharactersScales[i_data.name];
-                if (i_data.expanded)
-                {
-                    scale *= SpriteExpand.instance.expand_coefficient;
-                }
-                sprite.SetScale(scale);
-
-                list.Add(LoadSpriteByParts(sprite, i_data.name, i_data.pose, i_data.emotion));
                 list.Add(PackageConntector.instance.IConnectPackageGroup(i_data.name));
-            }
-            else
-            {
-                if (i_data.name != string.Empty && i_data.preloaded)
+                
+                if (!i_data.preloaded)
                 {
-                    list.Add(PackageConntector.instance.IConnectPackageGroup(i_data.name));
-                    //Debug.Log("Found loadable sprite 2!");
+                    sprite.SetPosition(i_data.postion);
+
+                    sprite.SetAlpha(i_data.alpha, i_data.alpha, 0);
+
+                    Vector3 scale = CharactersScales[i_data.name];
+                    if (i_data.expanded)
+                    {
+                        scale *= SpriteExpand.instance.expand_coefficient;
+                    }
+                    sprite.SetScale(scale);
+
+                    list.Add(LoadSpriteByParts(sprite, i_data.name, i_data.pose, i_data.emotion));
                 }
             }
         }
@@ -479,13 +462,13 @@ public class SpriteController : MonoBehaviour
     // Отгрузка спрайтов для сейв системы
     public IEnumerator IUnloadSprites()
     {
-        Debug.Log("Sprites start");
+        //Debug.Log("Sprites start");
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             SpriteData i_data = GameSpriteData[i];
 
-            Debug.Log($"i_data name: {i_data.name}");
-            Debug.Log($"i_data preloaded: {i_data.preloaded}");
+            //Debug.Log($"i_data name: {i_data.name}");
+            // Debug.Log($"i_data preloaded: {i_data.preloaded}");
 
             if (i_data.name != string.Empty && !i_data.preloaded)
             {
@@ -502,7 +485,7 @@ public class SpriteController : MonoBehaviour
         }
 
         yield return null;
-        Debug.Log("Sprites unloaded");
+        //Debug.Log("Sprites unloaded");
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             //Debug.Log($"[{i}] unloaded data: {GameSpriteData[i]}");

@@ -42,7 +42,7 @@ public class Typewriter : MonoBehaviour
 
     private string DialogSavesFile;
 
-    private Dictionary<string, List<int>> DialogSaves = new Dictionary<string, List<int>>();
+    private Dictionary<string, int> DialogSaves = new Dictionary<string, int>();
 
     private void Awake()
     {
@@ -206,17 +206,17 @@ public class Typewriter : MonoBehaviour
 
         if (!DialogSaves.ContainsKey(curr_block))
         {
-            DialogSaves.Add(curr_block, new List<int>());
+            DialogSaves.Add(curr_block, 0);
         }
 
-        if (DialogSaves[curr_block].Contains(curr_ind))
+        if (curr_ind <= DialogSaves[curr_block])
         {
             wasCurrentDialogRead = true;
         }
         else
         {
             wasCurrentDialogRead = false;
-            DialogSaves[curr_block].Add(curr_ind);
+            DialogSaves[curr_block] = curr_ind;
         }
 
         _say = StartCoroutine(IDoTypewriting(textToWrite));
@@ -274,14 +274,14 @@ public class Typewriter : MonoBehaviour
 
     public void SaveDialogSaves()
     {
-        ES3.Save<Dictionary<string, List<int>>>(DialogSavesFile, DialogSaves, $"{DialogSavesFile}.es3");
+        ES3.Save<Dictionary<string, int>>(DialogSavesFile, DialogSaves, $"{DialogSavesFile}.es3");
     }
 
     public void LoadDialogSaves()
     {
         if (ES3.KeyExists(DialogSavesFile, $"{DialogSavesFile}.es3"))
         {
-            var loaded = ES3.Load<Dictionary<string, List<int>>>(DialogSavesFile, $"{DialogSavesFile}.es3");
+            var loaded = ES3.Load<Dictionary<string, int>>(DialogSavesFile, $"{DialogSavesFile}.es3");
             if (loaded != null)
             {
                 DialogSaves = loaded;

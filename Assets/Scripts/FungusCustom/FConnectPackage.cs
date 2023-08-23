@@ -14,7 +14,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            StartCoroutine(PackageConntector.instance.IConnectPackageGroup(PackageName, true));
+            StartCoroutine(PackageConntector.instance.IConnectPackageGroupPreloaded(PackageName));
 
             Continue();
         }

@@ -32,7 +32,7 @@ public class PackageConntector : MonoBehaviour
         };
     }
 
-    public IEnumerator IConnectPackageGroup(string packageName, bool preload = false)
+    public IEnumerator IConnectPackageGroupPreloaded(string packageName)
     {
         GameSpriteObject? sprite_obj = SpriteController.instance.GetAvaliableSprite(packageName);
         if (sprite_obj == null)
@@ -40,12 +40,13 @@ public class PackageConntector : MonoBehaviour
             yield break;
         }
         GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
+        SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, true);
 
-        if (preload)
-        {
-            SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, true);
-        }
+        yield return StartCoroutine(IConnectPackageGroup(packageName));
+    }
 
+    public IEnumerator IConnectPackageGroup(string packageName)
+    {
         if (!packageSizes.ContainsKey(packageName))
         {
             yield break;

@@ -4,13 +4,14 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using static StaticVariables;
 
 public class MMPanelsManager : MonoBehaviour, IPanelsManager
 {
     public static MMPanelsManager instance = null;
 
-    public GameObject BlackPanel;
+    public GameObject BlackPanelMenu;
 
     public GameObject ActivePanels;
 
@@ -42,15 +43,6 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         PanelsConfig.CurrentManager = this;
 
-        // Флаг того, что произошёл переход игра => меню. В этом случае нужна доп. анимация
-        if (StaticVariables.ifInMainMenu == false)
-        {
-            FadeManager.FadeObject(BlackPanel, true);
-            StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
-        }
-
-        StaticVariables.ifInMainMenu = true;
-
         // Иначе нет гарантии, что ActivePanels внутри WarningPanel проиницализируется раньше, чем скрипт обратится к ней
         SaveFilesData = SaveSystemUtils.SaveFilesData;
     }
@@ -60,9 +52,63 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         ConfirmationPanel.instance.ActivePanels = ActivePanels;
         WarningPanel.instance.ActivePanels = ActivePanels;
         UpdateContinueButtonState();
+
+        MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = false;
+        // Флаг того, что произошёл переход игра => меню. В этом случае нужна доп. анимация
+        if (StaticVariables.ifInMainMenu == false)
+        {
+            StartCoroutine(StartingGuiAnim());
+        }
+        else
+        {
+            StartCoroutine(LoadLogo());
+        }
+
+        StaticVariables.ifInMainMenu = true;
     }
 
-    public GameObject GetBlackPanel() => BlackPanel;
+    private IEnumerator StartingGuiAnim()
+    {
+        FadeManager.FadeObject(BlackPanelMenu, true);
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
+        MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = true;
+    }
+
+    private IEnumerator LoadLogo()
+    {
+        float logoSpeed = 1.0f;
+        WaitForSeconds delay1 = new WaitForSeconds(0.5f);
+
+        FadeManager.FadeObject(BlackPanelMenu, true);
+
+        var handler = Addressables.InstantiateAsync("GameLogo", ActivePanels.GetComponent<RectTransform>(), false, true);
+        yield return handler;
+
+        FadeManager.FadeObject(BlackPanelMenu, false);
+
+        GameObject result = handler.Result;
+        GameObject LogoNew = result.transform.GetChild(0).gameObject;
+        GameObject LogoOld = result.transform.GetChild(1).gameObject;
+        GameObject WRLogo = result.transform.GetChild(2).gameObject;
+
+        yield return StartCoroutine(FadeManager.FadeObject(WRLogo, true, logoSpeed));
+        yield return delay1;
+        yield return StartCoroutine(FadeManager.FadeObject(WRLogo, false, logoSpeed));
+
+        yield return StartCoroutine(FadeManager.FadeObject(LogoNew, true, logoSpeed));
+        yield return delay1;
+        yield return StartCoroutine(FadeManager.FadeObject(LogoOld, true, logoSpeed));
+        yield return delay1;
+
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, logoSpeed));
+        yield return Addressables.ReleaseInstance(handler);
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, logoSpeed));
+
+        yield return delay1;
+        MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = true;
+    }
+
+    public GameObject GetBlackPanel() => BlackPanelMenu;
 
     public GameObject GetActivePanelsParent() => ActivePanels;
 
@@ -190,7 +236,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator IOpenSaveMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
         MMButtonsManager.instance.UnSelectButtons();
 
         savesPanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
@@ -200,7 +246,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         {
             savesPanelHandler.Result.name = "SaveGuiPanel";
 
-            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
+            yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
         }
         else
         {
@@ -210,13 +256,13 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator ICloseSaveMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
 
         Addressables.ReleaseInstance(savesPanelHandler);
 
         MMButtonsManager.instance.EnableButtons();
 
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
 
         Resources.UnloadUnusedAssets();
 
@@ -230,7 +276,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     public IEnumerator ILoadGameFromMainMenu(int actualSaveNum)
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
 
         StaticVariables.StartingLoadSaveFile = actualSaveNum;
 
@@ -247,7 +293,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator IOpenInfoMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
 
         aboutUsHandler = Addressables.InstantiateAsync("AboutUs", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return aboutUsHandler;
@@ -256,7 +302,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         {
             aboutUsHandler.Result.name = "AboutUs";
 
-            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
+            yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
         }
         else
         {
@@ -268,13 +314,13 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator ICloseInfoMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
 
         Addressables.ReleaseInstance(aboutUsHandler);
 
         MMButtonsManager.instance.EnableButtons();
 
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
 
         Resources.UnloadUnusedAssets();
     }
