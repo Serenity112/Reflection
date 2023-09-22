@@ -328,4 +328,9 @@ public class SettingsConfig
     {
         typewriter.SetTextSpeed(speed);
     }
+
+    public static bool IfAllowExpandings()
+    {
+        return chosenOptions[Settings.SpriteExpand].data == 1;
+    }
 }

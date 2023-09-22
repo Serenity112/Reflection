@@ -5,17 +5,17 @@ using UnityEngine;
 
 public class SkipButton : IExpandableButtonGroup
 {
-    private enum State
+    private enum SkipButtonState
     {
-        DoSkip,
-        ReturnSkip
+        SkipOn,
+        SkipOff
     }
 
     private GameObject ShadeTriangle;
     private GameObject ShadeArrow;
     private GameObject ShadeArrowCopy;
 
-    private State state;
+    private SkipButtonState state;
 
     private IEnumerator shade1in;
     private IEnumerator shade2in;
@@ -25,6 +25,9 @@ public class SkipButton : IExpandableButtonGroup
     private IEnumerator shade3out;
     private IEnumerator shrink;
     private IEnumerator expand;
+
+    private string SkipOnA = "DoSkip";
+    private string SkipOffA = "ReturnSkip";
 
     public SkipButton() : base()
     {
@@ -36,7 +39,7 @@ public class SkipButton : IExpandableButtonGroup
             delegate { ShadeArrowCopy = transform.GetChild(2).transform.GetChild(0).gameObject; },
         });
 
-        state = State.ReturnSkip;
+        state = SkipButtonState.SkipOff;
     }
 
     public override void RegisterManager()
@@ -98,16 +101,15 @@ public class SkipButton : IExpandableButtonGroup
 
         switch (state)
         {
-            case State.ReturnSkip:
-                Typewriter.Instance.buttonAutoSkip = true;
-                EnableSkip();
+            case SkipButtonState.SkipOff:
+                EnableSkipState();
+                EnableSkipAnimation();
                 break;
-            case State.DoSkip:
-                Typewriter.Instance.buttonAutoSkip = false;
-                Typewriter.Instance.ForceUpdateSkippingState();
-                if (!Typewriter.Instance.isSkipping)
+            case SkipButtonState.SkipOn:
+                if (!(Input.GetKey(KeyCode.Tab)))
                 {
-                    DisableSkip();
+                    DisableSkipState();
+                    DisableSkipAnimation();
                 }
                 break;
         }
@@ -122,15 +124,31 @@ public class SkipButton : IExpandableButtonGroup
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
     }
 
-    public void EnableSkip()
+    public void EnableSkipAnimation()
     {
-        animator.Play("DoSkip");
-        state = State.DoSkip;
+        Debug.Log("Enable anim");
+        animator.SetTrigger(SkipOnA);
     }
 
-    public void DisableSkip()
+    public void DisableSkipAnimation()
     {
-        animator.Play("ReturnSkip");
-        state = State.ReturnSkip;
+        Debug.Log("Disable anim");
+        animator.SetTrigger(SkipOffA);
+    }
+
+    public void EnableSkipState()
+    {
+        state = SkipButtonState.SkipOn;
+    }
+
+    public void DisableSkipState()
+    {
+        state = SkipButtonState.SkipOff;
+    }
+
+
+    public bool IfButtonClicked()
+    {
+        return state == SkipButton.SkipButtonState.SkipOn;
     }
 }

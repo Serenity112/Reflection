@@ -36,7 +36,12 @@ public class SpritesSwapper : MonoBehaviour
         {
             SpriteMove.instance.StopSpriteMoving();
             SpriteFade.instance.StopSpritesFading();
-            SpriteController.instance.SkipSpriteActions();
+            SpriteController.instance.LoadSpritesDataInfo();
+
+            if (SettingsConfig.IfAllowExpandings() && !skip)
+            {
+                SpriteController.instance.LoadSpritesExpandingInfo();
+            }
         }
 
         GameSpriteObject sprite1 = (GameSpriteObject)sprite1_obj;
@@ -61,7 +66,11 @@ public class SpritesSwapper : MonoBehaviour
             if (SpriteController.instance.GameSpriteData[sprite1.num].expanded)
             {
                 SpriteController.instance.SaveSpriteData(sprite2.num, true);
-                SpriteController.instance.SetScaleByName(sprite2, spriteName, SpriteExpand.instance.expand_coefficient);
+
+                if (!skip && SettingsConfig.IfAllowExpandings())
+                {
+                    SpriteController.instance.SetScaleByName(sprite2, spriteName, SpriteExpand.instance.expand_coefficient);
+                }
             }
             else
             {
@@ -111,8 +120,6 @@ public class SpritesSwapper : MonoBehaviour
             // Actions
             List<Action> postActions = new List<Action>
             {
-                 /*delegate { Addressables.Release(BodyHandler); },
-                 delegate { Addressables.Release(Face1Handler); },*/
                  delegate { Resources.UnloadUnusedAssets(); },
                  delegate { SpriteController.instance.ClearSpriteData(sprite1.num); },
                  delegate { Typewriter.Instance.AllowSkip(); },
@@ -133,7 +140,6 @@ public class SpritesSwapper : MonoBehaviour
         {
             SpriteController.instance.SaveSpriteData(sprite1.num, spriteName, pose, emotion);
 
-            //Используем Face1Handler как буффер
             AsyncOperationHandle<Sprite> Face1Handler = sprite1.GetHandler(SpritePart.Face1);
 
             sprite1.SetImage(SpritePart.Face2, sprite1.GetImage(SpritePart.Face1));
@@ -166,7 +172,7 @@ public class SpritesSwapper : MonoBehaviour
             // Actions
             List<Action> postActions = new List<Action>
             {
-                 //delegate { Addressables.ReleaseInstance(Face1Handler); },
+
                  delegate { Resources.UnloadUnusedAssets(); },
                  delegate { Typewriter.Instance.AllowSkip(); },
             };

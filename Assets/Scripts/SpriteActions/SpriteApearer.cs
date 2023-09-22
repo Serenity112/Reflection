@@ -31,7 +31,7 @@ public class SpriteApearer : MonoBehaviour
         {
             SpriteMove.instance.StopSpriteMoving();
             SpriteFade.instance.StopSpritesFading();
-            SpriteController.instance.SkipSpriteActions();
+            SpriteController.instance.LoadSpritesDataInfo();
         }
 
         GameSpriteObject sprite = (GameSpriteObject)sprite_obj;

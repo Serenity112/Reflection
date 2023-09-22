@@ -213,12 +213,6 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, 5f));
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
-        {
-            PackageConntector.instance.IDisconnectAllPackages(),
-            SpriteController.instance.IUnloadSprites(),
-        }));
-
         var asyncLoadLevel = SceneManager.LoadSceneAsync("MainMenu", LoadSceneMode.Single);
 
         while (!asyncLoadLevel.isDone)

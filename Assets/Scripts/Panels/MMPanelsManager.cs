@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -12,6 +13,8 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
     public static MMPanelsManager instance = null;
 
     public GameObject BlackPanelMenu;
+
+    public GameObject GrayPanelLogo;
 
     public GameObject ActivePanels;
 
@@ -66,7 +69,8 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         StaticVariables.ifInMainMenu = true;
     }
-
+    
+    // Переход из основной игры в главное меню
     private IEnumerator StartingGuiAnim()
     {
         FadeManager.FadeObject(BlackPanelMenu, true);
@@ -74,37 +78,42 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = true;
     }
 
+    // Лого игры, для первого запуcrf
     private IEnumerator LoadLogo()
     {
         float logoSpeed = 1.0f;
-        WaitForSeconds delay1 = new WaitForSeconds(0.5f);
 
-        FadeManager.FadeObject(BlackPanelMenu, true);
+        FadeManager.FadeObject(GrayPanelLogo, true);
 
         var handler = Addressables.InstantiateAsync("GameLogo", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return handler;
 
-        FadeManager.FadeObject(BlackPanelMenu, false);
+        FadeManager.FadeObject(GrayPanelLogo, false);
 
         GameObject result = handler.Result;
-        GameObject LogoNew = result.transform.GetChild(0).gameObject;
-        GameObject LogoOld = result.transform.GetChild(1).gameObject;
-        GameObject WRLogo = result.transform.GetChild(2).gameObject;
+        GameObject UnityBG = result.transform.GetChild(0).gameObject;
+        GameObject LogoNew = result.transform.GetChild(1).gameObject;
+        GameObject LogoOld = result.transform.GetChild(2).gameObject;
+        GameObject WRLogo = result.transform.GetChild(3).gameObject;
 
-        yield return StartCoroutine(FadeManager.FadeObject(WRLogo, true, logoSpeed));
-        yield return delay1;
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>() {
+            FadeManager.FadeObject(WRLogo, true, logoSpeed),
+            FadeManager.FadeObject(UnityBG, false, logoSpeed)
+        }));
+
+        yield return new WaitForSeconds(0.75f);
         yield return StartCoroutine(FadeManager.FadeObject(WRLogo, false, logoSpeed));
 
         yield return StartCoroutine(FadeManager.FadeObject(LogoNew, true, logoSpeed));
-        yield return delay1;
+        yield return new WaitForSeconds(0.5f);
         yield return StartCoroutine(FadeManager.FadeObject(LogoOld, true, logoSpeed));
-        yield return delay1;
+        yield return new WaitForSeconds(0.5f);
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, logoSpeed));
         yield return Addressables.ReleaseInstance(handler);
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, logoSpeed));
 
-        yield return delay1;
+        yield return new WaitForSeconds(0.5f);
         MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = true;
     }
 

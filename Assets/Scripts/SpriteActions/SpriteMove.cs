@@ -46,7 +46,7 @@ public class SpriteMove : MonoBehaviour
     {
         StopSpriteMoving();
         SpriteFade.instance.StopSpritesFading();
-        SpriteController.instance.SkipSpriteActions();
+        SpriteController.instance.LoadSpritesDataInfo();
 
         SpriteController.instance.SaveSpriteData(sprite.num, targetVect);
 

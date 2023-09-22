@@ -153,7 +153,7 @@ public struct SpriteData
 {
     public SpriteData(int SaveNum)
     {
-        name = string.Empty;
+        name = null;
         pose = 0;
         emotion = 0;
         postion = Vector3.zero;
@@ -238,7 +238,7 @@ public class SpriteController : MonoBehaviour
 
         for (int i = 0; i < 4; i++)
         {
-            if (GameSpriteData[i].name == string.Empty)
+            if (GameSpriteData[i].name == null)
             {
                 builder.AppendLine($"Sprite {i}: null, pose: {GameSpriteData[i].pose}, emo: {GameSpriteData[i].emotion} alpha: {GameSpriteData[i].alpha}\n");
             }
@@ -332,7 +332,7 @@ public class SpriteController : MonoBehaviour
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
-            if (GameSpriteData[i].name == string.Empty)
+            if (GameSpriteData[i].name == null)
             {
                 GameSpriteData[i].name = name;
                 return GameSprites[i];
@@ -356,7 +356,7 @@ public class SpriteController : MonoBehaviour
 
             SpriteData data = GameSpriteData[i];
 
-            if (data.name != string.Empty && !data.preloaded)
+            if (data.name != null && !data.preloaded)
             {
                 Vector3 scale = CharactersScales[data.name];
 
@@ -365,7 +365,7 @@ public class SpriteController : MonoBehaviour
         }
     }
 
-    public void SkipSpritesExpanding()
+    public void LoadSpritesExpandingInfo(bool animated = false)
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
@@ -373,7 +373,7 @@ public class SpriteController : MonoBehaviour
 
             SpriteData data = GameSpriteData[i];
 
-            if (data.name != string.Empty && !data.preloaded)
+            if (data.name != null && !data.preloaded)
             {
                 Vector3 scale = CharactersScales[data.name];
 
@@ -382,13 +382,20 @@ public class SpriteController : MonoBehaviour
                     scale *= SpriteExpand.instance.expand_coefficient;
                 }
 
-                sprite.SetScale(scale);
+                if (animated)
+                {
+                    StartCoroutine(SpriteExpand.instance.Expand(sprite, scale, 0.05f));
+                }
+                else
+                {
+                    sprite.SetScale(scale);
+                }
             }
         }
     }
 
     // Доводит состояния спрайтов до актуального состояния
-    public void SkipSpriteActions()
+    public void LoadSpritesDataInfo()
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
@@ -396,18 +403,9 @@ public class SpriteController : MonoBehaviour
 
             SpriteData data = GameSpriteData[i];
 
-            if (data.name != string.Empty && !data.preloaded)
+            if (data.name != null && !data.preloaded)
             {
                 sprite.SetPosition(data.postion);
-
-                Vector3 scale = CharactersScales[data.name];
-
-                if (data.expanded)
-                {
-                    scale *= SpriteExpand.instance.expand_coefficient;
-                }
-
-                sprite.SetScale(scale);
 
                 sprite.SetAlpha(data.alpha, data.alpha, 0);
 
@@ -434,10 +432,10 @@ public class SpriteController : MonoBehaviour
             SpriteData i_data = data[i];
             GameSpriteObject sprite = GameSprites[i];
 
-            if (i_data.name != string.Empty)
+            if (i_data.name != null)
             {
                 list.Add(PackageConntector.instance.IConnectPackageGroup(i_data.name));
-                
+
                 if (!i_data.preloaded)
                 {
                     sprite.SetPosition(i_data.postion);
@@ -445,7 +443,7 @@ public class SpriteController : MonoBehaviour
                     sprite.SetAlpha(i_data.alpha, i_data.alpha, 0);
 
                     Vector3 scale = CharactersScales[i_data.name];
-                    if (i_data.expanded)
+                    if (i_data.expanded && SettingsConfig.IfAllowExpandings())
                     {
                         scale *= SpriteExpand.instance.expand_coefficient;
                     }
@@ -462,15 +460,11 @@ public class SpriteController : MonoBehaviour
     // Отгрузка спрайтов для сейв системы
     public IEnumerator IUnloadSprites()
     {
-        //Debug.Log("Sprites start");
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             SpriteData i_data = GameSpriteData[i];
 
-            //Debug.Log($"i_data name: {i_data.name}");
-            // Debug.Log($"i_data preloaded: {i_data.preloaded}");
-
-            if (i_data.name != string.Empty && !i_data.preloaded)
+            if (i_data.name != null && !i_data.preloaded)
             {
                 GameSpriteObject sprite = GameSprites[i];
 
@@ -480,17 +474,7 @@ public class SpriteController : MonoBehaviour
                 yield return null;
                 sprite.SetAlpha(0f);
             }
-
-            // GameSpriteData[i] = new SpriteData(i);
         }
-
-        yield return null;
-        //Debug.Log("Sprites unloaded");
-        for (int i = 0; i < maxSpritesOnScreen; i++)
-        {
-            //Debug.Log($"[{i}] unloaded data: {GameSpriteData[i]}");
-        }
-
     }
 
     public IEnumerator LoadSpriteByParts(GameSpriteObject sprite, string character, int pose, int emotion)

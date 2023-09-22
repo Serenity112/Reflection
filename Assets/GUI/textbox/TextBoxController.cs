@@ -47,7 +47,7 @@ public class TextBoxController : MonoBehaviour
 
     public IEnumerator IChangeTheme(ThemeStyle newTheme, float targetAlpha, bool skip = false)
     {
-        if (!skip && Typewriter.Instance.isSkipping)
+        if (!skip && Typewriter.Instance.SkipIsActive)
         {
             skip = true;
         }

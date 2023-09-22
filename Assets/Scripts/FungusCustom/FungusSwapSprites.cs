@@ -46,7 +46,7 @@ namespace Fungus
         {
             Typewriter.Instance.DenySkip(); // разрешение будет в конце выполнения SwapSprites.
 
-            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, Typewriter.Instance.isSkipping, WaitForFinished, StopPrev));
+            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, Typewriter.Instance.SkipIsActive, WaitForFinished, StopPrev));
 
             Continue();
         }

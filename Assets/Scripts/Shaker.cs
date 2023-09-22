@@ -30,6 +30,11 @@ public class Shaker : MonoBehaviour
             _delayBetweenShakes = _time;
     }
 
+    private void OnEnable()
+    {
+        Shake();
+    }
+
     public void Shake()
     {
         StartCoroutine(IShake());

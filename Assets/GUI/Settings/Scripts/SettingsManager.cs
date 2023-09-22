@@ -63,6 +63,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     {
         StartCoroutine(ICloseSettings());
     }
+
     private IEnumerator IOpenSettings()
     {
         SettingsConfig.currentManager = GetComponent<SettingsManager>();
@@ -172,13 +173,13 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
             case Settings.Language:
                 break;
             case Settings.SpriteExpand:
-                if (data == 1)
+                if (data == 0) // Запретить
                 {
-                    //SpriteController.instance.UnExpandAllSprites();
+                    SpriteController.instance.UnExpandAllSprites();
                 }
-                else
+                else // Разрешить
                 {
-
+                    SpriteController.instance.LoadSpritesExpandingInfo();
                 }
                 break;
         }

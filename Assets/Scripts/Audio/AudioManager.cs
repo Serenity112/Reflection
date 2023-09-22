@@ -138,7 +138,7 @@ public class AudioManager : MonoBehaviour
             StopCoroutine(_IMusic2);
         }
 
-        if (duration == 0 || Typewriter.Instance.isSkipping)
+        if (duration == 0 || Typewriter.Instance.SkipIsActive)
         {
             musicSource.volume = volume;
         }
@@ -164,7 +164,7 @@ public class AudioManager : MonoBehaviour
             StopCoroutine(_IMusic2);
         }
 
-        if (duration == 0 || Typewriter.Instance.isSkipping)
+        if (duration == 0 || Typewriter.Instance.SkipIsActive)
         {
             musicSource.volume = 0;
             musicSource.Stop();
@@ -218,7 +218,7 @@ public class AudioManager : MonoBehaviour
             StopCoroutine(_IMusic2);
         }
 
-        if (duration == 0 || Typewriter.Instance.isSkipping)
+        if (duration == 0 || Typewriter.Instance.SkipIsActive)
         {
             newSource.volume = curr_vol;
             oldSource.volume = 0;
@@ -264,7 +264,7 @@ public class AudioManager : MonoBehaviour
             StopCoroutine(_IMusic2);
         }
 
-        if (duration == 0 || Typewriter.Instance.isSkipping)
+        if (duration == 0 || Typewriter.Instance.SkipIsActive)
         {
             activeSource.volume = 0;
             activeSource.Stop();
@@ -304,7 +304,7 @@ public class AudioManager : MonoBehaviour
             StopCoroutine(_IMusic2);
         }
 
-        if (duration == 0 || Typewriter.Instance.isSkipping)
+        if (duration == 0 || Typewriter.Instance.SkipIsActive)
         {
             activeSource.volume = volume;
         }
@@ -353,7 +353,7 @@ public class AudioManager : MonoBehaviour
             StopCoroutine(_IAmbient2);
         }
 
-        if (duration == 0 || Typewriter.Instance.isSkipping)
+        if (duration == 0 || Typewriter.Instance.SkipIsActive)
         {
             sourceToPlay.volume = volume;
         }
@@ -403,7 +403,7 @@ public class AudioManager : MonoBehaviour
             StopCoroutine(_IAmbient2);
         }
 
-        if (duration == 0 || Typewriter.Instance.isSkipping)
+        if (duration == 0 || Typewriter.Instance.SkipIsActive)
         {
             sourceToEnd.volume = 0;
             sourceToEnd.Stop();
@@ -425,7 +425,7 @@ public class AudioManager : MonoBehaviour
             StopCoroutine(_IAmbient1);
         }
 
-        if (duration == 0 || Typewriter.Instance.isSkipping)
+        if (duration == 0 || Typewriter.Instance.SkipIsActive)
         {
             ambientSource.volume = volume;
         }

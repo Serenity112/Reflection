@@ -34,7 +34,7 @@ namespace Fungus
 
         public SkipButton skipButton; // Для синхронизации кунопки tab и анимаций
 
-        public static bool denyNextDialog { get; set; } = false;
+        public static bool denySkip { get; set; } = false;
 
         public static bool wasCurrentDialogRead { get; set; }
 
@@ -96,7 +96,7 @@ namespace Fungus
                         skipping = true;
                     }*/
 
-                    if (!denyNextDialog)
+                    if (!denySkip)
                     {
                         SetNextLineFlag();
                     }
@@ -122,7 +122,7 @@ namespace Fungus
                     }
                     break;
                 case ClickMode.ClickOnDialog:
-                    if (dialogClickedFlag && !denyNextDialog)
+                    if (dialogClickedFlag && !denySkip)
                     {
                         SetNextLineFlag();
                         dialogClickedFlag = false;
@@ -175,7 +175,7 @@ namespace Fungus
         /// </summary>
         public virtual void SetDialogClickedFlag()
         {
-            if (!denyNextDialog)
+            if (!denySkip)
             {
                 // Ignore repeat clicks for a short time to prevent accidentally clicking through the character dialogue
                 if (ignoreClickTimer > 0f)

@@ -59,11 +59,7 @@ public class PackageConntector : MonoBehaviour
             list.Add(IConnectSinglePackage($"{packageName}{i}_connector"));
         }
 
-        //Debug.Log("Start connect " + packageName);
-
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
-
-        //Debug.Log("Connected " + packageName);
     }
 
     private IEnumerator IConnectSinglePackage(string address)
@@ -103,7 +99,5 @@ public class PackageConntector : MonoBehaviour
             yield return null;
         }
         handlers.Clear();
-
-        //Debug.Log("IDisconnectAllPackages ended");
     }
 }

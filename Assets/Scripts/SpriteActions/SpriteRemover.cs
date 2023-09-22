@@ -22,7 +22,7 @@ public class SpriteRemover : MonoBehaviour
     {
         SpriteFade.instance.StopSpritesFading();
         SpriteMove.instance.StopSpriteMoving();
-        SpriteController.instance.SkipSpriteActions();
+        SpriteController.instance.LoadSpritesDataInfo();
 
         GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteNumByName(characterName);
 

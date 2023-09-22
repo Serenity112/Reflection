@@ -22,7 +22,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            yield return StartCoroutine(SpriteRemover.instance.RemoveSprite(CharacterName, DisappearSpeed, Typewriter.Instance.isSkipping, false));
+            yield return StartCoroutine(SpriteRemover.instance.RemoveSprite(CharacterName, DisappearSpeed, Typewriter.Instance.SkipIsActive, false));
 
             Continue();
         }
