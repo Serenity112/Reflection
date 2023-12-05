@@ -52,6 +52,8 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         SettingsConfig.LoadSettingsFromMemory();
 
         ApplySettingsOnStart();
+
+        StartCoroutine(IPreloadSettingsPanel());
     }
 
     public void OpenSettings()
@@ -64,6 +66,18 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         StartCoroutine(ICloseSettings());
     }
 
+    private IEnumerator IPreloadSettingsPanel()
+    {
+        settingsPanelHandler = Addressables.InstantiateAsync("SettingsGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
+        yield return settingsPanelHandler;
+
+        if (settingsPanelHandler.Status == AsyncOperationStatus.Succeeded)
+        {
+            settingsPanelHandler.Result.name = "SettingsGui";
+            settingsPanelHandler.Result.SetActive(false);
+        }
+    }
+
     private IEnumerator IOpenSettings()
     {
         SettingsConfig.currentManager = GetComponent<SettingsManager>();
@@ -71,37 +85,29 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         FadeManager.FadeObject(blackPanelPanels, true);
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, true, speed));
 
-        settingsPanelHandler = Addressables.InstantiateAsync("SettingsGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
-        yield return settingsPanelHandler;
-
-        if (settingsPanelHandler.Status == AsyncOperationStatus.Succeeded)
-        {
-            settingsPanelHandler.Result.name = "SettingsGui";
-            PanelsCamera.enabled = true;
-        }
-        else
-        {
-            Debug.Log("Error loading");
-        }
+        PanelsCamera.enabled = true;
+        settingsPanelHandler.Result.SetActive(true);
+        settingsPanelHandler.Result.GetComponent<SettingsController>().InitialReset();
 
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, speed));
         FadeManager.FadeObject(blackPanelGame, false);
+
+        StaticVariables.IN_SETTINGS_MENU = true;
     }
     private IEnumerator ICloseSettings()
     {
         FadeManager.FadeObject(blackPanelGame, true);
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, speed));
 
-        Addressables.ReleaseInstance(settingsPanelHandler);
         PanelsCamera.enabled = false;
+        settingsPanelHandler.Result.SetActive(false);
 
-        PauseButtonsManager.instance.EnableButtons();
-        PauseButtonsManager.instance.UnSelectButtons();
+        PauseButtonsManager.instance.ResetManager();
 
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, false, speed));
         FadeManager.FadeObject(blackPanelPanels, false);
 
-        Resources.UnloadUnusedAssets();
+        StaticVariables.IN_SETTINGS_MENU = false;
     }
 
     // Не все настрйоки нужно просто включить. Например музыку надо плавно вцвести
@@ -111,26 +117,26 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         audioMixer.SetFloat("MusicVol", 0);
         audioMixer.SetFloat("SoundVol", 0);
 
-        foreach (Settings setting in (Settings[])Enum.GetValues(typeof(Settings)))
+        foreach (SettingsList setting in (SettingsList[])Enum.GetValues(typeof(SettingsList)))
         {
             SettingsOptions value = SettingsConfig.chosenOptions[setting].settingsOption;
             float data = SettingsConfig.chosenOptions[setting].data;
 
             switch (setting)
             {
-                case Settings.masterVolume:
+                case SettingsList.masterVolume:
                     SmoothMusicOnStart("MasterVol", data);
                     break;
-                case Settings.musicVolume:
+                case SettingsList.musicVolume:
                     SmoothMusicOnStart("MusicVol", data);
                     break;
-                case Settings.soundVolume:
+                case SettingsList.soundVolume:
                     SmoothMusicOnStart("SoundVol", data);
                     break;
-                case Settings.FullScreenMode:
+                case SettingsList.FullScreenMode:
                     // Не применять, переносится с мейн меню
                     break;
-                case Settings.Resolution:
+                case SettingsList.Resolution:
                     // Не применять, переносится с мейн меню
                     break;
                 default:
@@ -141,38 +147,38 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     }
 
 
-    public void InstantApplySpecificSetting(Settings setting, SettingsOptions value, float data)
+    public void InstantApplySpecificSetting(SettingsList setting, SettingsOptions value, float data)
     {
         switch (setting)
         {
-            case Settings.FullScreenMode:
+            case SettingsList.FullScreenMode:
                 SettingsConfig.ChangeFullscreeenMode(value);
                 break;
-            case Settings.BlackFramesMode:
+            case SettingsList.BlackFramesMode:
                 SettingsConfig.ChangeBlackFramesMode(GameCanvas, value);
                 SettingsConfig.ChangeBlackFramesMode(PanelsCanvas, value);
                 break;
-            case Settings.Resolution:
+            case SettingsList.Resolution:
                 SettingsConfig.ChangeResoulution(value);
                 break;
-            case Settings.masterVolume:
+            case SettingsList.masterVolume:
                 SettingsConfig.SetVolume(audioMixer, "MasterVol", data / 100); // Деление на 100 т.к. метод принимает числа от 0 до 1
                 break;
-            case Settings.musicVolume:
+            case SettingsList.musicVolume:
                 SettingsConfig.SetVolume(audioMixer, "MusicVol", data / 100);
                 break;
-            case Settings.soundVolume:
+            case SettingsList.soundVolume:
                 SettingsConfig.SetVolume(audioMixer, "SoundVol", data / 100);
                 break;
-            case Settings.ambientVolume:
+            case SettingsList.ambientVolume:
                 SettingsConfig.SetVolume(audioMixer, "AmbientVol", data / 100);
                 break;
-            case Settings.TextSpeed:
+            case SettingsList.TextSpeed:
                 SettingsConfig.ChangeTextSpeed(Typewriter.Instance, data);
                 break;
-            case Settings.Language:
+            case SettingsList.Language:
                 break;
-            case Settings.SpriteExpand:
+            case SettingsList.SpriteExpand:
                 if (data == 0) // Запретить
                 {
                     SpriteController.instance.UnExpandAllSprites();

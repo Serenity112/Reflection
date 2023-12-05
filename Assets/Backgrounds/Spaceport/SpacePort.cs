@@ -24,9 +24,9 @@ public class SpacePort : MonoBehaviour, ISpecialEvent
     private void OnEnable()
     {
         currentData = ((int)SpacePortState.Start).ToString();
-        SpecialEventManager.instance.SetEventEnum(SpecialEvent.SpacePort);
+        //SpecialEventManager.instance.SetEventEnum(SpecialEvent.SpacePort);
         //Debug.Log("SetEventInstance");
-        SpecialEventManager.instance.SetEventInstance(this);
+        //SpecialEventManager.instance.SetEventInstance(this);
     }
 
     public void RocketLaunch()

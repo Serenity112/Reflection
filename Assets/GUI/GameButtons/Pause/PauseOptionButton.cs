@@ -3,29 +3,31 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using static PauseButtonsManager;
 
-public class PauseOptionButton : IButtonGroup
+public class PauseOptionButton : IDraggableButton
 {
     [SerializeField] private PauseOptions option;
 
-    public GameObject spacing;
+    private GameObject _spacing;
 
     private IEnumerator _appear = null;
     private IEnumerator _disappear = null;
 
-    public PauseOptionButton() : base()
+    private float speed = 5.0f;
+
+    public override void Awake()
     {
-        OnAwakeActions(new List<Action>
-        {
-            delegate { spacing = transform.GetChild(0).gameObject; },
-            delegate { GetComponent<Button>().onClick.AddListener(OnClick); },
-        });
+        base.Awake();
+
+        _spacing = transform.GetChild(0).gameObject;
+        _spacing.GetComponent<CanvasGroup>().alpha = 0f;
+
+        GetComponent<Button>().onClick.AddListener(OnClick);
     }
 
-    public override void RegisterManager()
+    public void Start()
     {
-        SetManager(PauseButtonsManager.instance);
+        PauseButtonsManager.instance.SubscribeButton(this.gameObject);
     }
 
     public override void EnterAction()
@@ -35,29 +37,32 @@ public class PauseOptionButton : IButtonGroup
             StopCoroutine(_disappear);
         }
 
-        _appear = FadeManager.FadeOnly(spacing, true, speed);
+        _appear = FadeManager.FadeOnly(_spacing, true, speed);
         StartCoroutine(_appear);
     }
 
     public override void ExitAction()
     {
-        if (!PauseButtonsManager.instance.FreezeButtons)
+        if (_appear != null)
         {
-            if (_appear != null)
-            {
-                StopCoroutine(_appear);
-            }
-
-            _disappear = FadeManager.FadeOnly(spacing, false, speed);
-            StartCoroutine(_disappear);
+            StopCoroutine(_appear);
         }
+
+        _disappear = FadeManager.FadeOnly(_spacing, false, speed);
+        StartCoroutine(_disappear);
     }
 
     public override IEnumerator IClick()
     {
         StopAllCoroutines();
-        PauseButtonsManager.instance.DisableButtons();
         PauseButtonsManager.instance.ExecuteOption(option);
         yield return null;
+    }
+
+    public override void ResetButtonState()
+    {
+        StopAllCoroutines();
+        ResetFlags();
+        _spacing.GetComponent<CanvasGroup>().alpha = 0f;
     }
 }

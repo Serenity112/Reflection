@@ -2,15 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Игровые кнопки - пауза, хайд, скип, лог
 public class GameButtonsManager : IButtonManager
 {
     public static GameButtonsManager instance = null;
 
-    private void Awake()
+    public void Awake()
     {
         instance = this;
-
-        GameButtons = new List<GameObject>();
     }
 
     public IEnumerator HideTextBoxButtons(float speed)
@@ -33,18 +32,7 @@ public class GameButtonsManager : IButtonManager
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
     }
 
-    public override void AppearActualButton()
-    {
-        foreach (var button_obj in GameButtons)
-        {
-            if (button_obj.GetComponent<GameButtonComponent>() != null)
-            {
-                button_obj.GetComponent<GameButtonComponent>().AppearIfEntered();
-            }
-        }
-    }
-
-    public override void UnSelectButtons()
+    public override void ResetAllButtonsState()
     {
         // -
     }
@@ -57,5 +45,10 @@ public class GameButtonsManager : IButtonManager
     public override void DisableButtons()
     {
         // -
+    }
+
+    public override void ResetManager()
+    {
+        throw new System.NotImplementedException();
     }
 }

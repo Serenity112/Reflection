@@ -50,10 +50,10 @@ public class UserData : MonoBehaviour
     // Indexes
     public int CurrentCommandIndex { get; set; }
 
-    public string CurrentBlock { get; set; }
+    public string CurrentBlock { get; set; } = null;
 
     // Bg
-    public string CurrentBG { get; set; }
+    public string CurrentBG { get; set; } = null;
 
     // Music
     public (string Name, float Volume) CurrentMusic { get; set; }
@@ -83,10 +83,6 @@ public class UserData : MonoBehaviour
             Destroy(gameObject);
         }
 
-        CurrentBG = null;
-
-        CurrentBlock = null;
-
         SaveFileName = SaveSystemUtils.SaveFileName;
         SaveFilesFolder = SaveSystemUtils.SaveFilesFolder;
         SaveFilesData = SaveSystemUtils.SaveFilesData;
@@ -101,7 +97,7 @@ public class UserData : MonoBehaviour
         }
         else
         {
-            StartCoroutine(ILoadGameWithFade(StaticVariables.StartingLoadSaveFile));
+            StartCoroutine(ILoadGameBySaveNum(StaticVariables.StartingLoadSaveFile));
         }
     }
 
@@ -134,7 +130,7 @@ public class UserData : MonoBehaviour
         Typewriter.Instance.SaveDialogSaves();
 
         // Выборы
-        ChoiceManager.instance.SaveChoices(actualSaveNum);
+        //ChoiceManager.instance.SaveChoices(actualSaveNum);
 
 
         new Thread(() =>
@@ -153,7 +149,7 @@ public class UserData : MonoBehaviour
         yield return null;
     }
 
-    private IEnumerator ILoadGameWithFade(int actualSaveNum)
+    private IEnumerator ILoadGameBySaveNum(int actualSaveNum)
     {
         FadeManager.FadeObject(PanelsManager.instance.BlackPanel, true);
         FadeManager.FadeObject(PanelsManager.instance.blackPanelPanels, false);

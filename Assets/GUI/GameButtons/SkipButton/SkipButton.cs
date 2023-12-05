@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SkipButton : IExpandableButtonGroup
+public class SkipButton : IExpandableButton
 {
     private enum SkipButtonState
     {
@@ -29,22 +29,21 @@ public class SkipButton : IExpandableButtonGroup
     private string SkipOnA = "DoSkip";
     private string SkipOffA = "ReturnSkip";
 
-    public SkipButton() : base()
-    {
-        OnAwakeActions(new List<Action>
-        {
-            delegate { animator = GetComponent<Animator>(); },
-            delegate { ShadeTriangle = transform.GetChild(0).transform.GetChild(0).gameObject; },
-            delegate { ShadeArrow = transform.GetChild(1).transform.GetChild(0).gameObject; },
-            delegate { ShadeArrowCopy = transform.GetChild(2).transform.GetChild(0).gameObject; },
-        });
+    private float speed = 5.0f;
 
+    public override void Awake()
+    {
+        base.Awake();
+        ShadeTriangle = transform.GetChild(0).transform.GetChild(0).gameObject;
+        ShadeArrow = transform.GetChild(1).transform.GetChild(0).gameObject;
+        ShadeArrowCopy = transform.GetChild(2).transform.GetChild(0).gameObject;
+        animator = GetComponent<Animator>();
         state = SkipButtonState.SkipOff;
     }
 
-    public override void RegisterManager()
+    public void Start()
     {
-        SetManager(GameButtonsManager.instance);
+        GameButtonsManager.instance.SubscribeButton(this.gameObject);
     }
 
     public override void EnterAction()
@@ -126,13 +125,11 @@ public class SkipButton : IExpandableButtonGroup
 
     public void EnableSkipAnimation()
     {
-        Debug.Log("Enable anim");
         animator.SetTrigger(SkipOnA);
     }
 
     public void DisableSkipAnimation()
     {
-        Debug.Log("Disable anim");
         animator.SetTrigger(SkipOffA);
     }
 
@@ -146,9 +143,13 @@ public class SkipButton : IExpandableButtonGroup
         state = SkipButtonState.SkipOff;
     }
 
-
     public bool IfButtonClicked()
     {
         return state == SkipButton.SkipButtonState.SkipOn;
+    }
+
+    public override void ResetButtonState()
+    {
+        gameObject.transform.localScale = origScale;
     }
 }

@@ -85,29 +85,29 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
         Resources.UnloadUnusedAssets();
     }
 
-    public void InstantApplySpecificSetting(Settings setting, SettingsOptions value, float data)
+    public void InstantApplySpecificSetting(SettingsList setting, SettingsOptions value, float data)
     {
         switch (setting)
         {
-            case Settings.FullScreenMode:
+            case SettingsList.FullScreenMode:
                 SettingsConfig.ChangeFullscreeenMode(value);
                 break;
-            case Settings.BlackFramesMode:
+            case SettingsList.BlackFramesMode:
                 SettingsConfig.ChangeBlackFramesMode(MainCanvas, value);
                 break;
-            case Settings.Resolution:
+            case SettingsList.Resolution:
                 SettingsConfig.ChangeResoulution(value);
                 break;
-            case Settings.masterVolume:
+            case SettingsList.masterVolume:
                 SettingsConfig.SetVolume(audioMixer, "MasterVol", data / 100); // Деление на 100 т.к. метод принимает числа от 0 до 1, а сейвах идут проценты от 0 до 100
                 break;
-            case Settings.musicVolume:
+            case SettingsList.musicVolume:
                 SettingsConfig.SetVolume(audioMixer, "MusicVol", data / 100);
                 break;
-            case Settings.soundVolume:
+            case SettingsList.soundVolume:
                 SettingsConfig.SetVolume(audioMixer, "SoundVol", data / 100);
                 break;
-            case Settings.Language:
+            case SettingsList.Language:
                 break;
         }
     }
@@ -118,29 +118,29 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
         audioMixer.SetFloat("MusicVol", 0);
         audioMixer.SetFloat("SoundVol", 0);
 
-        foreach (Settings setting in (Settings[])Enum.GetValues(typeof(Settings)))
+        foreach (SettingsList setting in (SettingsList[])Enum.GetValues(typeof(SettingsList)))
         {
             SettingsOptions value = SettingsConfig.chosenOptions[setting].settingsOption;
             float data = SettingsConfig.chosenOptions[setting].data;
 
             switch (setting)
             {
-                case Settings.masterVolume:
+                case SettingsList.masterVolume:
                     SmoothMusicOnStart("MasterVol", data);
                     break;
-                case Settings.musicVolume:
+                case SettingsList.musicVolume:
                     SmoothMusicOnStart("MusicVol", data);
                     break;
-                case Settings.soundVolume:
+                case SettingsList.soundVolume:
                     SmoothMusicOnStart("SoundVol", data);
                     break;
-                case Settings.FullScreenMode:
+                case SettingsList.FullScreenMode:
                     if (StaticVariables.GameIsStarting)
                     {
                         InstantApplySpecificSetting(setting, value, data);
                     }
                     break;
-                case Settings.Resolution:
+                case SettingsList.Resolution:
                     if (StaticVariables.GameIsStarting)
                     {
                         InstantApplySpecificSetting(setting, value, data);

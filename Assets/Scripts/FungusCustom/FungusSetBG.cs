@@ -18,7 +18,7 @@ namespace Fungus
         private float Delay = 0.5f;
 
         [SerializeField]
-        private bgSwapType FadeType;
+        private BgSwapType FadeType;
 
         public override void OnEnter() => StartCoroutine(IOnEnter());
 

@@ -55,4 +55,9 @@ public class AboutUsBackButton : IDraggableButton
 
         GetComponent<Button>().interactable = true;
     }
+
+    public override void ResetButtonState()
+    {
+        throw new System.NotImplementedException();
+    }
 }

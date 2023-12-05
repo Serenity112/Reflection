@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using static MMButtonsManager;
 
-public class MMOptionButton : IButtonGroup
+public class MMOptionButton : IDraggableButtonGroup
 {
     [SerializeField] private MainMenuOption option;
 
@@ -18,13 +18,13 @@ public class MMOptionButton : IButtonGroup
     private IEnumerator _appear = null;
     private IEnumerator _disappear = null;
 
-    public MMOptionButton() : base()
+    private float speed = 5.0f;
+
+    public override void Awake()
     {
-        OnAwakeActions(new List<Action>
-        {
-            delegate { spacing = transform.GetChild(0).gameObject; },
-            delegate { GetComponent<Button>().onClick.AddListener(OnClick); },
-        });
+        base.Awake();
+        spacing = transform.GetChild(0).gameObject;
+        GetComponent<Button>().onClick.AddListener(OnClick);
     }
 
     public override void EnterAction()
@@ -56,8 +56,8 @@ public class MMOptionButton : IButtonGroup
         yield return null;
     }
 
-    public override void RegisterManager()
+    public override void ResetButtonState()
     {
-        SetManager(MMButtonsManager.instance);
+        throw new NotImplementedException();
     }
 }

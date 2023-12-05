@@ -53,7 +53,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
     private void Start()
     {
         ConfirmationPanel.instance.ActivePanels = ActivePanels;
-        WarningPanel.instance.ActivePanels = ActivePanels;
+        //WarningPanel.instance.ActivePanels = ActivePanels;
         UpdateContinueButtonState();
 
         MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = false;
@@ -135,7 +135,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         }
         catch (Exception)
         {
-            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
 
         switch (StaticVariables.MainMenuContinueButtonAnimationTrigger)
@@ -231,7 +231,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         }
         catch (Exception)
         {
-            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+           // WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
     }
 
@@ -246,7 +246,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
     private IEnumerator IOpenSaveMenu()
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
-        MMButtonsManager.instance.UnSelectButtons();
+        MMButtonsManager.instance.ResetAllButtonsState();
 
         savesPanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
         yield return savesPanelHandler;

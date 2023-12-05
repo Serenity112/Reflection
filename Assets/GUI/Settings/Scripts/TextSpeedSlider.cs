@@ -4,10 +4,10 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System;
 
-public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, ISettingsOption
+public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, ISettingsOptions
 {
     [SerializeField]
-    private Settings setting;
+    private SettingsList setting;
 
     [SerializeField]
     private SettingsOptions option;
@@ -33,7 +33,7 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
 
     private void Awake()
     {
-        SettingsConfig.subscribeOption(GetComponent<TextSpeedSlider>());
+        SettingsConfig.subscribeOption(setting, GetComponent<TextSpeedSlider>());
 
         slider = GetComponent<Slider>();
         text = TextObj.GetComponent<Text>();
@@ -56,7 +56,7 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
 
         SettingsConfig.SaveOptionToFile(setting, option, slider.value);
 
-        SettingsConfig.FilterAndApplySpecificSetting(setting, option, slider.value);
+        SettingsConfig.ApplySetting(setting, option, slider.value);
     }
 
     public void OnBeginDrag(PointerEventData eventData)

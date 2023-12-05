@@ -9,15 +9,13 @@ public class WarningPanel : MonoBehaviour
 {
     public static WarningPanel instance = null;
 
-    [HideInInspector] public GameObject ActivePanels;
-
     //private float FadingSpeed = 5f;
 
     public static string SavingErrorMessage =
        "В системе сохранений возникла ошибка!\n" +
        "Некоторые элементы игры могут быть сброшены и/или работать нестабильно.\n" +
        "Если вы не взаимодействовали с файлами игры, просим вас сообщить об ошибке разработчикам.\n" +
-       "Приносим извинения за доставленные неудобства!";
+       "Приносим извинения за доставленные неудобства! (нам похуй)";
 
     private AsyncOperationHandle<GameObject> handler;
 
@@ -37,9 +35,12 @@ public class WarningPanel : MonoBehaviour
     {
     }
 
-    public void CreateWarningPanel(string title) => StartCoroutine(ICreateWarningPanel(title));
+    public void CreateWarningPanel(string title, Transform parent)
+    {
+        StartCoroutine(ICreateWarningPanel(title, parent));
+    }
 
-    private IEnumerator ICreateWarningPanel(string title)
+    private IEnumerator ICreateWarningPanel(string title, Transform parent)
     {
         if (StaticVariables.OverlayPanelActive)
         {
@@ -48,7 +49,7 @@ public class WarningPanel : MonoBehaviour
 
         StaticVariables.OverlayPanelActive = true;
 
-        handler = Addressables.InstantiateAsync("WarningPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
+        handler = Addressables.InstantiateAsync("WarningPanel", parent.GetComponent<RectTransform>(), false, true);
         yield return handler;
 
         if (handler.Status == AsyncOperationStatus.Succeeded)

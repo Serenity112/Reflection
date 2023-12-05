@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CheckBox : MonoBehaviour, ISettingsOption
+public class CheckBox : MonoBehaviour, ISettingsOptions
 {
     [SerializeField]
-    private Settings setting;
+    private SettingsList setting;
 
     [SerializeField]
     private SettingsOptions option;
@@ -22,7 +22,7 @@ public class CheckBox : MonoBehaviour, ISettingsOption
         CircleIn = transform.GetChild(0).gameObject;
         //CircleOut = transform.GetChild(1).gameObject;
 
-        SettingsConfig.subscribeOption(this);
+        SettingsConfig.subscribeOption(setting, this);
     }
 
     public void OnClick() => StartCoroutine(IOnClick());
@@ -30,7 +30,7 @@ public class CheckBox : MonoBehaviour, ISettingsOption
     private IEnumerator IOnClick()
     {
         float newData = (SettingsConfig.chosenOptions[setting].data + 1) % 2;
-        SettingsConfig.FilterAndApplySpecificSetting(setting, option, newData);
+        SettingsConfig.ApplySetting(setting, option, newData);
         SettingsConfig.SaveOptionToFile(setting, option, newData);
 
         Vector3 origScale = CircleIn.transform.localScale;
@@ -44,7 +44,8 @@ public class CheckBox : MonoBehaviour, ISettingsOption
         if (newData == 0)
         {
             CircleOff();
-        } else
+        }
+        else
         {
             CircleOn();
         }

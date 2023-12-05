@@ -1,12 +1,13 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class SettingsOption : MonoBehaviour, ISettingsOption
+public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField]
-    private Settings setting;
+    private SettingsList setting;
 
     [SerializeField]
     private SettingsOptions option;
@@ -21,28 +22,29 @@ public class SettingsOption : MonoBehaviour, ISettingsOption
     private IEnumerator colorsOn;
     private IEnumerator colorsOff;
 
+    private bool pointer_down = false;
+    private bool enter = false;
+
     void Awake()
     {
         spacing = transform.GetChild(0).gameObject;
         text = gameObject.GetComponent<Text>();
 
-        SettingsConfig.subscribeOption(this);
+        SettingsConfig.subscribeOption(setting, this);
     }
 
     public void OnClick()
     {
-        SettingsConfig.FilterAndApplySpecificSetting(setting, option);
-
+        SettingsConfig.CheckLinkedOptions(setting, option);
         SettingsConfig.SaveOptionToFile(setting, option);
-
-        SettingsConfig.UpdateAllVisuals();
+        SettingsConfig.UpdateGroupVisuals(setting);
     }
 
     private void OnMouseEnter()
     {
         if (!SettingsConfig.isOptionEnabled(setting, option))
         {
-            ToWhite();
+            StartCoroutine(ToWhite());
         }
     }
 
@@ -50,55 +52,95 @@ public class SettingsOption : MonoBehaviour, ISettingsOption
     {
         if (!SettingsConfig.isOptionEnabled(setting, option))
         {
-            SpacingOff();
-            ToGray();
+            StartCoroutine(SpacingOff());
+            if (!pointer_down)
+            {
+                StartCoroutine(ToGray());
+            }
         }
     }
-    public void SpacingOn()
+
+    // Подчёркивание 
+    private IEnumerator SpacingOn()
     {
         if (spacingOff != null)
             StopCoroutine(spacingOff);
         spacingOn = FadeManager.FadeObject(spacing, true, SettingsConfig.spacingSpeed);
-        StartCoroutine(spacingOn);
+        yield return StartCoroutine(spacingOn);
     }
-    public void SpacingOff()
+
+    private IEnumerator SpacingOff()
     {
         if (spacingOn != null)
             StopCoroutine(spacingOn);
         spacingOff = FadeManager.FadeObject(spacing, false, SettingsConfig.spacingSpeed);
-        StartCoroutine(spacingOff);
+        yield return StartCoroutine(spacingOff);
     }
-    public void ToWhite()
+
+    // Белый текст
+    private IEnumerator ToWhite()
     {
         if (colorsOff != null)
             StopCoroutine(colorsOff);
         colorsOn = FadeManager.FadeTextToColor(text, new Color(1f, 1f, 1f, 1.05f), SettingsConfig.spacingSpeed);
-        StartCoroutine(colorsOn);
+        yield return StartCoroutine(colorsOn);
     }
-    public void ToGray()
+
+    private IEnumerator ToGray()
     {
         if (colorsOn != null)
             StopCoroutine(colorsOn);
         colorsOff = FadeManager.FadeTextToColor(text, new Color(0.6f, 0.6f, 0.6f, 1.05f), SettingsConfig.spacingSpeed);
-        StartCoroutine(colorsOff);
+        yield return StartCoroutine(colorsOff);
     }
 
     public void UpdateVisuals()
     {
+        StopAllCoroutines();
+
+        List<IEnumerator> list = new List<IEnumerator>();
+
         if (SettingsConfig.isOptionEnabled(setting, option))
         {
-            SpacingOn();
-            ToWhite();
+            list.Add(SpacingOn());
+            list.Add(ToWhite());
+
         }
         else
         {
-            SpacingOff();
-            ToGray();
+            list.Add(SpacingOff());
+            list.Add(ToGray());
         }
+
+        StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
     }
 
     public void InitialUpdateVisuals()
     {
         UpdateVisuals();
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        pointer_down = true;
+    }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        pointer_down = false;
+        if (!enter && !SettingsConfig.isOptionEnabled(setting, option))
+        {
+            StartCoroutine(ToGray());
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        enter = true;
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        enter = false;
     }
 }

@@ -4,5 +4,5 @@ public interface ISettingsManager
     void CloseSettings();
 
     // Каждый меденджер настроек должен по разному применять настройки. Какие-то игнорировать, какие-то применять к многим объектам.
-    void InstantApplySpecificSetting(Settings setting, SettingsOptions value, float data);
+    void InstantApplySpecificSetting(SettingsList setting, SettingsOptions value, float data);
 }

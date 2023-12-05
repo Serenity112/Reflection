@@ -13,17 +13,9 @@ public class Typewriter : MonoBehaviour
 
     private Text _text;
 
-    public bool SkipIsActive { get; set; } = false;
-
-    // Глобальный флаг для запрета скипа кнопкой Tab
-    public bool denySkip { get; private set; } = false;
-
-    // Локальный флаг для запрета скипа кнопкой Tab, сохрнаяет изменение режима isSkipping и анимации skip кнопки
-    public bool denyNextDialog { get; private set; } = false;
+    public bool SkipIsActive { get; private set; } = false;
 
     private Coroutine _say;
-
-    private string currentText;
 
     private bool extern_button_click_flag = false;
 
@@ -33,11 +25,21 @@ public class Typewriter : MonoBehaviour
     // Флаг скорости для опции "бесконечно" в настройках
     private bool instantSpeed = false;
 
-    public float TextSpeed { get; private set; }
-
     private string DialogSavesFile;
 
     private Dictionary<string, int> DialogSaves = new Dictionary<string, int>();
+
+    // Скип табом / кнопкой
+    private bool _SKIP_ENABLE = false;
+
+    // Клик игровой кнопки / Enter / Space
+    private bool _CLICK_ENABLE = false;
+
+    // Флаг для того, чтобы нельзя было зажать ЛКМ для скипа
+    public bool continueClickedFlag = true;
+
+    // Максимальная скорость, с которой она считается бесконечной
+    private double MAX_TEXT_SPEED = 120;
 
     private void Awake()
     {
@@ -46,66 +48,86 @@ public class Typewriter : MonoBehaviour
         _text = StoryText.GetComponent<Text>();
 
         DialogSavesFile = SaveSystemUtils.DialogSavesFile;
+
+        ResetTypewritterFlags();
+    }
+
+    private void Update()
+    {
+        UpdateClick();
+        UpdateSkip();
+    }
+
+    private void Start()
+    {
         LoadDialogSaves();
     }
 
-    public bool continueClickedFlag = true;
-
-    private void ResetContinueFlag()
+    public void ResetTypewritterFlags()
     {
+        SkipIsActive = false;
+        extern_button_click_flag = false;
+        _SKIP_ENABLE = false;
+        _CLICK_ENABLE = false;
         continueClickedFlag = true;
     }
 
+    private bool GetDenyStatus()
+    {
+        return (
+            StaticVariables.PAUSED ||
+            StaticVariables.WARNING_PANEL ||
+            StaticVariables.CONFIRM_PANEL ||
+            StaticVariables.OVER_UI);
+    }
+
+    // Нажимается кнопкой в игре
     public void ContinueButtonInput()
     {
         extern_button_click_flag = true;
     }
 
-    private bool GetInputClickState()
+    // Обновления статуса нажимания мыши
+    private void UpdateClick()
     {
-        return extern_button_click_flag;
-    }
+        bool externalInputState = extern_button_click_flag;
+        bool keyboardState = Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.Return);
 
-    private bool GetKeyboardClickState()
-    {
-        return (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.Return));
-    }
-
-    private bool RecalculateClickState()
-    {
-        bool inputState = GetInputClickState();
-        bool keyboardState = GetKeyboardClickState();
-
-        if (inputState || keyboardState)
+        if (externalInputState || keyboardState)
         {
+            Debug.Log("1");
+
             if (skipButton.IfButtonClicked())
             {
                 skipButton.DisableSkipState();
                 skipButton.DisableSkipAnimation();
             }
 
-            if (inputState)
+            if (externalInputState)
             {
+                Debug.Log("2");
                 extern_button_click_flag = false;
             }
 
-
-            if (!denySkip && continueClickedFlag)
+            if (!GetDenyStatus() && continueClickedFlag)
             {
+                Debug.Log("3");
                 continueClickedFlag = false;
-                return true;
+                _CLICK_ENABLE = true;
+            }
+            else
+            {
+                _CLICK_ENABLE = false;
             }
         }
-
-        return false;
+        else
+        {
+            continueClickedFlag = true;
+            _CLICK_ENABLE = false;
+        }
     }
 
-    public bool GetRawSkipState()
-    {
-        return (Input.GetKey(KeyCode.Tab) || skipButton.IfButtonClicked());
-    }
-
-    private bool RecalculateSkipState()
+    private void UpdateSkip()
     {
         bool tabSkip = Input.GetKey(KeyCode.Tab);
         bool skipButtonClicked = skipButton.IfButtonClicked();
@@ -117,15 +139,22 @@ public class Typewriter : MonoBehaviour
 
         if (tabSkip || skipButtonClicked)
         {
-            if (!SkipIsActive)
+            if (GetDenyStatus())
             {
-                SkipIsActive = true;
-                OnSkipStart();
+                _SKIP_ENABLE = false;
+                // Если был скип и случилась, например, пауза - отменяем скип кнопкой
+                skipButton.DisableSkipState();
+                skipButton.DisableSkipAnimation();
             }
-
-            if (!denySkip)
+            else
             {
-                return true;
+                if (!SkipIsActive)
+                {
+                    SkipIsActive = true;
+                    OnSkipStart();
+                }
+
+                _SKIP_ENABLE = true;
             }
         }
         else
@@ -136,60 +165,33 @@ public class Typewriter : MonoBehaviour
                 OnSkipEnd();
             }
 
+            _SKIP_ENABLE = false;
         }
-
-        return false;
     }
 
     private void OnSkipStart()
     {
         skipButton.EnableSkipAnimation();
-        //SpriteController.instance.UnExpandAllSprites();
     }
 
     private void OnSkipEnd()
     {
         skipButton.DisableSkipAnimation();
-        //CancelButtonAutoSkip();
-        //SkipJustEnded = true;
-    }
-
-
-    public void RecalculateSkippingMode()
-    {
-        bool tabSkip = Input.GetKey(KeyCode.Tab);
-
-        /*if ((tabSkip || AutoSkipButtonClickedFlag) && (SettingsConfig.skipEverything || wasCurrentDialogRead) && !denySkip)
-        {
-            if (!isSkipping)
-            {
-                isSkipping = true;
-            }
-        }
-        else
-        {
-            if (isSkipping)
-            {
-                isSkipping = false;
-            }
-        }*/
     }
 
     public void AllowSkip()
     {
-        denySkip = false;
-        denyNextDialog = false;
+        //denySkip = false;
     }
 
     public void DenySkip()
     {
-        denySkip = true;
-        denyNextDialog = true;
+        //denySkip = true;
     }
 
     public void SetTextSpeed(float value)
     {
-        if (value == 120)
+        if (value == MAX_TEXT_SPEED)
         {
             instantSpeed = true;
         }
@@ -197,15 +199,6 @@ public class Typewriter : MonoBehaviour
         {
             instantSpeed = false;
             defaultDelay = 1 / value;
-        }
-    }
-
-    // Метод вызываемый кнопкой в игре
-    public void StopTypewriter()
-    {
-        if (_say != null)
-        {
-            StopCoroutine(_say);
         }
     }
 
@@ -238,9 +231,8 @@ public class Typewriter : MonoBehaviour
     public IEnumerator ISayDialog(string storyText, string speaker)
     {
         _text.text = "";
-        currentText = storyText;
 
-        LogManager.instance.NewMessage(storyText, speaker);
+        //LogManager.instance.NewMessage(storyText, speaker);
 
         if (_say != null)
         {
@@ -253,9 +245,8 @@ public class Typewriter : MonoBehaviour
     public IEnumerator ISayExtend(string prevText, string extendedText, string speaker)
     {
         _text.text = prevText + " ";
-        currentText = prevText + " " + extendedText;
 
-        LogManager.instance.NewMessageExtended(extendedText, speaker);
+        //LogManager.instance.NewMessageExtended(extendedText, speaker);
 
         if (_say != null)
         {
@@ -265,7 +256,13 @@ public class Typewriter : MonoBehaviour
         yield return _say;
     }
 
+    // Флаг для быстрого скипа, нужно ресетать при тёмных экранах
     private bool auto_complete_next = false;
+
+    public void ResetInstantSkip()
+    {
+        auto_complete_next = false;
+    }
 
     // Обобщение вывода текста
     private IEnumerator ISayGeneric(string textToWrite, string speaker)
@@ -281,14 +278,12 @@ public class Typewriter : MonoBehaviour
         float timeElapsed = 0f;
         bool interrupt_flag = false;
 
-        RecalculateClickState();
-        bool instant_skip = RecalculateSkipState();
-        
-        if (instant_skip)
+        yield return null;
+
+        if (_SKIP_ENABLE)
         {
             auto_complete_next = true;
             _text.text = textToWrite;
-            ResetContinueFlag();
             yield return null;
             yield break;
         }
@@ -300,29 +295,23 @@ public class Typewriter : MonoBehaviour
         }
         else
         {
+            auto_complete_next = false;
+
             foreach (char c in textToWrite)
             {
                 _text.text += c;
 
                 while (timeElapsed < defaultDelay)
                 {
-                    if (!GetKeyboardClickState())
-                    {
-                        ResetContinueFlag();
-                    }
-
-                    bool click_flag = RecalculateClickState();
-                    bool skip_flag = RecalculateSkipState();
-
                     if (allow_skip_flag)
                     {
-                        if (skip_flag)
+                        if (_SKIP_ENABLE)
                         {
                             auto_complete_next = true;
                             interrupt_flag = true;
                             break;
                         }
-                        if (click_flag)
+                        if (_CLICK_ENABLE)
                         {
                             interrupt_flag = true;
                             break;
@@ -337,34 +326,26 @@ public class Typewriter : MonoBehaviour
 
                 if (interrupt_flag)
                 {
-                    _text.text = currentText;
+                    _text.text = textToWrite;
                     break;
-                }              
+                }
             }
         }
 
-        // Против зажатий кнопок Space / Enter
-        while (true)
-        {
-            bool keyboardState = GetKeyboardClickState();
-
-            if (!keyboardState)
-            {
-                ResetContinueFlag();
-                break;
-            }
-            yield return null;
-        }
+        yield return null;
 
         // Ожидание ввода Space / Tab / Нажатия игровой кнопки
         while (true)
         {
-            bool click_flag = RecalculateClickState();
-            bool skip_flag = RecalculateSkipState();
-
-            if (click_flag || skip_flag)
+            if (_SKIP_ENABLE || _CLICK_ENABLE)
             {
+                if (_SKIP_ENABLE)
+                {
+                    auto_complete_next = true;
+                }
+                yield return null;
                 yield break;
+
             }
             yield return null;
         }
@@ -381,13 +362,20 @@ public class Typewriter : MonoBehaviour
 
     public void LoadDialogSaves()
     {
-        if (ES3.KeyExists(DialogSavesFile, $"{DialogSavesFile}.es3"))
+        try
         {
-            var loaded = ES3.Load<Dictionary<string, int>>(DialogSavesFile, $"{DialogSavesFile}.es3");
-            if (loaded != null)
+            if (ES3.KeyExists(DialogSavesFile, $"{DialogSavesFile}.es3"))
             {
-                DialogSaves = loaded;
+                var loaded = ES3.Load<Dictionary<string, int>>(DialogSavesFile, $"{DialogSavesFile}.es3");
+                if (loaded != null)
+                {
+                    DialogSaves = loaded;
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage, PanelsManager.instance.ActivePanels.transform);
         }
     }
 

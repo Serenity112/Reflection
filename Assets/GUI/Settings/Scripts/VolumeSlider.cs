@@ -4,10 +4,10 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System;
 
-public class VolumeSlider : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, ISettingsOption
+public class VolumeSlider : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, ISettingsOptions
 {
     [SerializeField]
-    private Settings setting;
+    private SettingsList setting;
 
     [SerializeField]
     private SettingsOptions option;
@@ -36,7 +36,7 @@ public class VolumeSlider : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
     private void Awake()
     {
-        SettingsConfig.subscribeOption(this);
+        SettingsConfig.subscribeOption(setting, this);
 
         slider = GetComponent<Slider>();
         text = TextObj.GetComponent<Text>();
@@ -59,7 +59,7 @@ public class VolumeSlider : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
         SettingsConfig.SaveOptionToFile(setting, option, slider.value);
 
-        SettingsConfig.FilterAndApplySpecificSetting(setting, option, slider.value);
+        SettingsConfig.ApplySetting(setting, option, slider.value);
     }
 
     void Mute()

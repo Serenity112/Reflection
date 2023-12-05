@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HideButton : IExpandableButtonGroup
+public class HideButton : IExpandableButton
 {
     [SerializeField]
     private GameObject HideOverlayButton;
@@ -27,18 +27,21 @@ public class HideButton : IExpandableButtonGroup
     private GameObject CircleShade;
     private GameObject LineShade;
 
-    public HideButton() : base()
+    private float speed = 5.0f;
+
+    private string HideA = "Hide";
+    private string UnHideA = "Unhide";
+
+    public override void Awake()
     {
-        OnAwakeActions(new List<Action>
-        {
-            delegate { CircleShade = transform.GetChild(0).transform.GetChild(0).gameObject; },
-            delegate { LineShade = transform.GetChild(1).transform.GetChild(0).gameObject; },
-        });
+        base.Awake();
+        CircleShade = transform.GetChild(0).transform.GetChild(0).gameObject;
+        LineShade = transform.GetChild(1).transform.GetChild(0).gameObject;
     }
 
-    public override void RegisterManager()
+    public void Start()
     {
-        SetManager(GameButtonsManager.instance);
+        GameButtonsManager.instance.SubscribeButton(this.gameObject);
     }
 
     public override void EnterAction()
@@ -48,7 +51,7 @@ public class HideButton : IExpandableButtonGroup
         expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(expandOnEnter);
 
-        if (shades1out != null)
+        if (shades1out != null && shades2out != null)
         {
             StopCoroutine(shades1out);
             StopCoroutine(shades2out);
@@ -68,7 +71,7 @@ public class HideButton : IExpandableButtonGroup
         shrinkOnEnter = ExpandManager.ExpandObject(gameObject, origScale, expandTime);
         StartCoroutine(shrinkOnEnter);
 
-        if (shades1in != null)
+        if (shades1in != null && shades2in != null)
         {
             StopCoroutine(shades1in);
             StopCoroutine(shades2in);
@@ -83,12 +86,12 @@ public class HideButton : IExpandableButtonGroup
 
     public override IEnumerator IClick()
     {
-        Typewriter.Instance.DenySkip();
+        StaticVariables.OVER_UI = true;
 
         HideOverlayButton.SetActive(true);
-        animator.Play("Hide");
+        animator.Play(HideA);
 
-        if (gui1in != null)
+        if (gui1in != null && gui2in != null)
         {
             StopCoroutine(gui1in);
             StopCoroutine(gui2in);
@@ -124,7 +127,10 @@ public class HideButton : IExpandableButtonGroup
 
         while (!inputFlag)
         {
-            if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.Tab))
+            if (Input.GetKey(KeyCode.Space) ||
+                Input.GetKey(KeyCode.Return) ||
+                Input.GetKey(KeyCode.Tab) ||
+                Input.GetKey(KeyCode.Escape))
             {
                 inputFlag = true;
             }
@@ -132,10 +138,10 @@ public class HideButton : IExpandableButtonGroup
             yield return null;
         }
 
-        ShowHiddeUI();
+        ShowHiddenUI();
     }
 
-    public void ShowHiddeUI()
+    public void ShowHiddenUI()
     {
         StopInputWait();
         HideOverlayButton.GetComponent<Button>().interactable = false;
@@ -144,9 +150,9 @@ public class HideButton : IExpandableButtonGroup
 
     private IEnumerator IShowHiddenUI()
     {
-        animator.Play("Unhide");
+        animator.Play(UnHideA);
 
-        if (gui1out != null)
+        if (gui1out != null && gui2out != null)
         {
             StopCoroutine(gui1out);
             StopCoroutine(gui2out);
@@ -162,6 +168,11 @@ public class HideButton : IExpandableButtonGroup
         }));
 
         HideOverlayButton.SetActive(false);
-        Typewriter.Instance.AllowSkip();
+        StaticVariables.OVER_UI = false;
+    }
+
+    public override void ResetButtonState()
+    {
+        gameObject.transform.localScale = origScale;
     }
 }

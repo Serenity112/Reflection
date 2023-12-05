@@ -1,9 +1,13 @@
 using UnityEngine;
 
 public class SettingsController : MonoBehaviour
-{   
-    private void Start()
+{
+    public SettingsBackButton settingsBackButton;
+
+    public void InitialReset()
     {
         SettingsConfig.InitialUpdateAllVisuals();
+
+        settingsBackButton.ResetButtonState();
     }
 }

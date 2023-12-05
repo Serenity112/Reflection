@@ -2,27 +2,22 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SettingsBackButton : IDraggableButton
+public class SettingsBackButton : IExpandableButton
 {
-    private Animator animator;
-
     private IEnumerator expandOnEnter;
     private IEnumerator shrinkOnEnter;
 
-    private GameObject buttonParent;
-
-    private Vector3 origScale;
-    private Vector3 expandedScale;
-
-    void Start()
+    private void Start()
     {
-        animator = GetComponent<Animator>();
-
         animator.Play("Idle");
-        buttonParent = transform.parent.gameObject;
+    }
 
-        origScale = gameObject.GetComponent<RectTransform>().localScale;
-        expandedScale = origScale * 1.1f;
+    private void Update()
+    {
+        if (Input.GetKey(KeyCode.Escape) && GetComponent<Button>().interactable && StaticVariables.IN_SETTINGS_MENU)
+        {
+            OnClick();
+        }
     }
 
     public override IEnumerator IClick()
@@ -30,12 +25,10 @@ public class SettingsBackButton : IDraggableButton
         GetComponent<Button>().interactable = false;
 
         animator.Play("Back");
-        SettingsConfig.unSubscribeAllOptions();
         SettingsConfig.currentManager.CloseSettings();
 
-        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
 
         GetComponent<Button>().interactable = true;
     }
@@ -54,5 +47,11 @@ public class SettingsBackButton : IDraggableButton
             StopCoroutine(expandOnEnter);
         shrinkOnEnter = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
         StartCoroutine(shrinkOnEnter);
+    }
+
+    public override void ResetButtonState()
+    {
+        animator.Play("Idle");
+        GetComponent<Button>().interactable = true;
     }
 }

@@ -4,22 +4,32 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PauseButton : IExpandableButtonGroup
+public class PauseButton : IExpandableButton
 {
     private IEnumerator expandOnEnter;
     private IEnumerator shrinkOnExit;
 
-    public PauseButton() : base()
+    private float speed = 5.0f;
+
+    public override void Awake()
     {
-        OnAwakeActions(new List<Action>
-        {
-            delegate { animator = GetComponent<Animator>(); },
-        });
+        base.Awake();
     }
 
-    public override void RegisterManager()
+    public void Start()
     {
-        SetManager(GameButtonsManager.instance);
+        GameButtonsManager.instance.SubscribeButton(this.gameObject);
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (!StaticVariables.PAUSED && !StaticVariables.OVER_UI)
+            {
+                StartCoroutine(IClickAnimation());
+            }
+        }
     }
 
     public override void EnterAction()
@@ -42,22 +52,40 @@ public class PauseButton : IExpandableButtonGroup
 
     public override IEnumerator IClick()
     {
-        gameObject.GetComponent<Button>().interactable = false;
 
-        Typewriter.Instance.DenySkip();
+        yield return StartCoroutine(IClickAnimation());
+    }
 
+    private IEnumerator IClickAnimation()
+    {
         animator.Play("pauseanim");
+        gameObject.GetComponent<Button>().interactable = false;
+        StaticVariables.PAUSED = true;
 
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed));
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed * 0.75f));
-        StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.PausePanel, true, speed));
-
+        PanelsManager.instance.PausePanel.SetActive(true);
         PauseButtonsManager.instance.EnableButtons();
-        PauseButtonsManager.instance.UnSelectButtons();
+        PauseButtonsManager.instance.ResetManager();
+        PauseButtonsManager.instance.uIBlur.BeginBlur(speed);
 
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed),
+            FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed * 0.75f),
+            FadeManager.FadeOnly(PanelsManager.instance.PausePanel, true, speed),
+            CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+            {
+                ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
+                ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime)
+            })
+        }));
 
         GetComponent<Button>().interactable = true;
+        StaticVariables.PAUSED_ALLOW_BUTTON = true;
+        ResetButtonState();
+    }
+
+    public override void ResetButtonState()
+    {
+        gameObject.transform.localScale = origScale;
     }
 }

@@ -2,26 +2,35 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// ћенеджеры групп кнопок нужны дл€ общих действий с группами кнопок
 public abstract class IButtonManager : MonoBehaviour
 {
-    /*    public static GameButtonsManager instance = null;
-    */
     public bool ButtonSelected = false;
 
-    public List<GameObject> GameButtons;
+    public List<GameObject> GameButtons = new List<GameObject>();
 
     public void SubscribeButton(GameObject button)
     {
         GameButtons.Add(button);
     }
 
-    public abstract void UnSelectButtons();
+    /// <summary>
+    /// —бросить состо€ни€ всех кнопок
+    /// </summary>
+    public abstract void ResetAllButtonsState();
 
-    public abstract void AppearActualButton();
-
-    // ¬ключить взаимодействие с кнопоками
+    /// <summary>
+    /// ¬ключить коллайдеры
+    /// </summary>
     public abstract void EnableButtons();
 
-    // ќтключить взаимодействие с кнопоками
+    /// <summary>
+    /// ќтключить коллайдеры
+    /// </summary>
     public abstract void DisableButtons();
+
+    /// <summary>
+    /// —бросить всЄ по умолчанию
+    /// </summary>
+    public abstract void ResetManager();
 }

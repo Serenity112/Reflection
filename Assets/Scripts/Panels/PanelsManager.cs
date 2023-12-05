@@ -64,7 +64,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     {
         Typewriter.Instance.DenySkip();
         ConfirmationPanel.instance.ActivePanels = ActivePanels;
-        WarningPanel.instance.ActivePanels = ActivePanels;
+       // WarningPanel.instance.ActivePanels = ActivePanels;
     }
 
     #region GameButtons
@@ -133,7 +133,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         Addressables.ReleaseInstance(savePanelHandler);
 
         PauseButtonsManager.instance.EnableButtons();
-        PauseButtonsManager.instance.UnSelectButtons();
+        PauseButtonsManager.instance.ResetAllButtonsState();
         PanelsCamera.enabled = false;
 
         Resources.UnloadUnusedAssets();
@@ -185,7 +185,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         Addressables.ReleaseInstance(savePanelHandler);
 
         PauseButtonsManager.instance.EnableButtons();
-        PauseButtonsManager.instance.UnSelectButtons();
+        PauseButtonsManager.instance.ResetAllButtonsState();
 
         FadeManager.FadeObject(PausePanel, true);
         GameGuiPanel.GetComponent<CanvasGroup>().alpha = 0f;

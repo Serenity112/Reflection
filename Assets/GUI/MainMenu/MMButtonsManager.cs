@@ -26,26 +26,17 @@ public class MMButtonsManager : IButtonManager
     private void Start()
     {
         EnableButtons();
-        UnSelectButtons();
+        ResetAllButtonsState();
     }
 
-    public override void UnSelectButtons()
+    public override void ResetAllButtonsState()
     {
         foreach (GameObject button in GameButtons)
         {
             MMOptionButton underlineButton = button.GetComponent<MMOptionButton>();
-            underlineButton.ResetFlags();
-            GameObject spacing = underlineButton.spacing;
-            spacing.GetComponent<CanvasGroup>().alpha = 0f;
-        }
-    }
-
-    public override void AppearActualButton()
-    {
-        foreach (GameObject button_obj in GameButtons)
-        {
-            MMOptionButton button = button_obj.GetComponent<MMOptionButton>();
-            button.AppearIfEntered();
+            //underlineButton.ResetFlags();
+            //GameObject spacing = underlineButton.spacing;
+           // spacing.GetComponent<CanvasGroup>().alpha = 0f;
         }
     }
 
@@ -90,5 +81,10 @@ public class MMButtonsManager : IButtonManager
                 MMPanelsManager.instance.QuitGame();
                 break;
         }
+    }
+
+    public override void ResetManager()
+    {
+        throw new System.NotImplementedException();
     }
 }

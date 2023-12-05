@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LogButton : IExpandableButtonGroup
+public class LogButton : IExpandableButton
 {
     private GameObject ShadeBox;
     private GameObject ShadeLine1;
@@ -22,19 +22,19 @@ public class LogButton : IExpandableButtonGroup
     private IEnumerator shrinkOnExit;
     private IEnumerator expandOnEnter;
 
-    public LogButton() : base()
+    private float speed = 5.0f;
+
+    public override void Awake()
     {
-        OnAwakeActions(new List<Action>
-        {
-            delegate { ShadeBox = transform.GetChild(0).transform.GetChild(0).gameObject; },
-            delegate { ShadeLine1 = transform.GetChild(1).transform.GetChild(0).gameObject; },
-            delegate { ShadeLine2 = transform.GetChild(2).transform.GetChild(0).gameObject; },
-        });
+        base.Awake();
+        ShadeBox = transform.GetChild(0).transform.GetChild(0).gameObject;
+        ShadeLine1 = transform.GetChild(1).transform.GetChild(0).gameObject;
+        ShadeLine2 = transform.GetChild(2).transform.GetChild(0).gameObject;
     }
 
-    public override void RegisterManager()
+    public void Start()
     {
-        SetManager(GameButtonsManager.instance);
+        GameButtonsManager.instance.SubscribeButton(this.gameObject);
     }
 
     public override void EnterAction()
@@ -107,5 +107,10 @@ public class LogButton : IExpandableButtonGroup
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.06f));
 
         GetComponent<Button>().interactable = true;
+    }
+
+    public override void ResetButtonState()
+    {
+        gameObject.transform.localScale = origScale;
     }
 }

@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
-using Fungus;
 
-public enum Settings
+public enum SettingsList
 {
     FullScreenMode,
     BlackFramesMode,
@@ -21,6 +20,8 @@ public enum Settings
     SpriteExpand,
     GuiAnimation,
     Language,
+
+    None,
 }
 
 public enum SettingsOptions
@@ -49,6 +50,9 @@ public enum SettingsOptions
     // Язык
     Russian,
     English,
+
+    // Заглушки
+    None,
 }
 
 public struct SettingsOptionsData
@@ -66,21 +70,21 @@ public struct SettingsOptionsData
 
 public class SettingsConfig
 {
-    public static Dictionary<Settings, SettingsOptionsData> chosenOptions = new Dictionary<Settings, SettingsOptionsData>();
+    public static Dictionary<SettingsList, SettingsOptionsData> chosenOptions = new Dictionary<SettingsList, SettingsOptionsData>();
 
-    public static List<ISettingsOption> options = new List<ISettingsOption>();
+    public static List<(SettingsList, ISettingsOptions)> options = new List<(SettingsList, ISettingsOptions)>();
 
     public static ISettingsManager currentManager { get; set; }
 
-    public static float spacingSpeed = 5f;
+    public static float spacingSpeed { get; set; } = 5f;
 
-    public static float sliderGuiSpeed = 5f;
+    public static float sliderGuiSpeed { get; set; } = 5f;
 
     public static bool skipEverything
     {
         get
         {
-            return chosenOptions[Settings.DialogSkipMode].settingsOption == SettingsOptions.SkipEveryting;
+            return chosenOptions[SettingsList.DialogSkipMode].settingsOption == SettingsOptions.SkipEveryting;
         }
 
         set
@@ -100,45 +104,50 @@ public class SettingsConfig
         LoadUserSettings();
     }
 
-    public static SettingsOptions GetChosenOption(Settings setting)
+    public static SettingsOptions GetChosenOption(SettingsList setting)
     {
         return chosenOptions[setting].settingsOption;
     }
 
+    // Установка настроек по умолчанию
     private static void LoadDefaultSettings()
     {
         chosenOptions.Clear();
 
         //Общие
-        chosenOptions.Add(Settings.FullScreenMode, new SettingsOptionsData(SettingsOptions.FullScreen, 0));
-        chosenOptions.Add(Settings.BlackFramesMode, new SettingsOptionsData(SettingsOptions.BlackLines, 0));
-        chosenOptions.Add(Settings.DialogSkipMode, new SettingsOptionsData(SettingsOptions.SkipEveryting, 0));
-        chosenOptions.Add(Settings.Resolution, new SettingsOptionsData(SettingsOptions.rAutomatic, 0));
+        chosenOptions.Add(SettingsList.FullScreenMode, new SettingsOptionsData(SettingsOptions.FullScreen, 0));
+        chosenOptions.Add(SettingsList.BlackFramesMode, new SettingsOptionsData(SettingsOptions.BlackLines, 0));
+        chosenOptions.Add(SettingsList.DialogSkipMode, new SettingsOptionsData(SettingsOptions.SkipEveryting, 0));
+        chosenOptions.Add(SettingsList.Resolution, new SettingsOptionsData(SettingsOptions.rAutomatic, 0));
 
         // Миксер - глобальные параметры (0 - 100) Изменяются вручную из настроек игры
-        chosenOptions.Add(Settings.masterVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
-        chosenOptions.Add(Settings.musicVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
-        chosenOptions.Add(Settings.soundVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
-        chosenOptions.Add(Settings.ambientVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
+        chosenOptions.Add(SettingsList.masterVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
+        chosenOptions.Add(SettingsList.musicVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
+        chosenOptions.Add(SettingsList.soundVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
+        chosenOptions.Add(SettingsList.ambientVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
 
         // Скорость текста
-        chosenOptions.Add(Settings.TextSpeed, new SettingsOptionsData(SettingsOptions.Speed, 100));
+        chosenOptions.Add(SettingsList.TextSpeed, new SettingsOptionsData(SettingsOptions.Speed, 100));
 
         // Увеличениек спрайтов
-        chosenOptions.Add(Settings.SpriteExpand, new SettingsOptionsData(SettingsOptions.Expand, 1)); // 1 - true
+        chosenOptions.Add(SettingsList.SpriteExpand, new SettingsOptionsData(SettingsOptions.Expand, 1)); // 1 - true
 
         // Анимация фонов
-        chosenOptions.Add(Settings.GuiAnimation, new SettingsOptionsData(SettingsOptions.GuiAnimation, 1)); // 1 - true
+        chosenOptions.Add(SettingsList.GuiAnimation, new SettingsOptionsData(SettingsOptions.GuiAnimation, 1)); // 1 - true
 
         // Язык
-        chosenOptions.Add(Settings.Language, new SettingsOptionsData(SettingsOptions.Russian, 1));
+        chosenOptions.Add(SettingsList.Language, new SettingsOptionsData(SettingsOptions.Russian, 1));
+
+        // Заглушки
+        chosenOptions.Add(SettingsList.None, new SettingsOptionsData(SettingsOptions.None, 1));
     }
 
+    // Загрузка настроек пользователя поверх стандартных
     private static void LoadUserSettings()
     {
         try
         {
-            foreach (Settings setting in (Settings[])Enum.GetValues(typeof(Settings)))
+            foreach (SettingsList setting in (SettingsList[])Enum.GetValues(typeof(SettingsList)))
             {
                 if (ES3.FileExists(GlobalSettings) && ES3.KeyExists(setting.ToString(), GlobalSettings))
                 {
@@ -150,16 +159,17 @@ public class SettingsConfig
         }
         catch (Exception)
         {
-            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            // WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
     }
 
-    public static void SaveOptionToFile(Settings setting, SettingsOptions value)
+    // Сохранение настроек в список и файл сохранений
+    public static void SaveOptionToFile(SettingsList setting, SettingsOptions value)
     {
         SaveOptionToFile(setting, value, 0);
     }
 
-    public static void SaveOptionToFile(Settings setting, SettingsOptions value, float data)
+    public static void SaveOptionToFile(SettingsList setting, SettingsOptions value, float data)
     {
         try
         {
@@ -172,39 +182,38 @@ public class SettingsConfig
         }
         catch (Exception)
         {
-            WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
         }
     }
 
-    public static void FilterAndApplySpecificSetting(Settings setting, SettingsOptions value, float data = 0)
+    public static void CheckLinkedOptions(SettingsList setting, SettingsOptions value)
     {
-        if (setting == Settings.FullScreenMode)
+        if (setting == SettingsList.FullScreenMode && value == SettingsOptions.FullScreen)
         {
-            if (value == SettingsOptions.FullScreen)
-            {
-                SaveOptionToFile(Settings.Resolution, SettingsOptions.rAutomatic);
-            }
+            SaveOptionToFile(SettingsList.Resolution, SettingsOptions.rAutomatic);
+            UpdateGroupVisuals(SettingsList.Resolution);
         }
 
-        if (setting == Settings.Resolution)
+        if (setting == SettingsList.Resolution && value != chosenOptions[SettingsList.Resolution].settingsOption)
         {
-            if (value != chosenOptions[setting].settingsOption)
-            {
-                SaveOptionToFile(Settings.FullScreenMode, SettingsOptions.WindowsScreen);
-            }
+            SaveOptionToFile(SettingsList.FullScreenMode, SettingsOptions.WindowsScreen);
+            UpdateGroupVisuals(SettingsList.FullScreenMode);
         }
+    }
 
+    public static void ApplySetting(SettingsList setting, SettingsOptions value, float data = 0)
+    {
         currentManager.InstantApplySpecificSetting(setting, value, data);
     }
 
-    public static bool isOptionEnabled(Settings setting, SettingsOptions option)
+    public static bool isOptionEnabled(SettingsList setting, SettingsOptions option)
     {
         return chosenOptions[setting].settingsOption == option;
     }
 
-    public static void subscribeOption(ISettingsOption option)
+    public static void subscribeOption(SettingsList key, ISettingsOptions option)
     {
-        options.Add(option);
+        options.Add((key, option));
     }
 
     public static void unSubscribeAllOptions()
@@ -212,19 +221,22 @@ public class SettingsConfig
         options.Clear();
     }
 
-    public static void UpdateAllVisuals()
+    public static void UpdateGroupVisuals(SettingsList settingGroup)
     {
-        foreach (ISettingsOption setting in options)
+        foreach (var setting in options)
         {
-            setting.UpdateVisuals();
+            if (setting.Item1 == settingGroup)
+            {
+                setting.Item2.UpdateVisuals();
+            }
         }
     }
 
     public static void InitialUpdateAllVisuals()
     {
-        foreach (ISettingsOption setting in options)
+        foreach (var setting in options)
         {
-            setting.InitialUpdateVisuals();
+            setting.Item2.InitialUpdateVisuals();
         }
     }
 
@@ -302,7 +314,7 @@ public class SettingsConfig
                 Screen.SetResolution(832, 480, FullScreenMode.Windowed, 60);
                 break;
             case SettingsOptions.rAutomatic:
-                if (GetChosenOption(Settings.FullScreenMode) != SettingsOptions.FullScreen)
+                if (GetChosenOption(SettingsList.FullScreenMode) != SettingsOptions.FullScreen)
                 {
                     Screen.fullScreenMode = FullScreenMode.Windowed;
                     Screen.SetResolution(Screen.currentResolution.width, Screen.currentResolution.height, FullScreenMode.Windowed, 60);
@@ -314,7 +326,7 @@ public class SettingsConfig
     // Принимает громкость от 0 до 1, ставит громоксть миксера в децибельной шкале
     public static void SetVolume(AudioMixer mixer, string exposedparam, float linearVolume)
     {
-        float dbVolume = Mathf.Log10(linearVolume) * 20;
+        float dbVolume = 20 * Mathf.Log10(linearVolume);
 
         if (linearVolume == 0.0f)
         {
@@ -331,6 +343,6 @@ public class SettingsConfig
 
     public static bool IfAllowExpandings()
     {
-        return chosenOptions[Settings.SpriteExpand].data == 1;
+        return chosenOptions[SettingsList.SpriteExpand].data == 1;
     }
 }

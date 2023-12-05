@@ -6,7 +6,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using static TextBoxController;
 
-public enum bgSwapType
+public enum BgSwapType
 {
     BlackFade,
     Instant,
@@ -25,11 +25,6 @@ public struct TextBoxTheme
     public float alpha;
 };
 
-public enum Backgrounds
-{
-    SpacePort,
-}
-
 public class BackgroundManager : MonoBehaviour
 {
     public static BackgroundManager instance = null;
@@ -39,6 +34,7 @@ public class BackgroundManager : MonoBehaviour
 
     private GameObject _backgroundsPanel;
 
+    [SerializeField]
     private GameObject BlackPanel;
 
     private AsyncOperationHandle<GameObject> bg_handler;
@@ -63,11 +59,6 @@ public class BackgroundManager : MonoBehaviour
         // _textBoxThemes.Add("SkverDay", new TextBoxTheme(ThemeStyle.Light, 0.75f));
     }
 
-    private void Start()
-    {
-        BlackPanel = PanelsConfig.CurrentManager.GetBlackPanel();
-    }
-
     public IEnumerator IReleaseBackground()
     {
         if (bg_handler.IsValid())
@@ -76,17 +67,19 @@ public class BackgroundManager : MonoBehaviour
         }
     }
 
-    public IEnumerator ISwap(string bg_adress, bgSwapType type, float speed, float delay)
+    public IEnumerator ISwap(string bg_adress, BgSwapType type, float speed, float delay)
     {
+        Typewriter.Instance.ResetInstantSkip();
+
         switch (type)
         {
-            case bgSwapType.BlackFade:
+            case BgSwapType.BlackFade:
                 yield return StartCoroutine(IBlackFadeBackground(bg_adress, speed, delay));
                 break;
-            case bgSwapType.Instant:
+            case BgSwapType.Instant:
                 yield return StartCoroutine(IInstantSwapBackground(bg_adress));
                 break;
-            case bgSwapType.Overlay:
+            case BgSwapType.Overlay:
                 yield return StartCoroutine(IOverlayBackground(bg_adress, speed));
                 break;
         }
@@ -172,8 +165,12 @@ public class BackgroundManager : MonoBehaviour
         newBg.GetComponent<CanvasGroup>().alpha = 0f;
         newBg.transform.SetSiblingIndex(newBg.transform.childCount - 1);
 
-        StartCoroutine(SetTextBoxTheme(bg_adress, false));
-        yield return StartCoroutine(FadeManager.FadeObject(newBg, true, speed));
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            SetTextBoxTheme(bg_adress, false),
+            FadeManager.FadeObject(newBg, true, speed)
+        }));
+
 
         if (old_handler.IsValid())
         {
@@ -192,6 +189,8 @@ public class BackgroundManager : MonoBehaviour
     // Для сейв системы
     public IEnumerator ILoadBackground(string bg_adress)
     {
+        Typewriter.Instance.ResetInstantSkip();
+
         if (bg_handler.IsValid())
         {
             Addressables.ReleaseInstance(bg_handler);

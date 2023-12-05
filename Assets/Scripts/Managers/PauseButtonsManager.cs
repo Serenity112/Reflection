@@ -1,7 +1,16 @@
+using Krivodeling.UI.Effects;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+
+public enum PauseOptions
+{
+    Continue,
+    Saves,
+    Settings,
+    Quit
+}
 
 public class PauseButtonsManager : IButtonManager
 {
@@ -9,35 +18,28 @@ public class PauseButtonsManager : IButtonManager
 
     private float speed = 5f;
 
-    public bool FreezeButtons { get; private set; } = false;
+    private bool _buttonClicked = false;
 
-    public enum PauseOptions
-    {
-        Continue,
-        Saves,
-        Settings,
-        Quit
-    }
+    public UIBlur uIBlur;
 
-    private void Awake()
+    public void Awake()
     {
         instance = this;
-
-        GameButtons = new List<GameObject>();
     }
 
-    public override void AppearActualButton()
+    private void Update()
     {
-        foreach (GameObject button_obj in GameButtons)
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
-            PauseOptionButton button = button_obj.GetComponent<PauseOptionButton>();
-            button.AppearIfEntered();
+            if (StaticVariables.PAUSED_ALLOW_BUTTON && !StaticVariables.OVER_UI && !_buttonClicked)
+            {
+                ExecuteOption(PauseOptions.Continue);
+            }
         }
     }
 
     public override void DisableButtons()
     {
-        FreezeButtons = true;
         foreach (GameObject button_obj in GameButtons)
         {
             button_obj.GetComponent<BoxCollider>().enabled = false;
@@ -47,7 +49,6 @@ public class PauseButtonsManager : IButtonManager
 
     public override void EnableButtons()
     {
-        FreezeButtons = false;
         foreach (GameObject button_obj in GameButtons)
         {
             button_obj.GetComponent<BoxCollider>().enabled = true;
@@ -55,19 +56,25 @@ public class PauseButtonsManager : IButtonManager
         }
     }
 
-    public override void UnSelectButtons()
+    public override void ResetAllButtonsState()
     {
         foreach (GameObject button in GameButtons)
         {
-            PauseOptionButton underlineButton = button.GetComponent<PauseOptionButton>();
-            underlineButton.ResetFlags();
-            GameObject spacing = underlineButton.spacing;
-            spacing.GetComponent<CanvasGroup>().alpha = 0f;
+            PauseOptionButton pauseOptionButton = button.GetComponent<PauseOptionButton>();
+            pauseOptionButton.ResetButtonState();
         }
     }
 
     public void ExecuteOption(PauseOptions option)
     {
+        // Избежать нажатия на другие кнопки при уже нажатой одной
+        if (_buttonClicked)
+        {
+            return;
+        }
+
+        _buttonClicked = true;
+
         switch (option)
         {
             case PauseOptions.Continue:
@@ -87,15 +94,27 @@ public class PauseButtonsManager : IButtonManager
 
     private IEnumerator IContinue()
     {
+        uIBlur.EndBlur(speed);
+
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
             FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed),
             FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed * 0.5f),
-            FadeManager.FadeObject(PanelsManager.instance.PausePanel, false, speed)
+            FadeManager.FadeOnly(PanelsManager.instance.PausePanel, false, speed)
         }));
 
-        UnSelectButtons();
+        PanelsManager.instance.PausePanel.SetActive(false);
 
-        Typewriter.Instance.AllowSkip();
+        ResetAllButtonsState();
+
+        StaticVariables.PAUSED = false;
+        StaticVariables.PAUSED_ALLOW_BUTTON = false;
+    }
+
+    public override void ResetManager()
+    {
+        _buttonClicked = false;
+        ResetAllButtonsState();
+        EnableButtons();
     }
 }

@@ -8,6 +8,11 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
     protected bool pointer_down = false;
     protected bool enter = false;
 
+    public virtual void Awake()
+    {
+
+    }
+
     public abstract void EnterAction();
 
     public abstract void ExitAction();
@@ -16,9 +21,7 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
 
     public void OnClick() => StartCoroutine(IClick());
 
-    public virtual bool PointerEnterCondition() { return true; }
-
-    public void ResetFlags()
+    protected void ResetFlags()
     {
         pointer_down = false;
         enter = false;
@@ -28,7 +31,7 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
     {
         enter = true;
 
-        if (!StaticVariables.OverlayPanelActive && !pointer_down && PointerEnterCondition())
+        if (!StaticVariables.OverlayPanelActive && !pointer_down)
         {
             EnterAction();
         }
@@ -44,21 +47,13 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
         }
     }
 
-    public virtual void PrePointerDown() { }
-
     public void OnPointerDown(PointerEventData eventData)
     {
-        PrePointerDown();
-
         pointer_down = true;
     }
 
-    public virtual void PrePointerUp() { }
-
     public void OnPointerUp(PointerEventData eventData)
     {
-        PrePointerUp();
-
         pointer_down = false;
 
         if (!enter)
@@ -67,11 +62,5 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
         }
     }
 
-    public virtual void AppearIfEntered()
-    {
-        if (!StaticVariables.OverlayPanelActive && enter)
-        {
-            EnterAction();
-        }
-    }
+    public abstract void ResetButtonState();
 }

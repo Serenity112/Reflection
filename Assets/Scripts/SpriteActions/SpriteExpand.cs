@@ -55,7 +55,7 @@ public class SpriteExpand : MonoBehaviour
             StopPrev(allowExpand, skip);
         } else
         {
-            Typewriter.Instance.SkipIsActive = false;
+            //Typewriter.Instance.SkipIsActive = false;
             StopAllCoroutines();
             SpriteController.instance.LoadSpritesExpandingInfo();
         }
