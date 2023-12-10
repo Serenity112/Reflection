@@ -20,8 +20,7 @@ public class StationScroll : MonoBehaviour, ISpecialEvent
     private void OnEnable()
     {
         currentData = ((int)StationScrollState.Start).ToString();
-        SpecialEventManager.instance.SetEventEnum(SpecialEvent.StationScroll);
-        SpecialEventManager.instance.SetEventInstance(this);
+        SpecialEventManager.instance.SetEvent(this, SpecialEvent.StationScroll);
     }
 
     public IEnumerator IScrollBg(float speed, bool skip)

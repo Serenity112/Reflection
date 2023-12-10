@@ -2,35 +2,32 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SaveBackButton : IDraggableButton
+public class SaveBackButton : IExpandableButton
 {
-    private Animator animator;
-
     private IEnumerator expandOnEnter;
     private IEnumerator shrinkOnEnter;
 
-    private GameObject buttonParent;
-
-    private Vector3 origScale;
-    private Vector3 expandedScale;
-
-    void Awake()
+    private void Start()
     {
-        GetComponent<Button>().interactable = true;
+        animator.Play("Idle");
+    }
 
-        animator = GetComponent<Animator>();
-
-        buttonParent = transform.parent.gameObject;
-
-        origScale = gameObject.GetComponent<RectTransform>().localScale;
-        expandedScale = origScale * 1.1f;
+    private void Update()
+    {
+        if (Input.GetKey(KeyCode.Escape) && 
+            GetComponent<Button>().interactable && 
+            StaticVariables.IN_SAVE_MENU &&
+            !StaticVariables.GAME_LOADING)
+        {
+            OnClick();
+        }
     }
 
     public override void EnterAction()
     {
         if (shrinkOnEnter != null)
             StopCoroutine(shrinkOnEnter);
-        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
+        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(expandOnEnter);
     }
 
@@ -38,7 +35,7 @@ public class SaveBackButton : IDraggableButton
     {
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
-        shrinkOnEnter = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
+        shrinkOnEnter = ExpandManager.ExpandObject(gameObject, origScale, expandTime);
         StartCoroutine(shrinkOnEnter);
     }
 
@@ -49,15 +46,15 @@ public class SaveBackButton : IDraggableButton
         animator.Play("Back");
         SaveManager.instance.CloseSave();
 
-        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
 
         GetComponent<Button>().interactable = true;
     }
 
     public override void ResetButtonState()
     {
-        throw new System.NotImplementedException();
+        animator.Play("Idle");
+        GetComponent<Button>().interactable = true;
     }
 }

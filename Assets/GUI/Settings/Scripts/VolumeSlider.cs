@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System;
 
-public class VolumeSlider : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, ISettingsOptions
+public class VolumeSlider : MonoBehaviour, ISettingsOptions, IPointerDownHandler, IPointerUpHandler
 {
     [SerializeField]
     private SettingsList setting;
@@ -58,7 +58,6 @@ public class VolumeSlider : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         }
 
         SettingsConfig.SaveOptionToFile(setting, option, slider.value);
-
         SettingsConfig.ApplySetting(setting, option, slider.value);
     }
 

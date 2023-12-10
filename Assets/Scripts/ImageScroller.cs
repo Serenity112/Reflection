@@ -8,6 +8,9 @@ public class ImageScroller : MonoBehaviour
 
     private void Update()
     {
-        image.uvRect = new Rect(image.uvRect.position + new Vector2(x, y) * Time.deltaTime, image.uvRect.size);
+        if (SettingsConfig.chosenOptions[SettingsList.GuiAnimation].data == 1)
+        {
+            image.uvRect = new Rect(image.uvRect.position + new Vector2(x, y) * Time.deltaTime, image.uvRect.size);
+        }
     }
 }

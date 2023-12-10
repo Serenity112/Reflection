@@ -15,9 +15,9 @@ public class SpecialEventManager : MonoBehaviour
 {
     public static SpecialEventManager instance = null;
 
-    public ISpecialEvent currentEvent;
+    public ISpecialEvent CurrentEventObject { get; set; } = null;
 
-    public SpecialEvent currentEventEnum;
+    public SpecialEvent CurrentEventEnum { get; set; } = SpecialEvent.none;
 
     private void Awake()
     {
@@ -31,46 +31,42 @@ public class SpecialEventManager : MonoBehaviour
         }
     }
 
-    public void SetEventInstance(ISpecialEvent specialEvent)
+    public void SetEvent(ISpecialEvent eventObj, SpecialEvent evenEnum)
     {
-        currentEvent = specialEvent;
+        CurrentEventObject = eventObj;
+        CurrentEventEnum = evenEnum;
     }
 
-    public void SetEventEnum(SpecialEvent specialEvent)
+    public void DeleteEvent()
     {
-        currentEventEnum = specialEvent;
-    }
-
-    public void DeleteEvent(SpecialEvent specialEvent)
-    {
-        currentEventEnum = SpecialEvent.none;
-        currentEvent = null;
+        CurrentEventEnum = SpecialEvent.none;
+        CurrentEventObject = null;
     }
 
     public IEnumerator IReleaseCurrentEvent()
     {
-        if (currentEventEnum == SpecialEvent.none)
+        if (CurrentEventEnum == SpecialEvent.none)
         {
             yield break;
         }
 
-        yield return StartCoroutine(currentEvent.IReleaseEvent());
-        DeleteEvent(currentEventEnum);
+        yield return StartCoroutine(CurrentEventObject.IReleaseEvent());
+        DeleteEvent();
     }
 
     public IEnumerator ILoadCurrentEventByState(SpecialEvent specialEvent, string data)
     {
-        SetEventEnum(specialEvent);
+        //SetEventEnum(specialEvent);
 
-        if (currentEventEnum == SpecialEvent.none)
+        if (CurrentEventEnum == SpecialEvent.none)
         {
             yield break;
         }
 
         //Debug.Log("if (currentEvent != null)");
-        if (currentEvent != null)
+        if (CurrentEventObject != null)
         {
-            yield return StartCoroutine(currentEvent.ILoadEventByData(data));
+            yield return StartCoroutine(CurrentEventObject.ILoadEventByData(data));
         }
         else
         {

@@ -1,6 +1,7 @@
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SaveFileFields : MonoBehaviour
 {
@@ -50,7 +51,7 @@ public class SaveFileFields : MonoBehaviour
             if (overPanelOutColor != null)
                 StopCoroutine(overPanelOutColor);
 
-            overPanelInColor = FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, op_alpha), SaveManager.instance.speed);
+            overPanelInColor = FadeManager.FadeImageToColor(overPanel.GetComponent<Image>(), new Color(0, 0, 0, op_alpha), SaveManager.instance.speed);
             yield return StartCoroutine(overPanelInColor);
         }
     }
@@ -62,7 +63,7 @@ public class SaveFileFields : MonoBehaviour
             if (overPanelInColor != null)
                 StopCoroutine(overPanelInColor);
 
-            overPanelOutColor = FadeManager.FadeImageToColor(overPanel, new Color(0, 0, 0, 0), SaveManager.instance.speed);
+            overPanelOutColor = FadeManager.FadeImageToColor(overPanel.GetComponent<Image>(), new Color(0, 0, 0, 0), SaveManager.instance.speed);
             yield return StartCoroutine(overPanelOutColor);
         }
     }

@@ -79,7 +79,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     }
 
     private IEnumerator IOpenSettings()
-    {
+    {      
         SettingsConfig.currentManager = GetComponent<SettingsManager>();
 
         FadeManager.FadeObject(blackPanelPanels, true);
@@ -91,9 +91,9 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
 
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, speed));
         FadeManager.FadeObject(blackPanelGame, false);
-
         StaticVariables.IN_SETTINGS_MENU = true;
     }
+
     private IEnumerator ICloseSettings()
     {
         FadeManager.FadeObject(blackPanelGame, true);

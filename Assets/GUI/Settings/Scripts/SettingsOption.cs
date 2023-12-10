@@ -38,6 +38,7 @@ public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandl
         SettingsConfig.CheckLinkedOptions(setting, option);
         SettingsConfig.SaveOptionToFile(setting, option);
         SettingsConfig.UpdateGroupVisuals(setting);
+        SettingsConfig.ApplySetting(setting, option);
     }
 
     private void OnMouseEnter()

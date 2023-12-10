@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Collections;
 
 namespace Fungus
-{   
+{
     /// <summary>
     /// Attribute class for Fungus commands.
     /// </summary>
@@ -30,7 +30,7 @@ namespace Fungus
             this.HelpText = helpText;
             this.Priority = priority;
         }
-    
+
         public string Category { get; set; }
         public string CommandName { get; set; }
         public string HelpText { get; set; }
@@ -41,7 +41,7 @@ namespace Fungus
     /// Base class for Commands. Commands can be added to Blocks to create an execution sequence.
     /// </summary>
 
-    
+
     public abstract class Command : MonoBehaviour, IVariableReference
     {
         [FormerlySerializedAs("commandId")]
@@ -55,6 +55,8 @@ namespace Fungus
 
         [HideInInspector]
         public int InsertNum = -1;
+
+        protected int UniqueID = 0;
 
         #region Editor caches
 #if UNITY_EDITOR
@@ -92,8 +94,6 @@ namespace Fungus
         /// Unique for this Flowchart.
         /// </summary>
         public virtual int ItemId { get { return itemId; } set { itemId = value; } }
-
-
 
         /// <summary>
         /// Error message to display in the command inspector.
@@ -150,17 +150,6 @@ namespace Fungus
             OnEnter();
         }
 
-        public virtual void Continue(float waitTime, bool f)
-        {
-            StartCoroutine(IContinue());
-        }
-
-        private IEnumerator IContinue()
-        {
-            yield return new WaitForSeconds(1f);
-            Continue();
-        }
-
         /// <summary>
         /// End execution of this command and continue execution at the next command.
         /// </summary>
@@ -184,7 +173,7 @@ namespace Fungus
             if (ParentBlock != null)
             {
                 ParentBlock.JumpToCommandIndex = nextCommandIndex;
-            }   
+            }
         }
         public virtual void Continue(Action onComplete)
         {
@@ -214,46 +203,43 @@ namespace Fungus
         /// cleanup state so that the command is ready to execute again later on.
         /// </summary>
         public virtual void OnStopExecuting()
-        {}
+        { }
 
         /// <summary>
         /// Called when the new command is added to a block in the editor.
         /// </summary>
         public virtual void OnCommandAdded(Block parentBlock)
-        {}
-
-      
-
+        { }
 
         /// <summary>
         /// Called when the command is deleted from a block in the editor.
         /// </summary>
         public virtual void OnCommandRemoved(Block parentBlock)
-        {}
+        { }
 
         /// <summary>
         /// Called when this command starts execution.
         /// </summary>
         public virtual void OnEnter()
-        {}
+        { }
 
         /// <summary>
         /// Called when this command ends execution.
         /// </summary>
         public virtual void OnExit()
-        {}
+        { }
 
         /// <summary>
         /// Called when this command is reset. This happens when the Reset command is used.
         /// </summary>
         public virtual void OnReset()
-        {}
+        { }
 
         /// <summary>
         /// Populates a list with the Blocks that this command references.
         /// </summary>
         public virtual void GetConnectedBlocks(ref List<Block> connectedBlocks)
-        {}
+        { }
 
         /// <summary>
         /// Returns true if this command references the variable.
@@ -266,7 +252,7 @@ namespace Fungus
 
         public virtual string GetLocationIdentifier()
         {
-            return ParentBlock.GetFlowchart().GetName() + ":" + ParentBlock.BlockName + "." + this.GetType().Name + "#" + CommandIndex.ToString(); 
+            return ParentBlock.GetFlowchart().GetName() + ":" + ParentBlock.BlockName + "." + this.GetType().Name + "#" + CommandIndex.ToString();
         }
 
         /// <summary>
@@ -361,14 +347,14 @@ namespace Fungus
             string localizationId = GetFlowchart().LocalizationId;
             if (localizationId.Length == 0)
             {
-                localizationId = flowchart.GetName();            
+                localizationId = flowchart.GetName();
             }
 
             return localizationId;
         }
 
         //Delete
-      
+
 
         #endregion
     }

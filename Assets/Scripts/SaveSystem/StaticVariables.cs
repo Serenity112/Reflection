@@ -7,8 +7,21 @@ public static class StaticVariables
     public static bool OVER_UI = false;
 
     // Дауснкие статусы
-    public static bool PAUSED_ALLOW_BUTTON = false;
+    public static bool PAUSE_ANIM_ENDED = false;
     public static bool IN_SETTINGS_MENU = false;
+    public static bool IN_SAVE_MENU = false;
+    public static bool GAME_LOADING = false;
+
+    public static void ResetGlags()
+    {
+        PAUSED = false;
+        WARNING_PANEL = false;
+        CONFIRM_PANEL = false;
+        OVER_UI = false;
+        PAUSE_ANIM_ENDED = false;
+        IN_SETTINGS_MENU = false;
+        IN_SAVE_MENU = false;
+    }
 
     // В главном ли меню игра
     public static bool ifInMainMenu { get; set; } = true;

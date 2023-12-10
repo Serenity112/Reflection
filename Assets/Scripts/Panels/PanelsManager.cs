@@ -27,8 +27,6 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     public GameObject ChatLog;
 
-    public GameObject PausePanel;
-
     public GameObject PanelsCanvas;
 
     public GameObject GameCanvas;
@@ -62,9 +60,10 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     private void Start()
     {
-        Typewriter.Instance.DenySkip();
         ConfirmationPanel.instance.ActivePanels = ActivePanels;
-       // WarningPanel.instance.ActivePanels = ActivePanels;
+        // WarningPanel.instance.ActivePanels = ActivePanels;
+
+        StartCoroutine(IPreloadSavesPanel());
     }
 
     #region GameButtons
@@ -105,7 +104,6 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
             }));
         }
 
-        Typewriter.Instance.AllowSkip();
         GameButtonsActivate();
 
         yield return null;
@@ -123,29 +121,52 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     #endregion
 
+    #region SavePanel
+
     // Загрузка из сейв системы внутри игры
     public IEnumerator ILoadGame(int saveNum)
     {
+        StaticVariables.GAME_LOADING = true;
+
         FadeManager.FadeObject(BlackPanel, true);
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, speed));
 
-        SaveManager.instance.ClearCurrent();
-        Addressables.ReleaseInstance(savePanelHandler);
-
-        PauseButtonsManager.instance.EnableButtons();
-        PauseButtonsManager.instance.ResetAllButtonsState();
+        SaveManager.instance.ClearCurrenTextures();
+        SaveManager.instance.OnSaveClose();
+        // Так как внутри ClearCurrent идёт чтение из файла, это ломает корутины почему-то...
+        yield return new WaitForSeconds(0.1f);
+        //PauseButtonsManager.instance.ResetManager();
         PanelsCamera.enabled = false;
+        savePanelHandler.Result.SetActive(false);
 
-        Resources.UnloadUnusedAssets();
+        // Выключаем меню паузы
+        FadeManager.FadeOnly(PauseButtonsManager.instance.PausePanel, false);
+        FadeManager.FadeObject(PauseButtonsManager.instance.PausePanel, false);
 
         yield return StartCoroutine(UserData.instance.ILoadGame(saveNum));
-
+        yield return new WaitForSeconds(0.1f);
 
         FadeManager.FadeObject(blackPanelPanels, false);
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, speed));
+
+        StaticVariables.GAME_LOADING = false;
+        StaticVariables.IN_SAVE_MENU = false;
+        StaticVariables.PAUSED = false;
+        StaticVariables.PAUSE_ANIM_ENDED = false;
     }
 
-    // SAVES
+    private IEnumerator IPreloadSavesPanel()
+    {
+        savePanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
+        yield return savePanelHandler;
+
+        if (savePanelHandler.Status == AsyncOperationStatus.Succeeded)
+        {
+            savePanelHandler.Result.name = "SaveGuiPanel";
+            savePanelHandler.Result.SetActive(false);
+        }
+    }
+
     public void OpenSaveMenu() => StartCoroutine(IopenSaveMenu());
 
     public void CloseSaveMenu() => StartCoroutine(IcloseSaveMenu());
@@ -154,26 +175,24 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     {
         FadeManager.FadeObject(blackPanelPanels, true);
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
+        yield return new WaitForEndOfFrame();
 
-        savePanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
-        yield return savePanelHandler;
+        // Для корректных скринщотов -----
+        FadeManager.FadeOnly(PauseButtonsManager.instance.PausePanel, false);
+        GameGuiPanel.GetComponent<CanvasGroup>().alpha = 1f;
+        GameButtons.GetComponent<CanvasGroup>().alpha = 1f;
+        // -----
 
-        if (savePanelHandler.Status == AsyncOperationStatus.Succeeded)
-        {
-            // Включаем игровое гуи и выключаем паузу для корректных скриншотов
-
-            FadeManager.FadeObject(PausePanel, false);
-            GameGuiPanel.GetComponent<CanvasGroup>().alpha = 1f;
-            GameButtons.GetComponent<CanvasGroup>().alpha = 1f;
-            PanelsCamera.enabled = true;
-        }
-        else
-        {
-            Debug.Log("Error loading");
-        }
+        savePanelHandler.Result.SetActive(true);
+        PanelsCamera.enabled = true;
+        SaveManager.instance.InitialReset();
+        // Так как внутри InitialReset идёт чтение из файла, это ломает корутины почему-то...
+        yield return new WaitForSeconds(0.1f);
 
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, speed));
         FadeManager.FadeObject(BlackPanel, false);
+
+        StaticVariables.IN_SAVE_MENU = true;
     }
 
     private IEnumerator IcloseSaveMenu()
@@ -181,19 +200,20 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         FadeManager.FadeObject(BlackPanel, true);
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, speed));
 
-        SaveManager.instance.ClearCurrent();
-        Addressables.ReleaseInstance(savePanelHandler);
+        PanelsCamera.enabled = false;
+        savePanelHandler.Result.SetActive(false);
+        PauseButtonsManager.instance.ResetManager();
+        SaveManager.instance.ClearCurrenTextures();
+        SaveManager.instance.OnSaveClose();
 
-        PauseButtonsManager.instance.EnableButtons();
-        PauseButtonsManager.instance.ResetAllButtonsState();
-
-        FadeManager.FadeObject(PausePanel, true);
+        FadeManager.FadeOnly(PauseButtonsManager.instance.PausePanel, true);
         GameGuiPanel.GetComponent<CanvasGroup>().alpha = 0f;
         GameButtons.GetComponent<CanvasGroup>().alpha = 0f;
-        PanelsCamera.enabled = false;
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, speed));
         FadeManager.FadeObject(blackPanelPanels, false);
+
+        StaticVariables.IN_SAVE_MENU = false;
 
         Resources.UnloadUnusedAssets();
     }
@@ -202,6 +222,8 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     {
         Addressables.ReleaseInstance(savePanelHandler);
     }
+
+    #endregion
 
     // Выход в главное меню
     public void QuitToMainMenu()
@@ -226,9 +248,4 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     public GameObject GetActivePanelsParent() => ActivePanels;
 
     public Camera GetGameCamera() => GameCamera;
-
-    public void ReleaseSettingsMenu()
-    {
-        throw new System.NotImplementedException();
-    }
 }

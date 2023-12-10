@@ -50,7 +50,12 @@ public class SaveManager : MonoBehaviour
     public float frameAplhaOff { get; private set; } = 1f;
     public float frameAplhaOn { get; private set; } = 0.4f;
 
-    void Start()
+    [SerializeField]
+    private SaveBackButton backButton;
+
+    private IEnumerator _update;
+
+    private void Awake()
     {
         if (instance == null)
         {
@@ -65,7 +70,10 @@ public class SaveManager : MonoBehaviour
         SaveFilesFolder = SaveSystemUtils.SaveFilesFolder;
         SaveFileName = SaveSystemUtils.SaveFileName;
         ScreenshotsFolder = SaveSystemUtils.ScreenshotsFolder;
+    }
 
+    private void Start()
+    {
         GameObject Files = transform.GetChild(1).gameObject;
 
         for (int i = 0; i < savesPerPage; i++)
@@ -96,11 +104,30 @@ public class SaveManager : MonoBehaviour
         }
 
         bottomPages = bottomPagesObj.GetComponent<BottomPages>();
-
-        LoadFirstPage();
     }
 
-    public void ClearCurrent()
+    private IEnumerator IUpdate()
+    {
+        while (true)
+        {
+            if (StaticVariables.IN_SAVE_MENU && !StaticVariables.GAME_LOADING)
+            {
+                if (Input.GetKeyDown(KeyCode.RightArrow))
+                {
+                    ScrollPage(SavePageScroll.Right);
+                }
+
+                if (Input.GetKeyDown(KeyCode.LeftArrow))
+                {
+                    ScrollPage(SavePageScroll.Left);
+                }
+            }
+
+            yield return null;
+        }
+    }
+
+    public void ClearCurrenTextures()
     {
         for (int i = 0; i < savesPerPage; i++)
         {
@@ -140,14 +167,16 @@ public class SaveManager : MonoBehaviour
 
     public void LoadPage(int pageToLoad)
     {
-        bottomPages.DisappearNumbers(currentPage);
-        bottomPages.Disactivate(currentPage);
-
-        StartCoroutine(LoadPictures(currentPage, pageToLoad));
+        int oldPage = currentPage;
         currentPage = pageToLoad;
 
+        bottomPages.DisappearNumbers(oldPage);
+        bottomPages.HidePage(oldPage);
+
+        StartCoroutine(LoadPictures(oldPage, pageToLoad));
+
         bottomPages.AppearNumbers(pageToLoad);
-        bottomPages.Activate(pageToLoad);
+        bottomPages.ShowPage(pageToLoad);
     }
 
     public void LoadFirstPage()
@@ -184,6 +213,7 @@ public class SaveManager : MonoBehaviour
                 currentTextures[saveNum] = texture;
 
                 screenshot.GetComponent<RawImage>().texture = texture;
+
                 screenshot.GetComponent<CanvasGroup>().alpha = 1f;
 
                 FadeManager.FadeObject(overPanel, true);
@@ -344,7 +374,7 @@ public class SaveManager : MonoBehaviour
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators_prev));
 
         // Очистка текущих скринов
-        ClearCurrent();
+        ClearCurrenTextures();
 
         // Загрузка текстур новых скринов
         for (int i = 0; i < savesPerPage; i++)
@@ -527,5 +557,23 @@ public class SaveManager : MonoBehaviour
     public void CloseSave()
     {
         PanelsConfig.CurrentManager.CloseSaveMenu();
+    }
+
+    public void InitialReset()
+    {
+        backButton.ResetButtonState();
+        bottomPages.InitialReset();
+        LoadFirstPage();
+
+        _update = IUpdate();
+        StartCoroutine(_update);
+    }
+
+    public void OnSaveClose()
+    {
+        if (_update != null)
+        {
+            StopCoroutine(_update);
+        }
     }
 }

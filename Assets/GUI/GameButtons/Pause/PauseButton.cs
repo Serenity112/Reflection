@@ -25,8 +25,11 @@ public class PauseButton : IExpandableButton
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (!StaticVariables.PAUSED && !StaticVariables.OVER_UI)
+            if (!StaticVariables.PAUSED && 
+                !StaticVariables.OVER_UI &&
+                !StaticVariables.GAME_LOADING)
             {
+                StaticVariables.PAUSED = true;
                 StartCoroutine(IClickAnimation());
             }
         }
@@ -52,7 +55,6 @@ public class PauseButton : IExpandableButton
 
     public override IEnumerator IClick()
     {
-
         yield return StartCoroutine(IClickAnimation());
     }
 
@@ -62,7 +64,10 @@ public class PauseButton : IExpandableButton
         gameObject.GetComponent<Button>().interactable = false;
         StaticVariables.PAUSED = true;
 
-        PanelsManager.instance.PausePanel.SetActive(true);
+        PauseButtonsManager.instance.PausePanel.GetComponent<CanvasGroup>().alpha = 0f;
+        PauseButtonsManager.instance.PausePanel.SetActive(true);
+
+
         PauseButtonsManager.instance.EnableButtons();
         PauseButtonsManager.instance.ResetManager();
         PauseButtonsManager.instance.uIBlur.BeginBlur(speed);
@@ -71,7 +76,7 @@ public class PauseButton : IExpandableButton
         {
             FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed),
             FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed * 0.75f),
-            FadeManager.FadeOnly(PanelsManager.instance.PausePanel, true, speed),
+            FadeManager.FadeObject(PauseButtonsManager.instance.PausePanel, true, speed),
             CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
             {
                 ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
@@ -80,7 +85,7 @@ public class PauseButton : IExpandableButton
         }));
 
         GetComponent<Button>().interactable = true;
-        StaticVariables.PAUSED_ALLOW_BUTTON = true;
+        StaticVariables.PAUSE_ANIM_ENDED = true;
         ResetButtonState();
     }
 

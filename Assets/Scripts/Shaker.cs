@@ -32,7 +32,7 @@ public class Shaker : MonoBehaviour
 
     private void OnEnable()
     {
-        Shake();
+        //Shake();
     }
 
     public void Shake()

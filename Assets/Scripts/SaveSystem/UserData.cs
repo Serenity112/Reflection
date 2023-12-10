@@ -64,8 +64,6 @@ public class UserData : MonoBehaviour
 
     // Events
 
-    private const string _startingDayName = "Dream";
-
     private static string SaveFileName;
     private static string SaveFilesFolder;
     private static string SaveFilesData;
@@ -122,8 +120,8 @@ public class UserData : MonoBehaviour
         newSave.CurrentAmbient2 = instance.CurrentAmbient2;
 
         // Ивенты
-        newSave.specialEvent = SpecialEventManager.instance.currentEventEnum;
-        newSave.specialEventData = newSave.specialEvent == SpecialEvent.none ? null : SpecialEventManager.instance.currentEvent.GetData();
+        newSave.specialEvent = SpecialEventManager.instance.CurrentEventEnum;
+        newSave.specialEventData = newSave.specialEvent == SpecialEvent.none ? null : SpecialEventManager.instance.CurrentEventObject.GetData();
 
         // Внешние сейвы
         // Прочитанные диалоги
@@ -143,6 +141,7 @@ public class UserData : MonoBehaviour
 
     private IEnumerator ILoadGameFromStart()
     {
+        string _startingDayName = "Dream";
         Flowchart flowchart = PanelsManager.instance.flowchart;
         Block targetBlock = flowchart.FindBlock(_startingDayName);
         flowchart.ExecuteBlock(targetBlock);
@@ -152,7 +151,6 @@ public class UserData : MonoBehaviour
     private IEnumerator ILoadGameBySaveNum(int actualSaveNum)
     {
         FadeManager.FadeObject(PanelsManager.instance.BlackPanel, true);
-        FadeManager.FadeObject(PanelsManager.instance.blackPanelPanels, false);
 
         yield return StartCoroutine(ILoadGame(actualSaveNum));
 
@@ -167,7 +165,6 @@ public class UserData : MonoBehaviour
         SaveData newSave = ES3.Load<SaveData>($"SaveFile{actualSaveNum}", fileName);
 
         Flowchart flowchart = PanelsManager.instance.flowchart;
-        Typewriter.Instance.AllowSkip();
 
         // Block
         if (CurrentBlock != null)
@@ -188,14 +185,14 @@ public class UserData : MonoBehaviour
         // Backgrounds + special event
         CurrentBG = newSave.Background;
 
-        IEnumerator i_bg_unload = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        IEnumerator i_bg_unload = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
         {
             SpecialEventManager.instance.IReleaseCurrentEvent(),
             BackgroundManager.instance.IReleaseBackground(),
             TextBoxController.instance.ClearThemes(),
         });
 
-        IEnumerator i_bg_load = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        IEnumerator i_bg_load = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
         {
             BackgroundManager.instance.ILoadBackground(CurrentBG),
             SpecialEventManager.instance.ILoadCurrentEventByState(newSave.specialEvent, newSave.specialEventData)

@@ -1,6 +1,7 @@
 using Krivodeling.UI.Effects;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,22 +17,29 @@ public class PauseButtonsManager : IButtonManager
 {
     public static PauseButtonsManager instance = null;
 
-    private float speed = 5f;
+    private float _speed = 5f;
 
     private bool _buttonClicked = false;
 
     public UIBlur uIBlur;
 
+    public GameObject PausePanel;
+
     public void Awake()
     {
         instance = this;
+
+        PausePanel = transform.GetChild(0).gameObject;
     }
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (StaticVariables.PAUSED_ALLOW_BUTTON && !StaticVariables.OVER_UI && !_buttonClicked)
+            if (StaticVariables.PAUSE_ANIM_ENDED &&
+                !StaticVariables.OVER_UI &&
+                !_buttonClicked &&
+                !StaticVariables.GAME_LOADING)
             {
                 ExecuteOption(PauseOptions.Continue);
             }
@@ -94,21 +102,20 @@ public class PauseButtonsManager : IButtonManager
 
     private IEnumerator IContinue()
     {
-        uIBlur.EndBlur(speed);
+        uIBlur.EndBlur(_speed);
 
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
-            FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed),
-            FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed * 0.5f),
-            FadeManager.FadeOnly(PanelsManager.instance.PausePanel, false, speed)
+            FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, _speed),
+            FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, _speed * 0.5f),
+            FadeManager.FadeOnly(PausePanel, false, _speed)
         }));
 
-        PanelsManager.instance.PausePanel.SetActive(false);
-
         ResetAllButtonsState();
+        PausePanel.SetActive(false);
 
         StaticVariables.PAUSED = false;
-        StaticVariables.PAUSED_ALLOW_BUTTON = false;
+        StaticVariables.PAUSE_ANIM_ENDED = false;
     }
 
     public override void ResetManager()
@@ -116,5 +123,25 @@ public class PauseButtonsManager : IButtonManager
         _buttonClicked = false;
         ResetAllButtonsState();
         EnableButtons();
+    }
+
+    public IEnumerator HideManager(float speed)
+    {
+        yield return StartCoroutine(FadeManager.FadeObject(PausePanel, false, speed));
+    }
+
+    public IEnumerator ShowManager(float speed)
+    {
+        yield return StartCoroutine(FadeManager.FadeObject(PausePanel, true, speed));
+    }
+
+    public void SetActive(bool active)
+    {
+        PausePanel.SetActive(active);
+    }
+
+    public void SetAlpha(float alpha)
+    {
+        PausePanel.GetComponent<CanvasGroup>().alpha = alpha;
     }
 }

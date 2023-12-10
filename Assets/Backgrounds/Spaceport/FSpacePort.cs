@@ -11,7 +11,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            ((SpacePort)SpecialEventManager.instance.currentEvent).RocketLaunch();
+            ((SpacePort)SpecialEventManager.instance.CurrentEventObject).RocketLaunch();
 
             Continue();
         }

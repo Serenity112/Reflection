@@ -24,9 +24,7 @@ public class SpacePort : MonoBehaviour, ISpecialEvent
     private void OnEnable()
     {
         currentData = ((int)SpacePortState.Start).ToString();
-        //SpecialEventManager.instance.SetEventEnum(SpecialEvent.SpacePort);
-        //Debug.Log("SetEventInstance");
-        //SpecialEventManager.instance.SetEventInstance(this);
+        SpecialEventManager.instance.SetEvent(this, SpecialEvent.SpacePort);
     }
 
     public void RocketLaunch()
@@ -36,7 +34,7 @@ public class SpacePort : MonoBehaviour, ISpecialEvent
         RocketStandPanel.GetComponent<CanvasGroup>().alpha = 0f;
         RocketLaunchPanel.GetComponent<CanvasGroup>().alpha = 1f;
 
-        if (!Typewriter.Instance.SkipIsActive)
+        if (!Typewriter.Instance.SkipIsActive && !StaticVariables.GAME_LOADING)
         {
             RocketLaunchPanel.GetComponent<Shaker>().Shake();
         }

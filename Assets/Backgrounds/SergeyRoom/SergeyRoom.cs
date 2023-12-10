@@ -30,8 +30,7 @@ public class SergeyRoom : MonoBehaviour, ISpecialEvent
     private void OnEnable()
     {
         //currentData = ((int)StationScrollState.Start).ToString();
-        SpecialEventManager.instance.SetEventEnum(SpecialEvent.SergeyRoom);
-        SpecialEventManager.instance.SetEventInstance(this);
+        SpecialEventManager.instance.SetEvent(this, SpecialEvent.SergeyRoom);
     }
 
     public void SetTime(string time)

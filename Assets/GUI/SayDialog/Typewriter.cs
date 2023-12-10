@@ -95,8 +95,6 @@ public class Typewriter : MonoBehaviour
 
         if (externalInputState || keyboardState)
         {
-            Debug.Log("1");
-
             if (skipButton.IfButtonClicked())
             {
                 skipButton.DisableSkipState();
@@ -105,13 +103,11 @@ public class Typewriter : MonoBehaviour
 
             if (externalInputState)
             {
-                Debug.Log("2");
                 extern_button_click_flag = false;
             }
 
             if (!GetDenyStatus() && continueClickedFlag)
             {
-                Debug.Log("3");
                 continueClickedFlag = false;
                 _CLICK_ENABLE = true;
             }

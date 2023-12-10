@@ -3,104 +3,85 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BottomPageButton : MonoBehaviour
+public class BottomPageButton : IExpandableButton
 {
-    public float speed;
-    public int buttonnumber;
+    private float _speed = 2.5f;
+    private int _buttonNum;
 
-    GameObject pages;
-    GameObject number;
-    Text text;
+    private Text _text;
+    private Image _image;
 
-    IEnumerator numbertowhite;
-    IEnumerator numbertogray;
-    IEnumerator numbertoblank;
+    private IEnumerator numbertowhite;
+    private IEnumerator numbertogray;
+    private IEnumerator numbertoblank;
 
-    IEnumerator expand;
-    IEnumerator shrink;
+    private IEnumerator expand;
+    private IEnumerator shrink;
 
-    IEnumerator active;
-    IEnumerator notactive;
+    private IEnumerator _squareWhite;
+    private IEnumerator _squareGray;
 
-    private void Awake()
+    private BottomPages _bottomPages;
+
+    public override void Awake()
     {
-        pages = transform.parent.gameObject;
-        number = transform.GetChild(0).gameObject;
-        text = number.GetComponent<Text>();
+        base.Awake();
 
-        string toBeSearched = "Page";
-        buttonnumber = Int32.Parse(name.Substring(name.IndexOf(toBeSearched) + toBeSearched.Length));
+        _image = GetComponent<Image>();
+        _text = transform.GetChild(0).gameObject.GetComponent<Text>();
     }
-    private void OnMouseEnter()
+
+    public void InitializeButton(int buttonNum, BottomPages bottomPages)
+    {
+        _buttonNum = buttonNum;
+        _bottomPages = bottomPages;
+        GetComponent<Button>().onClick.AddListener(delegate { OnClick(); });
+    }
+
+    public void SetText(string text)
+    {
+        _text.text = text;
+    }
+
+    public override void EnterAction()
     {
         NumberToWhite();
         Expand();
-        SquareAppear();
+        SquareToWhite();
     }
 
-    private void OnMouseExit()
+    public override void ExitAction()
     {
-        ClearNumber();
+        HideNumber();
         Shrink();
-        if(SaveManager.instance.currentPage != buttonnumber)
-            SquareHide();
-    }
-
-    public void ClearNumber()
-    {
-        int curr = SaveManager.instance.currentPage;
-        if (buttonnumber == curr - 1 
-            || buttonnumber == curr + 1)
+        if (SaveManager.instance.currentPage != _buttonNum)
         {
-           NumberToGray();
-        } else if (buttonnumber != curr)
-        {
-           NumberToBlank();
+            SquareToGray();
         }
     }
-    public void Expand()
-    {
-        if(shrink != null)
-            StopCoroutine(shrink);
 
-        expand = ExpandManager.ExpandObject(gameObject, 1.15f, 0.05f);
-        StartCoroutine(expand);
+    // Номера
+    public void HideNumber()
+    {
+        int curr = SaveManager.instance.currentPage;
+        if (_buttonNum == curr - 1 || _buttonNum == curr + 1)
+        {
+            NumberToGray();
+        }
+        else if (_buttonNum != curr)
+        {
+            NumberToBlank();
+        }
     }
 
-    public void Shrink()
-    {
-        if (expand != null)
-            StopCoroutine(expand);
-
-        shrink = ExpandManager.ExpandObject(gameObject, new Vector3(1f, 1f, 1f), 0.05f);
-        StartCoroutine(shrink);
-    }
-
-    public void SquareAppear()
-    {
-        if (notactive != null)
-            StopCoroutine(notactive);
-
-        active = FadeManager.FadeImageToColor(gameObject, new Color(1f, 1f, 1f, 1.05f), speed);
-        StartCoroutine(active);
-    }
-
-    public void SquareHide()
-    {
-        if (active != null)
-            StopCoroutine(active);
-
-        notactive = FadeManager.FadeImageToColor(gameObject, new Color(0.6f, 0.6f, 0.6f, 1.05f), speed); 
-        StartCoroutine(notactive);
-    }
     public void NumberToWhite()
     {
-        if(numbertogray != null)
+        if (numbertogray != null)
             StopCoroutine(numbertogray);
         if (numbertoblank != null)
             StopCoroutine(numbertoblank);
 
-        numbertowhite = FadeManager.FadeTextToColor(text, new Color(1f, 1f, 1f, 1.05f), speed);
+        numbertowhite = FadeManager.FadeTextToColor(_text, new Color(1f, 1f, 1f, 1f), _speed);
         StartCoroutine(numbertowhite);
     }
 
@@ -111,7 +92,7 @@ public class BottomPageButton : MonoBehaviour
         if (numbertoblank != null)
             StopCoroutine(numbertoblank);
 
-        numbertogray = FadeManager.FadeTextToColor(text, new Color(0.6f, 0.6f, 0.6f, 1.05f), speed);
+        numbertogray = FadeManager.FadeTextToColor(_text, new Color(0.6f, 0.6f, 0.6f, 1f), _speed);
         StartCoroutine(numbertogray);
     }
 
@@ -122,11 +103,61 @@ public class BottomPageButton : MonoBehaviour
         if (numbertogray != null)
             StopCoroutine(numbertogray);
 
-        float r = text.color.r;
-        float g = text.color.g;
-        float b = text.color.b;
+        float r = _text.color.r;
+        float g = _text.color.g;
+        float b = _text.color.b;
 
-        numbertoblank = FadeManager.FadeTextToColor(text, new Color(r, g, b, -0.05f), speed);
+        numbertoblank = FadeManager.FadeTextToColor(_text, new Color(r, g, b, 0f), _speed);
         StartCoroutine(numbertoblank);
+    }
+
+    // Расширение/сжатие
+    public void Expand()
+    {
+        if (shrink != null)
+            StopCoroutine(shrink);
+
+        expand = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
+        StartCoroutine(expand);
+    }
+
+    public void Shrink()
+    {
+        if (expand != null)
+            StopCoroutine(expand);
+
+        shrink = ExpandManager.ExpandObject(gameObject, origScale, 0f);
+        StartCoroutine(shrink);
+    }
+
+    // Квадрат
+    public void SquareToWhite()
+    {
+        if (_squareGray != null)
+            StopCoroutine(_squareGray);
+
+        _squareWhite = FadeManager.FadeImageToColor(_image, new Color(1f, 1f, 1f, 1f), _speed);
+        StartCoroutine(_squareWhite);
+    }
+
+    public void SquareToGray()
+    {
+        if (_squareWhite != null)
+            StopCoroutine(_squareWhite);
+
+        _squareGray = FadeManager.FadeImageToColor(_image, new Color(0.6f, 0.6f, 0.6f, 1f), _speed);
+        StartCoroutine(_squareGray);
+    }
+
+    public override IEnumerator IClick()
+    {
+        _bottomPages.loadPageOnClick(_buttonNum);
+        yield return null;
+    }
+
+    public override void ResetButtonState()
+    {
+        _image.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+        _text.color = new Color(0.6f, 0.6f, 0.6f, 0f);
     }
 }

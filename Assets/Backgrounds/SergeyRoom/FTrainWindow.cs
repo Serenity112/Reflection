@@ -18,7 +18,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            StartCoroutine(((SergeyRoom)SpecialEventManager.instance.currentEvent).LaunchTrain(Train, Delay));
+            StartCoroutine(((SergeyRoom)SpecialEventManager.instance.CurrentEventObject).LaunchTrain(Train, Delay));
 
             Continue();
         }

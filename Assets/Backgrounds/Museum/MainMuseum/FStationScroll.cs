@@ -20,7 +20,7 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            yield return StartCoroutine(((StationScroll)SpecialEventManager.instance.currentEvent).IScrollBg(Speed, Typewriter.Instance.SkipIsActive));
+            yield return StartCoroutine(((StationScroll)SpecialEventManager.instance.CurrentEventObject).IScrollBg(Speed, Typewriter.Instance.SkipIsActive));
 
             Continue();
         }
