@@ -1,6 +1,7 @@
 using Fungus;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -8,13 +9,18 @@ public class SpriteExpand : MonoBehaviour
 {
     public static SpriteExpand instance = null;
 
-    public string lastExpandedSpriteName = null;
+    public Character lastExpandedSpriteName = Character.None;
 
     public bool isExecuting = false;
 
     public float expand_coefficient = 1.035f;
 
     private float expand_time = 0.1f;
+
+    private Dictionary<Character, Character> namesAliases = new()
+    {
+        { Character.Stranger, Character.Nastya },
+    };
 
     void Awake()
     {
@@ -27,103 +33,103 @@ public class SpriteExpand : MonoBehaviour
             Destroy(gameObject);
         }
 
-        lastExpandedSpriteName = null;
+        lastExpandedSpriteName = Character.None;
     }
 
-    public void StopPrev(bool allowExpand, bool skip)
+    public void StopPrev(bool animated)
     {
         // isExecuting добавлено чтобы не вызывать загрузку позиций каждый диалог, а только когда что-то реально движется
         // Другие анимации редкие, поэтому там это условие игнорируется. Диалогов же больше чем свапов, появлений.
-        if (isExecuting)
-        {
-            isExecuting = false;
 
-            if (!skip && allowExpand)
-            {
-                StopAllCoroutines();
-                SpriteController.instance.LoadSpritesExpandingInfo();
-            }
+        isExecuting = false;
+
+        StopAllCoroutines();
+
+        if (SettingsConfig.IfAllowExpandings())
+        {
+            SpriteController.instance.LoadSpritesExpandingInfo(animated);
         }
     }
 
-    public void SetExpanding(string characterName, bool skip)
+    public void SetExpanding(Character character, bool skipIsActive)
     {
-        bool allowExpand = SettingsConfig.IfAllowExpandings();
+        //Debug.Log("SetExpanding skip: " + skipIsActive);
 
-        if (!Typewriter.Instance.SkipIsActive)
+        // Местоимения, аля Незнакомка - Настя итд
+        if (namesAliases.ContainsKey(character))
         {
-            StopPrev(allowExpand, skip);
-        } else
-        {
-            //Typewriter.Instance.SkipIsActive = false;
-            StopAllCoroutines();
-            SpriteController.instance.LoadSpritesExpandingInfo();
+            character = namesAliases[character];
         }
 
-        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteNumByName(characterName);
+        bool allowExpand = SettingsConfig.IfAllowExpandings();
 
-        if (sprite_obj != null)
+        if (isExecuting)
+        {
+            StopPrev(false);
+        }
+
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteByName(character);
+
+        // Говорящий спрайт реально есть на экране или в предпрогрузке
+        if (sprite_obj != null && character != Character.None)
         {
             GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
 
-            if (lastExpandedSpriteName != characterName)
+            // Говорит новый спрайт, не тот что был
+            if (character != lastExpandedSpriteName)
             {
                 SpriteData spriteData = SpriteController.instance.GameSpriteData[sprite.num];
 
+                // Если спрайт предпрогружен, то его ещё нет на экране
                 if (!spriteData.preloaded)
                 {
-                    Vector3 newScale = SpriteController.instance.CharactersScales[characterName] * expand_coefficient;
+                    Vector3 newScale = SpriteController.instance.CharactersScales[character] * expand_coefficient;
 
                     SpriteController.instance.SaveSpriteData(sprite.num, true);
-
-                    if (Typewriter.Instance.SkipIsActive)
-                    {
-                        
-                    }
 
                     // Для синхронизации увеличения при смене спрайтов
                     int linkedSprite = spriteData.prevSprite;
                     if (linkedSprite != -1)
                     {
-                        SpriteData linkedSpriteData = SpriteController.instance.GameSpriteData[linkedSprite];
-                        if (allowExpand && !skip && !linkedSpriteData.preloaded)
+                        /*SpriteData linkedSpriteData = SpriteController.instance.GameSpriteData[linkedSprite];
+                        if (allowExpand && !skipIsActive && !linkedSpriteData.preloaded)
                         {
                             StartCoroutine(Expand(SpriteController.instance.GameSprites[linkedSprite], newScale, expand_time));
-                        }
+                        }*/
                     }
 
-                    if (allowExpand && !skip && !spriteData.preloaded)
+                    if (allowExpand && !skipIsActive)
                     {
                         StartCoroutine(Expand(sprite, newScale, expand_time));
                     }
 
-                    // Нет условия на скип, т.к. при начале сикпа старые спрайты должны уменьшиться
-                    if (allowExpand && lastExpandedSpriteName != null)
+                    if (allowExpand && lastExpandedSpriteName != Character.None)
                     {
-                        shrinkOldSprite(lastExpandedSpriteName, skip);
+                        ShrinkOldSprite(lastExpandedSpriteName, skipIsActive);
                     }
 
-                    lastExpandedSpriteName = characterName;
+                    lastExpandedSpriteName = character;
                 }
             }
         }
+        // Спрайта ещё нет на экране
         else
         {
-            if (lastExpandedSpriteName != null)
+            if (lastExpandedSpriteName != Character.None)
             {
                 if (allowExpand)
                 {
-                    shrinkOldSprite(lastExpandedSpriteName, Typewriter.Instance.SkipIsActive);
+                    ShrinkOldSprite(lastExpandedSpriteName, skipIsActive);
                 }
 
-                lastExpandedSpriteName = null;
+                lastExpandedSpriteName = character;
             }
         }
     }
 
-    private void shrinkOldSprite(string name, bool skip)
+    private void ShrinkOldSprite(Character character, bool skip)
     {
-        GameSpriteObject? old_sprite = SpriteController.instance.GetSpriteNumByName(name);
+        GameSpriteObject? old_sprite = SpriteController.instance.GetSpriteByName(character);
 
         if (old_sprite != null)
         {
@@ -137,20 +143,22 @@ public class SpriteExpand : MonoBehaviour
                 StartCoroutine(Expand(SpriteController.instance.GameSprites[linkedSprite].ByPart(SpritePart.Body), SpriteController.instance.CharactersScales[name], expand_time));
             }*/
 
-            StartCoroutine(Expand(sprite, SpriteController.instance.CharactersScales[name], expand_time, skip));
+            Vector3 scale = SpriteController.instance.CharactersScales[character];
+
+            StartCoroutine(Expand(sprite, scale, expand_time, skip));
         }
     }
 
     public IEnumerator Expand(GameSpriteObject sprite, Vector3 newScale, float smoothTime, bool skip = false)
     {
-        isExecuting = true;
-
         if (skip)
         {
             sprite.SetScale(newScale);
             isExecuting = false;
             yield break;
         }
+
+        isExecuting = true;
 
         Vector3 velocity = Vector3.zero;
 

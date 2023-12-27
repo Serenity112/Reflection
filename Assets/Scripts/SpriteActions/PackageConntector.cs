@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,7 +11,7 @@ public class PackageConntector : MonoBehaviour
 
     private static Dictionary<string, AsyncOperationHandle<Sprite>> handlers;
 
-    private static Dictionary<string, int> packageSizes;
+    private static Dictionary<Character, int> packageSizes;
 
     private void Awake()
     {
@@ -24,17 +25,17 @@ public class PackageConntector : MonoBehaviour
         }
 
         handlers = new Dictionary<string, AsyncOperationHandle<Sprite>>();
-        packageSizes = new Dictionary<string, int>()
+        packageSizes = new Dictionary<Character, int>()
         {
-            { "Pasha", 3 },
-            { "Katya", 3 },
-            { "Tumanov", 2 },
+            { Character.Pasha, 3 },
+            { Character.Katya, 3 },
+            { Character.Tumanov, 2 },
         };
     }
 
-    public IEnumerator IConnectPackageGroupPreloaded(string packageName)
+    public IEnumerator IConnectPackageGroupPreloaded(Character characterGroup)
     {
-        GameSpriteObject? sprite_obj = SpriteController.instance.GetAvaliableSprite(packageName);
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetAvaliableSprite(characterGroup);
         if (sprite_obj == null)
         {
             yield break;
@@ -42,21 +43,21 @@ public class PackageConntector : MonoBehaviour
         GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
         SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, true);
 
-        yield return StartCoroutine(IConnectPackageGroup(packageName));
+        yield return StartCoroutine(IConnectPackageGroup(characterGroup));
     }
 
-    public IEnumerator IConnectPackageGroup(string packageName)
+    public IEnumerator IConnectPackageGroup(Character characterGroupName)
     {
-        if (!packageSizes.ContainsKey(packageName))
+        if (!packageSizes.ContainsKey(characterGroupName))
         {
             yield break;
         }
 
         List<IEnumerator> list = new List<IEnumerator>();
 
-        for (int i = 1; i <= packageSizes[packageName]; i++)
+        for (int i = 1; i <= packageSizes[characterGroupName]; i++)
         {
-            list.Add(IConnectSinglePackage($"{packageName}{i}_connector"));
+            list.Add(IConnectSinglePackage($"{characterGroupName}{i}_connector"));
         }
 
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
@@ -78,11 +79,11 @@ public class PackageConntector : MonoBehaviour
         }
     }
 
-    public void DisconnectPackageGroup(string packageName)
+    public void DisconnectPackageGroup(Character characterGroupName)
     {
-        for (int i = 1; i <= packageSizes[packageName]; i++)
+        for (int i = 1; i <= packageSizes[characterGroupName]; i++)
         {
-            string address = $"{packageName}{i}_connector";
+            string address = $"{characterGroupName}{i}_connector";
             if (handlers.ContainsKey(address))
             {
                 Addressables.Release(handlers[address]);

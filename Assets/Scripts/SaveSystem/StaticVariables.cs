@@ -5,6 +5,8 @@ public static class StaticVariables
     public static bool WARNING_PANEL = false;
     public static bool CONFIRM_PANEL = false;
     public static bool OVER_UI = false;
+    public static bool SPRITE_LOADING = false;
+    public static bool SPRITE_MOVING = false;
 
     // Дауснкие статусы
     public static bool PAUSE_ANIM_ENDED = false;

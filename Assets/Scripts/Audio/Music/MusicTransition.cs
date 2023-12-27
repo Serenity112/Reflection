@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace Fungus
@@ -8,16 +9,28 @@ namespace Fungus
     public class MusicTransition : Command
     {
         [SerializeField]
-        private string MusicName;
+        private string MusicOld;
 
         [SerializeField]
-        private float Duration = 1.5f;
+        private string MusicNew;
+
+        [SerializeField]
+        private float Time = 2f;
+
+        [SerializeField]
+        private float Volume = 1f;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.MusicTransition(MusicName, Duration);
+            StartCoroutine(IOnEnter());
+        }
+
+        private IEnumerator IOnEnter()
+        {
+            yield return AudioManager.instance.StartCoroutine(AudioManager.instance.AudioLineTransition(AudioManager.AudioLine.Music, MusicOld, MusicNew, Time, Volume));
+
             Continue();
         }
 

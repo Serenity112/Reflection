@@ -31,6 +31,7 @@ public class Typewriter : MonoBehaviour
 
     // Скип табом / кнопкой
     private bool _SKIP_ENABLE = false;
+    private bool _POST_SKIP = false;
 
     // Клик игровой кнопки / Enter / Space
     private bool _CLICK_ENABLE = false;
@@ -78,7 +79,10 @@ public class Typewriter : MonoBehaviour
             StaticVariables.PAUSED ||
             StaticVariables.WARNING_PANEL ||
             StaticVariables.CONFIRM_PANEL ||
-            StaticVariables.OVER_UI);
+            StaticVariables.OVER_UI /*||*/
+            //StaticVariables.SPRITE_LOADING
+            //StaticVariables.SPRITE_MOVING
+            );
     }
 
     // Нажимается кнопкой в игре
@@ -167,12 +171,30 @@ public class Typewriter : MonoBehaviour
 
     private void OnSkipStart()
     {
+        AudioManager.instance.OnSkipStart();
+
         skipButton.EnableSkipAnimation();
+    }
+
+    private void OnPostSkipEnd()
+    {
+        if (SettingsConfig.IfAllowExpandings())
+        {
+            SpriteController.instance.LoadSpritesExpandingInfo(true);
+        }
     }
 
     private void OnSkipEnd()
     {
         skipButton.DisableSkipAnimation();
+
+
+        AudioManager.instance.OnSkipEnd();
+
+        if (!SpriteExpand.instance.isExecuting)
+        {
+            //SpriteExpand.instance.StopPrev(false);
+        }
     }
 
     public void AllowSkip()
@@ -224,7 +246,7 @@ public class Typewriter : MonoBehaviour
     }
 
     // Методы для вывода текста общего / экстенда
-    public IEnumerator ISayDialog(string storyText, string speaker)
+    public IEnumerator ISayDialog(string storyText, Character speaker)
     {
         _text.text = "";
 
@@ -238,7 +260,7 @@ public class Typewriter : MonoBehaviour
         yield return _say;
     }
 
-    public IEnumerator ISayExtend(string prevText, string extendedText, string speaker)
+    public IEnumerator ISayExtend(string prevText, string extendedText, Character speaker)
     {
         _text.text = prevText + " ";
 
@@ -261,9 +283,9 @@ public class Typewriter : MonoBehaviour
     }
 
     // Обобщение вывода текста
-    private IEnumerator ISayGeneric(string textToWrite, string speaker)
+    private IEnumerator ISayGeneric(string textToWrite, Character speaker)
     {
-        //SpriteExpand.instance.SetExpanding(speaker, isSkipping);
+        SpriteExpand.instance.SetExpanding(speaker, SkipIsActive || _POST_SKIP);
 
         NameChanger.instance.SetName(speaker);
 
@@ -278,6 +300,7 @@ public class Typewriter : MonoBehaviour
 
         if (_SKIP_ENABLE)
         {
+            _POST_SKIP = true;
             auto_complete_next = true;
             _text.text = textToWrite;
             yield return null;
@@ -285,6 +308,12 @@ public class Typewriter : MonoBehaviour
         }
         else if (auto_complete_next || instantSpeed)
         {
+            if (_POST_SKIP)
+            {
+
+                _POST_SKIP = false;
+                OnPostSkipEnd();
+            }
             auto_complete_next = false;
             _text.text = textToWrite;
             yield return null;

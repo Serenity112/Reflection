@@ -27,7 +27,10 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            yield return StartCoroutine(Typewriter.Instance.ISayDialog(storyText, speaker));
+            var parsed = Enum.TryParse<global::Character>(speaker, true, out global::Character character);
+            var character_input = parsed ? character : global::Character.None;
+
+            yield return StartCoroutine(Typewriter.Instance.ISayDialog(storyText, character_input));
 
             Continue();
         }

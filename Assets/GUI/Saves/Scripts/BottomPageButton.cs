@@ -117,7 +117,7 @@ public class BottomPageButton : IExpandableButton
         if (shrink != null)
             StopCoroutine(shrink);
 
-        expand = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
+        expand = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(expand);
     }
 
@@ -126,7 +126,7 @@ public class BottomPageButton : IExpandableButton
         if (expand != null)
             StopCoroutine(expand);
 
-        shrink = ExpandManager.ExpandObject(gameObject, origScale, 0f);
+        shrink = ExpandManager.ExpandObject(gameObject, origScale, expandTime);
         StartCoroutine(shrink);
     }
 

@@ -72,7 +72,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     private void HidePresetData()
     {
         Typewriter.Instance.SetText("");
-        NameChanger.instance.SetName(string.Empty);
+        NameChanger.instance.SetName(Character.None);
     }
 
     public void DisableGuiOnStart()

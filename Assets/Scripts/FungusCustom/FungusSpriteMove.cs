@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Fungus
 {
@@ -20,9 +21,12 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            Typewriter.Instance.DenySkip(); // Запрет отключтся в конце выполнения SetMovementSprites
+            StaticVariables.SPRITE_MOVING = true;
 
-            SpriteMove.instance.SetSpriteMovement(CharacterName, Position, MovementTime, Typewriter.Instance.SkipIsActive);
+            var parsed = Enum.TryParse<global::Character>(CharacterName, true, out global::Character character);
+            var character_input = parsed ? character : global::Character.None;
+
+            SpriteMove.instance.SetSpriteMovement(character_input, Position, MovementTime, Typewriter.Instance.SkipIsActive);
 
             Continue();
         }

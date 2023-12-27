@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 namespace Fungus
 {
@@ -38,7 +39,10 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            yield return StartCoroutine(SpriteApearer.instance.SpriteAppear(CharacterName, Pose, Emotion, Position, AppearSpeed, Typewriter.Instance.SkipIsActive, WaitForFinished, StopPrev));
+            var parsed = Enum.TryParse<global::Character>(CharacterName, true, out global::Character character);
+            var character_input = parsed ? character : global::Character.None;
+
+            yield return StartCoroutine(SpriteApearer.instance.SpriteAppear(character_input, Pose, Emotion, Position, AppearSpeed, Typewriter.Instance.SkipIsActive, WaitForFinished, StopPrev));
 
             Continue();
         }

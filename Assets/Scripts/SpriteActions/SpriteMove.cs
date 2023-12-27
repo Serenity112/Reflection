@@ -23,14 +23,14 @@ public class SpriteMove : MonoBehaviour
         StopAllCoroutines();
     }
 
-    public void SetSpriteMovement(string name, Vector3 vector, float smoothTime, bool skip)
+    public void SetSpriteMovement(Character character, Vector3 vector, float smoothTime, bool skip)
     {
-        StartCoroutine(IMoveSprite(name, vector, smoothTime, skip));
+        StartCoroutine(IMoveSprite(character, vector, smoothTime, skip));
     }
 
-    public IEnumerator IMoveSprite(string name, Vector3 targetVect, float smoothTime, bool skip)
+    public IEnumerator IMoveSprite(Character character, Vector3 targetVect, float smoothTime, bool skip)
     {
-        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteNumByName(name);
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteByName(character);
 
         if (sprite_obj == null)
         {
@@ -79,6 +79,6 @@ public class SpriteMove : MonoBehaviour
             }
         }
 
-        Typewriter.Instance.AllowSkip();
+        StaticVariables.SPRITE_MOVING = false;
     }
 }

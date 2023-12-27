@@ -64,9 +64,9 @@ public struct GameSpriteObject
         return Parts[SpritePart.Body].GetComponent<RectTransform>().localScale;
     }
 
-    public void SetPosition(Vector3 scale)
+    public void SetPosition(Vector3 position)
     {
-        Parts[SpritePart.Body].GetComponent<RectTransform>().localPosition = scale;
+        Parts[SpritePart.Body].GetComponent<RectTransform>().localPosition = position;
     }
 
     public Vector3 GetPosition()
@@ -79,12 +79,12 @@ public struct GameSpriteObject
         return Parts[part];
     }
 
-    public void SetImage(SpritePart part, Sprite sprite)
+    public void SetSprite(SpritePart part, Sprite sprite)
     {
         Parts[part].GetComponent<SpriteRenderer>().sprite = sprite;
     }
 
-    public Sprite GetImage(SpritePart part)
+    public Sprite GetSprite(SpritePart part)
     {
         return Parts[part].GetComponent<SpriteRenderer>().sprite;
     }
@@ -106,20 +106,20 @@ public struct GameSpriteObject
         }
     }
 
-    public void ReleaseHandler(SpritePart part)
+    public IEnumerator ReleaseHandler(SpritePart part)
     {
         switch (part)
         {
             case SpritePart.Body:
-                if (Handlers[0].Status == AsyncOperationStatus.Succeeded)
+                if (Handlers[0].IsValid())
                 {
-                    Addressables.Release(Handlers[0]);
+                    yield return Addressables.ReleaseInstance(Handlers[0]);
                 }
                 break;
             case SpritePart.Face1:
-                if (Handlers[1].Status == AsyncOperationStatus.Succeeded)
+                if (Handlers[1].IsValid())
                 {
-                    Addressables.Release(Handlers[1]);
+                    yield return Addressables.ReleaseInstance(Handlers[1]);
                 }
                 break;
         }
@@ -153,7 +153,7 @@ public struct SpriteData
 {
     public SpriteData(int SaveNum)
     {
-        name = null;
+        character = Character.None;
         pose = 0;
         emotion = 0;
         postion = Vector3.zero;
@@ -163,30 +163,52 @@ public struct SpriteData
         prevSprite = -1;
     }
 
-    public string name;
+    public Character character;
     public int pose;
     public int emotion;
     public Vector3 postion;
     public float alpha;
     public bool expanded;
     public bool preloaded;
-    public int prevSprite;
+    public int prevSprite { get; set; }
 
     public override string ToString()
     {
-        return $"[{name} {pose} {emotion} {preloaded}]";
+        return $"[{character} {pose} {emotion} {preloaded}]";
     }
+}
+
+
+public enum Character
+{
+    None,
+
+    Sergey,
+    Pasha,
+
+    Katya,
+    Nastya,
+    Evelina,
+    Tanya,
+
+    Tumanov,
+    Raketnikov,
+
+    Neznakomka, // Ќаст€
+    Stranger, // ЁвелинаЅайкер
+    Speakers, // јктовый зал
+    Students, // јктовый зал
 }
 
 public class SpriteController : MonoBehaviour
 {
     public static SpriteController instance = null;
 
-    private const int maxSpritesOnScreen = 4;
+    private const int maxSpritesOnScreen = 6;
 
     [HideInInspector] public SpriteData[] GameSpriteData { get; set; }
 
-    [HideInInspector] public Dictionary<string, Vector3> CharactersScales;
+    [HideInInspector] public Dictionary<Character, Vector3> CharactersScales;
 
     public GameObject Sprites;
 
@@ -220,42 +242,26 @@ public class SpriteController : MonoBehaviour
 
     private void InitScales()
     {
-        CharactersScales = new Dictionary<string, Vector3>
+        CharactersScales = new Dictionary<Character, Vector3>
         {
-            { "Pasha", new Vector3(0.80f, 0.80f, 0f) },
-            { "Nastya", new Vector3(0.80f, 0.80f, 0f) },
-            { "Evelina", new Vector3(0.80f, 0.80f, 0f) },
-            { "Tanya", new Vector3(0.80f, 0.80f, 0f) },
-            { "Katya", new Vector3(0.80f, 0.80f, 0f) },
-            { "Raketnikov", new Vector3(0.80f, 0.80f, 0f) },
-            { "Tumanov", new Vector3(0.80f, 0.80f, 0f) }
+            { Character.Pasha, new Vector3(0.80f, 0.80f, 0f) },
+            { Character.Sergey, new Vector3(0.80f, 0.80f, 0f) },
+
+            { Character.Nastya, new Vector3(0.80f, 0.80f, 0f) },
+            { Character.Evelina, new Vector3(0.80f, 0.80f, 0f) },
+            { Character.Tanya, new Vector3(0.80f, 0.80f, 0f) },
+            { Character.Katya, new Vector3(0.80f, 0.80f, 0f) },
+
+            { Character.Raketnikov, new Vector3(0.80f, 0.80f, 0f) },
+            { Character.Tumanov, new Vector3(0.80f, 0.80f, 0f) }
         };
-    }
-
-    public void printData()
-    {
-        StringBuilder builder = new StringBuilder();
-
-        for (int i = 0; i < 4; i++)
-        {
-            if (GameSpriteData[i].name == null)
-            {
-                builder.AppendLine($"Sprite {i}: null, pose: {GameSpriteData[i].pose}, emo: {GameSpriteData[i].emotion} alpha: {GameSpriteData[i].alpha}\n");
-            }
-            else
-            {
-                builder.AppendLine($"Sprite {i}: {GameSpriteData[i].name}, pose: {GameSpriteData[i].pose}, emo: {GameSpriteData[i].emotion} alpha: {GameSpriteData[i].alpha}\n");
-            }
-        }
-
-        Debug.Log(builder.ToString());
     }
 
     #region SaveSpriteData
 
-    public void SaveSpriteData(int spriteNum, string name, int pose, int emotion, Vector3 position, float alpha, bool expanded) // Full
+    public void SaveSpriteData(int spriteNum, Character character, int pose, int emotion, Vector3 position, float alpha, bool expanded) // Full
     {
-        GameSpriteData[spriteNum].name = name;
+        GameSpriteData[spriteNum].character = character;
         GameSpriteData[spriteNum].pose = pose;
         GameSpriteData[spriteNum].emotion = emotion;
         GameSpriteData[spriteNum].postion = position;
@@ -263,21 +269,21 @@ public class SpriteController : MonoBehaviour
         GameSpriteData[spriteNum].expanded = expanded;
     }
 
-    public void SaveSpriteData(int Sprite, Vector3 newVector) //save Position
+    public void SaveSpriteData(int sprite, Vector3 newPosition) //save Position
     {
-        GameSpriteData[Sprite].postion = newVector;
+        GameSpriteData[sprite].postion = newPosition;
     }
 
-    public void SaveSpriteData(int Sprite, float alpha) //save Alpha
+    public void SaveSpriteData(int sprite, float newAlpha) //save Alpha
     {
-        GameSpriteData[Sprite].alpha = alpha;
+        GameSpriteData[sprite].alpha = newAlpha;
     }
 
-    public void SaveSpriteData(int Sprite, string name, int pose, int emotion) //save Name+pos+emo
+    public void SaveSpriteData(int sprite, Character character, int pose, int emotion) //save Name+pos+emo
     {
-        GameSpriteData[Sprite].name = name;
-        GameSpriteData[Sprite].pose = pose;
-        GameSpriteData[Sprite].emotion = emotion;
+        GameSpriteData[sprite].character = character;
+        GameSpriteData[sprite].pose = pose;
+        GameSpriteData[sprite].emotion = emotion;
     }
 
     public void SaveSpriteData(int Sprite, bool expanded)
@@ -302,24 +308,24 @@ public class SpriteController : MonoBehaviour
 
     #region Scale
 
-    public void SetScaleByName(GameSpriteObject sprite, string name)
+    public void SetScaleByName(GameSpriteObject sprite, Character character)
     {
-        SetScaleByName(sprite, name, 1f);
+        SetScaleByName(sprite, character, 1f);
     }
 
-    public void SetScaleByName(GameSpriteObject sprite, string name, float coefficient)
+    public void SetScaleByName(GameSpriteObject sprite, Character character, float coefficient)
     {
-        sprite.SetScale(CharactersScales[name] * coefficient);
+        sprite.SetScale(CharactersScales[character] * coefficient);
     }
 
     #endregion
 
     // Activity
-    public GameSpriteObject? GetSpriteNumByName(string name)
+    public GameSpriteObject? GetSpriteByName(Character character)
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
-            if (GameSpriteData[i].name == name)
+            if (GameSpriteData[i].character == character)
             {
                 return GameSprites[i];
             }
@@ -328,13 +334,13 @@ public class SpriteController : MonoBehaviour
         return null;
     }
 
-    public GameSpriteObject? GetAvaliableSprite(string name)
+    public GameSpriteObject? GetAvaliableSprite(Character character)
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
-            if (GameSpriteData[i].name == null)
+            if (GameSpriteData[i].character == Character.None)
             {
-                GameSpriteData[i].name = name;
+                GameSpriteData[i].character = character;
                 return GameSprites[i];
             }
         }
@@ -348,6 +354,7 @@ public class SpriteController : MonoBehaviour
         return;
     }
 
+    // ћетод дл€ настроек. —жимает все спрайты до исходных, если увеличени€ выключаютс€
     public void UnExpandAllSprites()
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
@@ -356,15 +363,16 @@ public class SpriteController : MonoBehaviour
 
             SpriteData data = GameSpriteData[i];
 
-            if (data.name != null && !data.preloaded)
+            if (data.character != Character.None && !data.preloaded)
             {
-                Vector3 scale = CharactersScales[data.name];
+                Vector3 scale = CharactersScales[data.character];
 
                 sprite.SetScale(scale);
             }
         }
     }
 
+    // ”величивает спрайты, если они должны быть таковыми
     public void LoadSpritesExpandingInfo(bool animated = false)
     {
         for (int i = 0; i < maxSpritesOnScreen; i++)
@@ -373,9 +381,9 @@ public class SpriteController : MonoBehaviour
 
             SpriteData data = GameSpriteData[i];
 
-            if (data.name != null && !data.preloaded)
+            if (data.character != Character.None && !data.preloaded)
             {
-                Vector3 scale = CharactersScales[data.name];
+                Vector3 scale = CharactersScales[data.character];
 
                 if (data.expanded)
                 {
@@ -384,7 +392,7 @@ public class SpriteController : MonoBehaviour
 
                 if (animated)
                 {
-                    StartCoroutine(SpriteExpand.instance.Expand(sprite, scale, 0.05f));
+                    SpriteExpand.instance.StartCoroutine(SpriteExpand.instance.Expand(sprite, scale, 0.05f));
                 }
                 else
                 {
@@ -403,7 +411,7 @@ public class SpriteController : MonoBehaviour
 
             SpriteData data = GameSpriteData[i];
 
-            if (data.name != null && !data.preloaded)
+            if (data.character != Character.None && !data.preloaded)
             {
                 sprite.SetPosition(data.postion);
 
@@ -432,9 +440,9 @@ public class SpriteController : MonoBehaviour
             SpriteData i_data = data[i];
             GameSpriteObject sprite = GameSprites[i];
 
-            if (i_data.name != null)
+            if (i_data.character != Character.None)
             {
-                list.Add(PackageConntector.instance.IConnectPackageGroup(i_data.name));
+                list.Add(PackageConntector.instance.IConnectPackageGroup(i_data.character));
 
                 if (!i_data.preloaded)
                 {
@@ -442,14 +450,14 @@ public class SpriteController : MonoBehaviour
 
                     sprite.SetAlpha(i_data.alpha, i_data.alpha, 0);
 
-                    Vector3 scale = CharactersScales[i_data.name];
+                    Vector3 scale = CharactersScales[i_data.character];
                     if (i_data.expanded && SettingsConfig.IfAllowExpandings())
                     {
                         scale *= SpriteExpand.instance.expand_coefficient;
                     }
                     sprite.SetScale(scale);
 
-                    list.Add(LoadSpriteByParts(sprite, i_data.name, i_data.pose, i_data.emotion));
+                    list.Add(LoadSpriteByParts(sprite, i_data.character, i_data.pose, i_data.emotion));
                 }
             }
         }
@@ -460,24 +468,28 @@ public class SpriteController : MonoBehaviour
     // ќтгрузка спрайтов дл€ сейв системы
     public IEnumerator IUnloadSprites()
     {
+        List<IEnumerator> list = new List<IEnumerator>();
+
         for (int i = 0; i < maxSpritesOnScreen; i++)
         {
             SpriteData i_data = GameSpriteData[i];
 
-            if (i_data.name != null && !i_data.preloaded)
+            if (i_data.character != Character.None && !i_data.preloaded)
             {
                 GameSpriteObject sprite = GameSprites[i];
 
-                sprite.ReleaseHandler(SpritePart.Body);
-                sprite.ReleaseHandler(SpritePart.Face1);
+                list.Add(sprite.ReleaseHandler(SpritePart.Body));
+                list.Add(sprite.ReleaseHandler(SpritePart.Face1));
 
                 yield return null;
                 sprite.SetAlpha(0f);
             }
         }
+
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
     }
 
-    public IEnumerator LoadSpriteByParts(GameSpriteObject sprite, string character, int pose, int emotion)
+    public IEnumerator LoadSpriteByParts(GameSpriteObject sprite, Character character, int pose, int emotion)
     {
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
         {
@@ -486,12 +498,12 @@ public class SpriteController : MonoBehaviour
         }));
     }
 
-    public IEnumerator ILoadSpriteOfSpecificObject(GameSpriteObject sprite, SpritePart part, string name, int pose, int emotion)
+    public IEnumerator ILoadSpriteOfSpecificObject(GameSpriteObject sprite, SpritePart part, Character character, int pose, int emotion)
     {
-        AsyncOperationHandle<Sprite> newHandle = Addressables.LoadAssetAsync<Sprite>($"{name}{pose}_p{emotion}");
+        AsyncOperationHandle<Sprite> newHandle = Addressables.LoadAssetAsync<Sprite>($"{character}{pose}_p{emotion}");
         yield return newHandle;
 
         sprite.AddHandler(part, newHandle);
-        sprite.SetImage(part, newHandle.Result);
+        sprite.SetSprite(part, newHandle.Result);
     }
 }

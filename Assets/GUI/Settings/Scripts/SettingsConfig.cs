@@ -326,7 +326,7 @@ public class SettingsConfig
     // Принимает громкость от 0 до 1, ставит громоксть миксера в децибельной шкале
     public static void SetVolume(AudioMixer mixer, string exposedparam, float linearVolume)
     {
-        float dbVolume = 20 * Mathf.Log10(linearVolume);
+        float dbVolume = 40 * Mathf.Log10(linearVolume);
 
         if (linearVolume == 0.0f)
         {

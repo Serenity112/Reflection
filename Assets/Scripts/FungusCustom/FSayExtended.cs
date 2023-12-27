@@ -30,7 +30,10 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            yield return StartCoroutine(Typewriter.Instance.ISayExtend(prevText, extendedText, speaker));
+            var parsed = Enum.TryParse<global::Character>(speaker, true, out global::Character character);
+            var character_input = parsed ? character : global::Character.None;
+
+            yield return StartCoroutine(Typewriter.Instance.ISayExtend(prevText, extendedText, character));
 
             Continue();
         }

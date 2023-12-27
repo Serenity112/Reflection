@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace Fungus
@@ -7,21 +8,26 @@ namespace Fungus
                  "AmbientVolChange")]
     public class AmbientVolChange : Command
     {
-        // ”казываетс€ если играет больше чем 1 эмбиент и надо уточнить какой
         [SerializeField]
         private string AmbientName;
 
         [SerializeField]
-        private float Duration = 1.5f;
+        private float Time = 1.5f;
 
         [SerializeField]
-        private float Volume = 1;
+        private float Volume = 1f;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.AmbientVolChange(AmbientName, Duration, Volume);
+            StartCoroutine(IOnEnter());
+        }
+
+        private IEnumerator IOnEnter()
+        {
+            yield return AudioManager.instance.StartCoroutine(AudioManager.instance.AudioLineVolChange(AudioManager.AudioLine.Ambient, AmbientName, Time, Volume));
+
             Continue();
         }
 

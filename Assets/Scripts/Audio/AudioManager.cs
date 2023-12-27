@@ -2,82 +2,119 @@ using Fungus;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Reflection;
+using System.Xml.Linq;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using static AudioManager;
 
 public class AudioManager : MonoBehaviour
 {
-    public static AudioManager instance = null;
-
-    public AudioSource musicSource;
-    public AudioSource musicBufferSource;
-
-    public AudioSource ambientSource;
-    public AudioSource ambientBufferSource;
-
-    public AudioSource soundSource;
-
-    private Dictionary<string, AudioClip> Music;
-    private Dictionary<string, AudioClip> Ambient;
-    private Dictionary<string, AudioClip> Sound;
-
-    // Нужны для определения дорожек
-    private string _ambient1name;
-    private string _ambient2name;
-
-    [Serializable]
-    public struct AudioArr
-    {
-        public string name;
-        public AudioClip clip;
-    }
-
-    private enum AudioType
+    public enum AudioLine
     {
         Music,
         Ambient,
+        Sound,
     }
 
-    public AudioArr[] MusicData;
-    public AudioArr[] AmbientData;
-    public AudioArr[] SoundData;
+    public enum TransitionType
+    {
+        None,
+        Start,
+        End,
+        Play,
+        VolChange,
+    }
 
-    // Два иенумератора нужны т.к. не всегда идёт одна анимация, а объединить их в один вариант пока не найден
-    private IEnumerator _IMusic1;
-    private IEnumerator _IMusic2;
+    public static AudioManager instance;
 
-    private IEnumerator _IAmbient1;
-    private IEnumerator _IAmbient2;
+    public GameObject MusicSourcesObject;
+    public GameObject AmbientSourcesObject;
+    public GameObject SoundSourcesObject;
+
+    private int MusicSourceCount = 0;
+    private int AmbientSourceCount = 0;
+    private int SoundSourceCount = 0;
+
+    public float currentMusicVolume = 1;
+    public float currentAmbientVolume = 1;
+    public float currentSoundVolume = 1;
+
+    public struct AudioData
+    {
+        public AudioData(int count)
+        {
+            Count = count;
+
+            transitionType = new TransitionType[count];
+            OstData = new (string ostName, float volume)?[count];
+            IEnumerators = new IEnumerator[count];
+            Handlers = new AsyncOperationHandle<AudioClip>?[count];
+            TodoActions = new Action[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                OstData[i] = null;
+                IEnumerators[i] = null;
+                Handlers[i] = null;
+                transitionType[i] = TransitionType.None;
+                TodoActions[i] = delegate { };
+            }
+        }
+
+        public int Count;
+        public TransitionType[] transitionType;
+        public (string ostName, float volume)?[] OstData;
+        public IEnumerator[] IEnumerators;
+        public AsyncOperationHandle<AudioClip>?[] Handlers;
+        public Action[] TodoActions;
+    }
+
+    private Dictionary<AudioLine, AudioData> _data = new();
+
+    private Dictionary<AudioLine, List<AudioSource>> _sources = new();
 
     void Awake()
     {
         AudioListener.volume = 1f;
+        instance = this;
 
-        if (instance == null)
+        // Инициализация источников
+        _sources.Add(AudioLine.Music, new List<AudioSource>());
+        foreach (var component in MusicSourcesObject.GetComponents<AudioSource>())
         {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
-
-        Music = new Dictionary<string, AudioClip>();
-        Ambient = new Dictionary<string, AudioClip>();
-        Sound = new Dictionary<string, AudioClip>();
-
-        foreach (var data in MusicData)
-        {
-            Music.Add(data.name, data.clip);
+            _sources[AudioLine.Music].Add(component);
+            MusicSourceCount++;
         }
 
-        foreach (var data in AmbientData)
+        _sources.Add(AudioLine.Ambient, new List<AudioSource>());
+        foreach (var component in AmbientSourcesObject.GetComponents<AudioSource>())
         {
-            Ambient.Add(data.name, data.clip);
+            _sources[AudioLine.Ambient].Add(component);
+            AmbientSourceCount++;
         }
 
-        foreach (var data in SoundData)
+        _sources.Add(AudioLine.Sound, new List<AudioSource>());
+        foreach (var component in SoundSourcesObject.GetComponents<AudioSource>())
         {
-            Sound.Add(data.name, data.clip);
+            _sources[AudioLine.Sound].Add(component);
+            SoundSourceCount++;
+        }
+
+        _data.Add(AudioLine.Music, new(MusicSourceCount));
+        _data.Add(AudioLine.Ambient, new(AmbientSourceCount));
+    }
+
+    #region onskip
+    public void ResetManager()
+    {
+
+        foreach (var item in _sources)
+        {
+            //item.Value.volume = 0;
+            // item.Value.Stop();
         }
     }
 
@@ -85,385 +122,470 @@ public class AudioManager : MonoBehaviour
     // Метод для отгрузки при загрузкит сейв файла
     public IEnumerator FadeOutCurrent()
     {
-        float time = 0.4f;
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
-        {
-            LinearFade(musicSource, time, 0),
-            LinearFade(musicBufferSource, time, 0),
-            LinearFade(ambientSource, time, 0),
-            LinearFade(ambientBufferSource, time, 0),
-            LinearFade(soundSource, time, 0),
-        });
-        ClearCurrent();
+        yield break;
     }
 
     public void ClearCurrent()
     {
-        musicSource.Stop();
-        musicSource.clip = null;
-
-        musicBufferSource.Stop();
-        musicBufferSource.clip = null;
-
-        ambientSource.Stop();
-        ambientSource.clip = null;
-
-        ambientBufferSource.Stop();
-        ambientBufferSource.clip = null;
-
-        soundSource.Stop();
-        soundSource.clip = null;
     }
 
-    // Включает музыку с 0й громкости до громкости настроек
-    public void MusicStart(string name, float duration, float volume)
+    public void OnSkipStart()
     {
-        if (!Music.ContainsKey(name))
-        {
-            return;
-        }
 
-        UserData.instance.CurrentMusic = (name, volume);
-
-        musicSource.volume = 0;
-        musicSource.clip = Music[name];
-        musicSource.Play();
-
-        if (_IMusic1 != null)
-        {
-            StopCoroutine(_IMusic1);
-        }
-        if (_IMusic2 != null)
-        {
-            StopCoroutine(_IMusic2);
-        }
-
-        if (duration == 0 || Typewriter.Instance.SkipIsActive)
-        {
-            musicSource.volume = volume;
-        }
-        else
-        {
-            _IMusic1 = LinearFade(musicSource, duration, volume);
-            StartCoroutine(_IMusic1);
-        }
     }
 
-    public void MusicEnd(float duration) => StartCoroutine(IMusicEnd(duration));
-
-    private IEnumerator IMusicEnd(float duration)
+    public void OnSkipEnd()
     {
-        UserData.instance.CurrentMusic = (null, 0);
 
-        if (_IMusic1 != null)
-        {
-            StopCoroutine(_IMusic1);
-        }
-        if (_IMusic2 != null)
-        {
-            StopCoroutine(_IMusic2);
-        }
+    }
 
-        if (duration == 0 || Typewriter.Instance.SkipIsActive)
-        {
-            musicSource.volume = 0;
-            musicSource.Stop();
+    #endregion onskip
 
-            musicBufferSource.volume = 0;
-            musicBufferSource.Stop();
-        }
-        else
-        {
-            _IMusic1 = LinearFade(musicSource, duration, 0);
-            _IMusic2 = LinearFade(musicBufferSource, duration, 0);
+    // Функционал
 
-            yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+    private int GetAvaliableAudioSourceId(AudioLine line)
+    {
+        int not_found = -1;
+
+        for (int i = 0; i < _sources[line].Count; i++)
+        {
+            if (!_sources[line][i].isPlaying &&
+                !(_data[line].transitionType[i] == TransitionType.Start) &&
+                !(_data[line].transitionType[i] == TransitionType.Play))
             {
-                _IMusic1,
-                _IMusic2,
-            });
-
-            musicSource.Stop();
-            musicBufferSource.Stop();
+                return i;
+            }
         }
+
+        return not_found;
     }
 
-    // Переход трека в трек
-    public void MusicTransition(string name, float duration) => StartCoroutine(IMusicTransition(name, duration));
-
-    private IEnumerator IMusicTransition(string name, float duration)
+    private List<int> GetSourcesByState(AudioLine line, TransitionType transitionType)
     {
-        if (!Music.ContainsKey(name))
+        var data = _data[line];
+        List<int> found = new List<int>();
+
+        for (int i = 0; i < _sources[line].Count; i++)
         {
-            yield break;
-        }
-
-        float curr_vol = UserData.instance.CurrentMusic.Volume;
-
-        UserData.instance.CurrentMusic = (name, curr_vol);
-
-        AudioSource oldSource = musicSource.isPlaying ? musicSource : musicBufferSource;
-        AudioSource newSource = musicSource.isPlaying ? musicBufferSource : musicSource;
-
-        newSource.volume = 0;
-        newSource.clip = Music[name];
-        newSource.Play();
-
-        if (_IMusic1 != null)
-        {
-            StopCoroutine(_IMusic1);
-        }
-        if (_IMusic2 != null)
-        {
-            StopCoroutine(_IMusic2);
-        }
-
-        if (duration == 0 || Typewriter.Instance.SkipIsActive)
-        {
-            newSource.volume = curr_vol;
-            oldSource.volume = 0;
-            oldSource.Stop();
-        }
-        else
-        {
-            _IMusic1 = LinearFade(newSource, duration, curr_vol);
-            _IMusic2 = LinearFade(oldSource, duration, 0);
-
-            yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+            if (data.transitionType[i] == transitionType)
             {
-                _IMusic1,
-                _IMusic2,
-            });
-
-            oldSource.Stop();
+                found.Add(i);
+            }
         }
+
+        return found;
     }
 
-    // Трек -> тишина -> трек
-    public void MusicChange(string name, float duration) => StartCoroutine(IMusicChange(name, duration));
-
-    private IEnumerator IMusicChange(string name, float duration)
+    private int GetSourceIdByName(AudioLine line, string name)
     {
-        if (!Music.ContainsKey(name))
+        int not_found = -1;
+
+        for (int i = 0; i < _data[line].Count; i++)
         {
-            yield break;
-        }
-
-        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBufferSource;
-
-        float curr_vol = activeSource.volume;
-
-        UserData.instance.CurrentMusic = (name, curr_vol);
-
-        if (_IMusic1 != null)
-        {
-            StopCoroutine(_IMusic1);
-        }
-        if (_IMusic2 != null)
-        {
-            StopCoroutine(_IMusic2);
-        }
-
-        if (duration == 0 || Typewriter.Instance.SkipIsActive)
-        {
-            activeSource.volume = 0;
-            activeSource.Stop();
-            musicSource.clip = Music[name];
-            musicSource.volume = curr_vol;
-            musicSource.Play();
-        }
-        else
-        {
-            _IMusic1 = LinearFade(activeSource, duration, 0);
-            yield return StartCoroutine(_IMusic1);
-            musicSource.Stop();
-
-            yield return new WaitForSeconds(0f); // Задержка между треками
-
-            musicSource.volume = 0;
-            musicSource.clip = Music[name];
-            musicSource.Play();
-
-            _IMusic1 = LinearFade(musicSource, duration, curr_vol);
-            yield return StartCoroutine(_IMusic1);
-        }
-    }
-
-    public void MusicVolChange(float duration, float volume) // volume от 0 до 1
-    {
-        UserData.instance.CurrentMusic = (UserData.instance.CurrentMusic.Name, volume);
-
-        AudioSource activeSource = musicSource.isPlaying ? musicSource : musicBufferSource;
-
-        if (_IMusic1 != null)
-        {
-            StopCoroutine(_IMusic1);
-        }
-        if (_IMusic2 != null)
-        {
-            StopCoroutine(_IMusic2);
-        }
-
-        if (duration == 0 || Typewriter.Instance.SkipIsActive)
-        {
-            activeSource.volume = volume;
-        }
-        else
-        {
-            _IMusic1 = LinearFade(activeSource, duration, volume);
-            StartCoroutine(_IMusic1);
-        }
-    }
-
-    public void MusicVolDefault(float duration) => MusicVolChange(duration, 1);
-
-
-    // Ambient
-    public void AmbientStart(string name, float duration, float volume = 1, bool newLine = false)
-    {
-        if (!Ambient.ContainsKey(name))
-        {
-            return;
-        }
-
-        AudioSource sourceToPlay;
-        if (newLine)
-        {
-            _ambient2name = name;
-            UserData.instance.CurrentAmbient2 = (name, volume);
-            sourceToPlay = ambientSource.isPlaying ? ambientBufferSource : ambientSource;
-        }
-        else
-        {
-            _ambient1name = name;
-            UserData.instance.CurrentAmbient1 = (name, volume);
-            sourceToPlay = ambientSource.isPlaying ? ambientSource : ambientBufferSource;
-        }
-
-        sourceToPlay.volume = 0;
-        sourceToPlay.clip = Ambient[name];
-        sourceToPlay.Play();
-
-        if (_IAmbient1 != null)
-        {
-            StopCoroutine(_IAmbient1);
-        }
-        if (_IAmbient2 != null)
-        {
-            StopCoroutine(_IAmbient2);
-        }
-
-        if (duration == 0 || Typewriter.Instance.SkipIsActive)
-        {
-            sourceToPlay.volume = volume;
-        }
-        else
-        {
-            IEnumerator play = LinearFade(sourceToPlay, duration, volume);
-            if (newLine)
+            var ost_data = _data[line].OstData[i];
+            if (ost_data != null)
             {
-                _IAmbient2 = play;
-                StartCoroutine(_IAmbient2);
+                (string ostName, float volume) curr = ((string, float))ost_data;
+                if (curr.ostName == name)
+                {
+                    return i;
+                }
+            }
+        }
+
+        return not_found;
+    }
+
+    private void CompleteAfterTask(AudioLine line, int index)
+    {
+        _data[line].TodoActions[index].Invoke();
+        ClearTask(line, index);
+    }
+
+    private void AddAfterTask(AudioLine line, int index, Action action)
+    {
+        _data[line].TodoActions[index] = action;
+    }
+
+    private void ClearTask(AudioLine line, int index)
+    {
+        _data[line].TodoActions[index] = delegate { };
+    }
+
+    public IEnumerator AudioLineStart(AudioLine line, string name, float time, float targetVolume)
+    {
+        int freeSourceId = GetAvaliableAudioSourceId(line);
+        if (freeSourceId == -1)
+        {
+            //UnloadHandlers();
+            var fade_out_sources = GetSourcesByState(line, TransitionType.End);
+            if (fade_out_sources.Count > 0)
+            {
+                freeSourceId = fade_out_sources[0];
+                IEnumerator free_ienum = _data[line].IEnumerators[freeSourceId];
+                if (free_ienum != null)
+                {
+                    StopCoroutine(free_ienum);
+                }
+                CompleteAfterTask(line, freeSourceId);
             }
             else
             {
-                _IAmbient1 = play;
-                StartCoroutine(_IAmbient1);
+                Debug.Log("Нет свободных источников");
+                yield break;
             }
         }
+
+        AudioSource targetSource = _sources[line][freeSourceId];
+
+        _data[line].OstData[freeSourceId] = (name, targetVolume);
+        _data[line].transitionType[freeSourceId] = TransitionType.Start;
+
+        targetSource.Stop();
+        targetSource.volume = 0;
+
+        var currentOperationHandle = Addressables.LoadAssetAsync<AudioClip>(name);
+        yield return currentOperationHandle;
+        var newAudioClip = currentOperationHandle.Result;
+        _data[line].Handlers[freeSourceId] = currentOperationHandle;
+
+        targetSource.clip = newAudioClip;
+        targetSource.Play();
+
+        IEnumerator fadein = LinearFadeTime(targetSource, time, targetVolume);
+        _data[line].IEnumerators[freeSourceId] = fadein;
+        AddAfterTask(line, freeSourceId, delegate { _data[line].transitionType[freeSourceId] = TransitionType.Play; });
+
+        StartCoroutine(ProcessAudioLineStart(fadein, line, freeSourceId));
     }
 
-    public void AmbientEnd(string name, float duration) => StartCoroutine(IAmbientEnd(name, duration));
-
-    private IEnumerator IAmbientEnd(string name, float duration)
+    private IEnumerator ProcessAudioLineStart(IEnumerator fadein, AudioLine line, int id)
     {
-        if (!Ambient.ContainsKey(name))
+        yield return StartCoroutine(fadein);
+        CompleteAfterTask(line, id);
+    }
+
+    public IEnumerator AudioLineEnd(AudioLine line, string name, float time)
+    {
+        int sourceId = GetSourceIdByName(line, name);
+        if (sourceId == -1 /*|| !Music.ContainsKey(name)*/)
         {
             yield break;
         }
 
-        AudioSource sourceToEnd;
-        if (name == _ambient1name)
+        _data[line].transitionType[sourceId] = TransitionType.End;
+        _data[line].OstData[sourceId] = null;
+
+        CompleteAfterTask(line, sourceId);
+        IEnumerator curr = _data[line].IEnumerators[sourceId];
+        if (curr != null)
         {
-            sourceToEnd = ambientSource;
-            UserData.instance.CurrentAmbient1 = (null, 0);
-        }
-        else
-        {
-            sourceToEnd = ambientBufferSource;
-            UserData.instance.CurrentAmbient2 = (null, 0);
+            StopCoroutine(curr);
         }
 
-        if (_IAmbient1 != null)
-        {
-            StopCoroutine(_IAmbient1);
-        }
-        if (_IAmbient2 != null)
-        {
-            StopCoroutine(_IAmbient2);
-        }
+        IEnumerator fadeOut = LinearFadeTime(_sources[line][sourceId], time, 0);
+        _data[line].IEnumerators[sourceId] = fadeOut;
 
-        if (duration == 0 || Typewriter.Instance.SkipIsActive)
+        //AddHandlerToReleaseList(line, _data[line].Handlers[sourceId]);
+
+        AddAfterTask(line, sourceId, delegate
         {
-            sourceToEnd.volume = 0;
-            sourceToEnd.Stop();
-        }
-        else
-        {
-            _IAmbient1 = LinearFade(sourceToEnd, duration, 0);
-            yield return StartCoroutine(_IAmbient1);
-            sourceToEnd.Stop();
-        }
+            _data[line].transitionType[sourceId] = TransitionType.None;
+            ReleaseHandler(_data[line].Handlers[sourceId]);
+            var source = _sources[line][sourceId];
+            source.clip = null;
+            source.Stop();
+        });
+
+        StartCoroutine(ProcessAudioLineEnd(fadeOut, sourceId, line));
     }
 
-    public void AmbientVolChange(string name, float duration, float volume) // 0 to 1
+    private IEnumerator ProcessAudioLineEnd(IEnumerator fadeout, int id, AudioLine line)
     {
-        //UserData.instance.AmbientSourceVolume = volume;
-
-        if (_IAmbient1 != null)
-        {
-            StopCoroutine(_IAmbient1);
-        }
-
-        if (duration == 0 || Typewriter.Instance.SkipIsActive)
-        {
-            ambientSource.volume = volume;
-        }
-        else
-        {
-            _IAmbient1 = LinearFade(ambientSource, duration, volume);
-            StartCoroutine(_IAmbient1);
-        }
+        yield return StartCoroutine(fadeout);
+        CompleteAfterTask(line, id);
     }
 
-    public void AmbientVolDefault(string name, float duration) => AmbientVolChange(name, duration, 1);
-
-    public void AmbientTransition(string name, float duration)
+    // Переход трека в трек
+    public IEnumerator AudioLineTransition(AudioLine line, string prev_name, string new_name, float time, float targetVolume)
     {
-
-    }
-
-    // Sound
-    public void SoundStart(string name)
-    {
-        if (!Sound.ContainsKey(name))
+        int freeSourceId = GetAvaliableAudioSourceId(line);
+        if (freeSourceId == -1)
         {
-            return;
+            var fade_out_sources = GetSourcesByState(line, TransitionType.End);
+            if (fade_out_sources.Count > 0)
+            {
+                freeSourceId = fade_out_sources[0];
+                IEnumerator free_ienum = _data[line].IEnumerators[freeSourceId];
+                if (free_ienum != null)
+                {
+                    StopCoroutine(free_ienum);
+                }
+                CompleteAfterTask(line, freeSourceId);
+            }
+            else
+            {
+                yield break;
+            }
         }
 
-        soundSource.volume = 0;
-        soundSource.clip = Sound[name];
-        soundSource.Play();
+        int currentSourceId = GetSourceIdByName(line, prev_name);
+        if (currentSourceId == -1)
+        {
+            yield break;
+        }
+        IEnumerator old_enum = _data[line].IEnumerators[currentSourceId];
+        if (old_enum != null)
+        {
+            StopCoroutine(old_enum);
+        }
+
+        AudioSource targetSource = _sources[line][freeSourceId];
+        AudioSource currentSource = _sources[line][currentSourceId];
+
+        _data[line].OstData[currentSourceId] = null;
+        _data[line].transitionType[currentSourceId] = TransitionType.End;
+
+        _data[line].OstData[freeSourceId] = (new_name, targetVolume);
+        _data[line].transitionType[freeSourceId] = TransitionType.Start;
+
+        targetSource.Stop();
+        targetSource.volume = 0;
+
+        var currentOperationHandle = Addressables.LoadAssetAsync<AudioClip>(new_name);
+        yield return currentOperationHandle;
+        var newAudioClip = currentOperationHandle.Result;
+        _data[line].Handlers[freeSourceId] = currentOperationHandle;
+
+        targetSource.clip = newAudioClip;
+        targetSource.Play();
+
+        IEnumerator fadein = LinearFadeTime(targetSource, time, targetVolume);
+        _data[line].IEnumerators[freeSourceId] = fadein;
+
+        IEnumerator fadeout = LinearFadeTime(currentSource, time, 0);
+        _data[line].IEnumerators[currentSourceId] = fadeout;
+
+        AddAfterTask(line, freeSourceId, delegate
+        {
+            _data[line].transitionType[freeSourceId] = TransitionType.Play;
+            _data[line].transitionType[currentSourceId] = TransitionType.None;
+            ReleaseHandler(_data[line].Handlers[currentSourceId]);
+            var source = _sources[line][currentSourceId];
+            source.clip = null;
+            source.Stop();
+        });
+
+        StartCoroutine(ProcessLineTransition(fadein, fadeout, line, freeSourceId));
     }
 
-    public IEnumerator LinearFade(AudioSource source, float fadeTime, float targetVolume_linear)
+    private IEnumerator ProcessLineTransition(IEnumerator fadein, IEnumerator fadeout, AudioLine line, int new_id)
+    {
+        yield return StartCoroutine(WaitForAll(new List<IEnumerator>() { fadein, fadeout }));
+        CompleteAfterTask(line, new_id);
+    }
+
+    // Трек -> тишина -> трек
+    public IEnumerator AudioLineChange(AudioLine line, string old_name, string new_name, float fade_time, float delay_time, float targetVolume)
+    {
+        int currentSourceId = GetSourceIdByName(line, old_name);
+        if (currentSourceId == -1)
+        {
+            yield break;
+        }
+        IEnumerator old_enum = _data[line].IEnumerators[currentSourceId];
+        if (old_enum != null)
+        {
+            StopCoroutine(old_enum);
+        }
+
+        int freeSourceId = GetAvaliableAudioSourceId(line);
+        if (freeSourceId == -1)
+        {
+            var fade_out_sources = GetSourcesByState(line, TransitionType.End);
+            if (fade_out_sources.Count > 0)
+            {
+                freeSourceId = fade_out_sources[0];
+                IEnumerator free_ienum = _data[line].IEnumerators[freeSourceId];
+                if (free_ienum != null)
+                {
+                    StopCoroutine(free_ienum);
+                }
+                CompleteAfterTask(line, freeSourceId);
+            }
+            else
+            {
+                yield break;
+            }
+        }
+
+        AudioSource targetSource = _sources[line][freeSourceId];
+        AudioSource currentSource = _sources[line][currentSourceId];
+
+        _data[line].OstData[currentSourceId] = null;
+        _data[line].transitionType[currentSourceId] = TransitionType.End;
+
+        _data[line].OstData[freeSourceId] = (new_name, targetVolume);
+        _data[line].transitionType[freeSourceId] = TransitionType.Start;
+
+        targetSource.Stop();
+        targetSource.volume = 0;
+
+        var currentOperationHandle = Addressables.LoadAssetAsync<AudioClip>(new_name);
+        yield return currentOperationHandle;
+        var newAudioClip = currentOperationHandle.Result;
+        _data[line].Handlers[freeSourceId] = currentOperationHandle;
+
+        targetSource.clip = newAudioClip;
+
+        IEnumerator fadeout = LinearFadeTime(currentSource, fade_time, 0);
+        _data[line].IEnumerators[currentSourceId] = fadeout;
+
+        IEnumerator fadein = LinearFadeTime(targetSource, fade_time, targetVolume);
+        _data[line].IEnumerators[freeSourceId] = fadein;
+
+        AddAfterTask(line, freeSourceId, delegate
+        {
+            _data[line].transitionType[freeSourceId] = TransitionType.Play;
+            _data[line].transitionType[currentSourceId] = TransitionType.None;
+            ReleaseHandler(_data[line].Handlers[currentSourceId]);
+            var source = _sources[line][currentSourceId];
+            source.clip = null;
+            source.Stop();
+            var targetSource = _sources[line][freeSourceId];
+            targetSource.Play();
+        });
+
+        StartCoroutine(ProcessLineChange(line, fadein, fadeout, currentSourceId, freeSourceId, delay_time, targetSource));
+    }
+
+    private IEnumerator ProcessLineChange(AudioLine line, IEnumerator fadein, IEnumerator fadeout, int old_id, int new_id, float delay_time, AudioSource targetSource)
+    {
+        yield return StartCoroutine(fadeout);
+
+        yield return StartCoroutine(IDelay(delay_time));
+
+        CompleteAfterTask(line, new_id);
+
+        StartCoroutine(fadein);
+    }
+
+    private void ReleaseHandler(AsyncOperationHandle<AudioClip>? handler)
+    {
+        if (handler != null)
+        {
+            var h = (AsyncOperationHandle<AudioClip>)handler;
+            if (h.IsValid())
+            {
+                Addressables.ReleaseInstance(h);
+            }
+        }
+    }
+
+    public IEnumerator AudioLineVolChange(AudioLine line, string name, float time, float volume)
+    {
+        int sourceId = GetSourceIdByName(line, name);
+        if (sourceId == -1)
+        {
+            yield break;
+        }
+
+        _data[line].transitionType[sourceId] = TransitionType.VolChange;
+        _data[line].OstData[sourceId] = (name, volume);
+
+        CompleteAfterTask(line, sourceId);
+        IEnumerator curr = _data[line].IEnumerators[sourceId];
+        if (curr != null)
+        {
+            StopCoroutine(curr);
+        }
+
+        IEnumerator volFade = LinearFadeTime(_sources[line][sourceId], time, volume);
+        _data[line].IEnumerators[sourceId] = volFade;
+
+        AddAfterTask(line, sourceId, delegate
+        {
+            _data[line].transitionType[sourceId] = TransitionType.Play;
+        });
+
+        StartCoroutine(ProcessVolChange(line, volFade, sourceId));
+    }
+
+    private IEnumerator ProcessVolChange(AudioLine line, IEnumerator volFade, int id)
+    {
+        yield return StartCoroutine(volFade);
+        CompleteAfterTask(line, id);
+    }
+
+    public IEnumerator SoundStart(string name)
+    {
+        yield break;
+    }
+
+    private IEnumerator IDelay(float time)
+    {
+        float currentTime = 0;
+        while (currentTime < time)
+        {
+            float step;
+            if (Typewriter.Instance.SkipIsActive)
+            {
+                step = SkipStep;
+            }
+            else
+            {
+                step = DefaultStep;
+            }
+
+            currentTime += Time.deltaTime * step;
+            yield return null;
+        }
+
+        yield break;
+    }
+
+    private IEnumerator WaitForAll(List<IEnumerator> coroutines)
+    {
+        int tally = 0;
+
+        foreach (IEnumerator c in coroutines)
+        {
+            StartCoroutine(RunCoroutine(c));
+        }
+
+        while (tally > 0)
+        {
+            yield return null;
+        }
+
+        IEnumerator RunCoroutine(IEnumerator c)
+        {
+            tally++;
+            yield return StartCoroutine(c);
+            tally--;
+        }
+    }
+
+    private const float SkipStep = 10f;
+    private const float DefaultStep = 1;
+    public IEnumerator LinearFadeTime(AudioSource source, float fadeTime, float targetVolume_linear)
     {
         float currentTime = 0;
         float currentVolume_linear = source.volume;
         while (currentTime < fadeTime)
         {
-            currentTime += Time.deltaTime;
-            source.volume = Mathf.Lerp(currentVolume_linear, targetVolume_linear, currentTime / fadeTime);
+            float step;
+            if (Typewriter.Instance.SkipIsActive)
+            {
+                step = SkipStep;
+            }
+            else
+            {
+                step = DefaultStep;
+            }
+
+            currentTime += Time.deltaTime * step;
+            source.volume = Mathf.Lerp(currentVolume_linear, targetVolume_linear, (currentTime / fadeTime));
             yield return null;
         }
 

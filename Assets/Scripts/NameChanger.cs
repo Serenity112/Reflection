@@ -6,7 +6,24 @@ public class NameChanger : MonoBehaviour
 {
     public static NameChanger instance = null;
 
-    private Dictionary<string, string> _localizedNames = new Dictionary<string, string>();
+    private Dictionary<Character, string> charactersLocalization = new()
+    {
+        {Character.Sergey, "Сергей"},
+        {Character.Pasha, "Паша"},
+
+        {Character.Katya, "Катя"},
+        {Character.Nastya, "Настя"},
+        {Character.Tanya, "Таня"},
+        {Character.Evelina, "Эвелина"},
+
+        {Character.Raketnikov, "Ракетников"},
+        {Character.Tumanov, "Туманов"},
+
+        {Character.Neznakomka, "Незнакомка"},
+        {Character.Stranger, "Незнакомка"},
+        {Character.Speakers, "Выступающие"},
+        {Character.Students, "Студенты"},
+    };
 
     private void Awake()
     {
@@ -18,30 +35,17 @@ public class NameChanger : MonoBehaviour
         {
             Destroy(gameObject);
         }
-
-        // Временное решение. При добавлении локализации изменить
-        _localizedNames.Add("Katya", "Катя");
-        _localizedNames.Add("Nastya", "Настя");
-        _localizedNames.Add("Tanya", "Таня");
-        _localizedNames.Add("Eveline", "Эвелина");
-        _localizedNames.Add("Pasha", "Паша");
-        _localizedNames.Add("Tumanov", "Туманов");
-        _localizedNames.Add("Raketnikov", "Ракетников");
-        _localizedNames.Add("Sergey", "Сергей");
-        _localizedNames.Add("Stranger", "Незнакомка");
-        _localizedNames.Add("Speakers", "Выступающие");
-        _localizedNames.Add("Students", "Студенты");
     }
 
-    public void SetName(string name)
+    public void SetName(Character name)
     {
-        if (name == null || !_localizedNames.ContainsKey(name))
+        if (!charactersLocalization.ContainsKey(name))
         {
             SetNameText("");
         }
         else
         {
-            SetNameText(_localizedNames[name]);
+            SetNameText(charactersLocalization[name]);
         }
     }
 

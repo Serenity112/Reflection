@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -44,9 +45,12 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            Typewriter.Instance.DenySkip(); // разрешение будет в конце выполнения SwapSprites.
+            StaticVariables.SPRITE_LOADING = true;
 
-            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(CharacterName, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, Typewriter.Instance.SkipIsActive, WaitForFinished, StopPrev));
+            var parsed = Enum.TryParse<global::Character>(CharacterName, true, out global::Character character);
+            var character_input = parsed ? character : global::Character.None;
+
+            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(character_input, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, Typewriter.Instance.SkipIsActive, WaitForFinished, StopPrev));
 
             Continue();
         }

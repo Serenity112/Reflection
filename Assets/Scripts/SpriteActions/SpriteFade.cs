@@ -44,4 +44,26 @@ public class SpriteFade : MonoBehaviour
             yield return StartCoroutine(FadeManager.ColorAlphaFadeObject(obj, fadein, speed));
         }
     }
+
+    public IEnumerator WaitForAll(List<IEnumerator> coroutines)
+    {
+        int tally = 0;
+
+        foreach (IEnumerator c in coroutines)
+        {
+            StartCoroutine(RunCoroutine(c));
+        }
+
+        while (tally > 0)
+        {
+            yield return null;
+        }
+
+        IEnumerator RunCoroutine(IEnumerator c)
+        {
+            tally++;
+            yield return StartCoroutine(c);
+            tally--;
+        }
+    }
 }

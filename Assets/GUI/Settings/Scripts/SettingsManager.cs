@@ -79,7 +79,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     }
 
     private IEnumerator IOpenSettings()
-    {      
+    {
         SettingsConfig.currentManager = GetComponent<SettingsManager>();
 
         FadeManager.FadeObject(blackPanelPanels, true);
@@ -113,10 +113,6 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     // Не все настрйоки нужно просто включить. Например музыку надо плавно вцвести
     private void ApplySettingsOnStart()
     {
-        audioMixer.SetFloat("MasterVol", 0);
-        audioMixer.SetFloat("MusicVol", 0);
-        audioMixer.SetFloat("SoundVol", 0);
-
         foreach (SettingsList setting in (SettingsList[])Enum.GetValues(typeof(SettingsList)))
         {
             SettingsOptions value = SettingsConfig.chosenOptions[setting].settingsOption;
@@ -125,13 +121,17 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
             switch (setting)
             {
                 case SettingsList.masterVolume:
-                    SmoothMusicOnStart("MasterVol", data);
+                    //audioMixer.SetFloat("MasterVol", data / 100);
+                    SmoothMusicOnStart("MasterVol", data / 100); // Деление на 100 т.к. метод принимает числа от 0 до 1
                     break;
                 case SettingsList.musicVolume:
-                    SmoothMusicOnStart("MusicVol", data);
+                    SmoothMusicOnStart("MusicVol", data / 100);
+                    break;
+                case SettingsList.ambientVolume:
+                    SmoothMusicOnStart("AmbientVol", data / 100);
                     break;
                 case SettingsList.soundVolume:
-                    SmoothMusicOnStart("SoundVol", data);
+                    SmoothMusicOnStart("SoundVol", data / 100);
                     break;
                 case SettingsList.FullScreenMode:
                     // Не применять, переносится с мейн меню
@@ -185,17 +185,18 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
                 }
                 else // Разрешить
                 {
-                    SpriteController.instance.LoadSpritesExpandingInfo();
+                    SpriteController.instance.LoadSpritesExpandingInfo(false);
                 }
                 break;
         }
     }
 
-    private void SmoothMusicOnStart(string exposedParam, float data)
+    private void SmoothMusicOnStart(string exposedParam, float volume_linear)
     {
+        float fadeInTime = 3f;
         audioMixer.SetFloat(exposedParam, 0);
-        float targetVolume_db = Mathf.Log10(data / 100) * 20;
-        StartCoroutine(FadeVolume(audioMixer, exposedParam, 3f, targetVolume_db));
+        float targetVolume_db = Mathf.Log10(volume_linear) * 20;
+        StartCoroutine(FadeVolume(audioMixer, exposedParam, fadeInTime, targetVolume_db));
     }
 
     private IEnumerator FadeVolume(AudioMixer mixer, string exposedParam, float duration, float targetVolume_db)

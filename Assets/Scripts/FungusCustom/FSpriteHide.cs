@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 namespace Fungus
 {
@@ -22,7 +23,10 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            yield return StartCoroutine(SpriteRemover.instance.RemoveSprite(CharacterName, DisappearSpeed, Typewriter.Instance.SkipIsActive, false));
+            var parsed = Enum.TryParse<global::Character>(CharacterName, true, out global::Character character);
+            var character_input = parsed ? character : global::Character.None;
+
+            yield return StartCoroutine(SpriteRemover.instance.RemoveSprite(character_input, DisappearSpeed, Typewriter.Instance.SkipIsActive, false));
 
             Continue();
         }

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace Fungus
@@ -11,13 +12,19 @@ namespace Fungus
         private string MusicName;
 
         [SerializeField]
-        private float Duration = 1.5f;
+        private float Time = 2f;
 
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.MusicEnd(Duration);
+            StartCoroutine(IOnEnter());
+        }
+
+        private IEnumerator IOnEnter()
+        {
+            yield return AudioManager.instance.StartCoroutine(AudioManager.instance.AudioLineEnd(AudioManager.AudioLine.Music, MusicName, Time));
+
             Continue();
         }
 

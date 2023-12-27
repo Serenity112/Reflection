@@ -17,7 +17,7 @@ public struct SaveData
         CurrentBlock = null;
 
         CurrentMusic = (null, 1);
-        CurrentAmbient1 = (null, 1);
+        CurrentAmbient = (null, 1);
         CurrentAmbient2 = (null, 1);
 
         LogBlocks = new List<string>();
@@ -33,7 +33,7 @@ public struct SaveData
 
     // Music
     public (string Name, float Volume) CurrentMusic;
-    public (string Name, float Volume) CurrentAmbient1;
+    public (string Name, float Volume) CurrentAmbient;
     public (string Name, float Volume) CurrentAmbient2;
 
     public List<string> LogBlocks;
@@ -58,9 +58,7 @@ public class UserData : MonoBehaviour
     // Music
     public (string Name, float Volume) CurrentMusic { get; set; }
 
-    public (string Name, float Volume) CurrentAmbient1 { get; set; }
-
-    public (string Name, float Volume) CurrentAmbient2 { get; set; }
+    public (string Name, float Volume) CurrentAmbient { get; set; }
 
     // Events
 
@@ -116,8 +114,8 @@ public class UserData : MonoBehaviour
 
         // Музыка
         newSave.CurrentMusic = instance.CurrentMusic;
-        newSave.CurrentAmbient1 = instance.CurrentAmbient1;
-        newSave.CurrentAmbient2 = instance.CurrentAmbient2;
+        newSave.CurrentAmbient = instance.CurrentAmbient;
+        //newSave.CurrentAmbient2 = instance.CurrentAmbient2;
 
         // Ивенты
         newSave.specialEvent = SpecialEventManager.instance.CurrentEventEnum;
@@ -222,6 +220,12 @@ public class UserData : MonoBehaviour
             i_sprite_unload,
             i_sprite_load,
         });
+
+        // Музыка
+        CurrentMusic = newSave.CurrentMusic;
+        AudioManager.instance.currentMusicVolume = CurrentMusic.Volume;
+
+
 
         /*// Музыка
         // Отгрузка

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Fungus
@@ -14,7 +15,11 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            StartCoroutine(PackageConntector.instance.IConnectPackageGroupPreloaded(PackageName));
+            var parsed = Enum.TryParse<global::Character>(PackageName, true, out global::Character character);
+
+            Debug.Log(parsed + " " + character.ToString());
+
+            StartCoroutine(PackageConntector.instance.IConnectPackageGroupPreloaded(parsed ? character : global::Character.None));
 
             Continue();
         }
