@@ -7,8 +7,7 @@ public class ConfirmationPanel : MonoBehaviour
 {
     public static ConfirmationPanel instance = null;
 
-    [SerializeField]
-    private float FadingSpeed;
+    private float FadingSpeed = 5f;
 
     private IEnumerator IYes;
     private IEnumerator INo;
@@ -22,6 +21,8 @@ public class ConfirmationPanel : MonoBehaviour
 
     private AsyncOperationHandle<GameObject> handler;
 
+    private bool creation_ended = false;
+
     private void Awake()
     {
         if (instance == null)
@@ -34,7 +35,7 @@ public class ConfirmationPanel : MonoBehaviour
         }
     }
 
-    private void Start()
+    private void OnEnable()
     {
     }
 
@@ -66,6 +67,8 @@ public class ConfirmationPanel : MonoBehaviour
             {
                 Debug.Log("Error loading");
             }
+
+            creation_ended = true;
         }
     }
 
@@ -76,6 +79,7 @@ public class ConfirmationPanel : MonoBehaviour
         _panelOpen = false;
 
         StaticVariables.OverlayPanelActive = false;
+        creation_ended = false;
 
         Addressables.ReleaseInstance(handler);
 

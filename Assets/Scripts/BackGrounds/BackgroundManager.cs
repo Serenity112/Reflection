@@ -54,9 +54,9 @@ public class BackgroundManager : MonoBehaviour
 
         _backgroundsPanel = gameObject;
 
-        // _textBoxThemes.Add("SpacePort", new TextBoxTheme(ThemeStyle.Dark, 0.9f));
-        // _textBoxThemes.Add("AssemblyHall", new TextBoxTheme(ThemeStyle.Dark, 0.5f));
-        // _textBoxThemes.Add("SkverDay", new TextBoxTheme(ThemeStyle.Light, 0.75f));
+         _textBoxThemes.Add("SpacePort", new TextBoxTheme(ThemeStyle.Dark, 0.9f));
+         _textBoxThemes.Add("AssemblyHall", new TextBoxTheme(ThemeStyle.Light, 0.5f));
+         _textBoxThemes.Add("SkverDay", new TextBoxTheme(ThemeStyle.Light, 0.75f));
     }
 
     public IEnumerator IReleaseBackground()

@@ -99,4 +99,15 @@ public class SaveFileFields : MonoBehaviour
         circle1.GetComponent<RectTransform>().rotation = new Quaternion(0, 0, 0, 0);
         circle2.GetComponent<RectTransform>().rotation = new Quaternion(0, 0, 0, 0);
     }
+
+    public void ResetVisuals()
+    {
+        SavedPanel.GetComponent<CanvasGroup>().alpha = 0f;
+        UnSavedPanel.GetComponent<CanvasGroup>().alpha = 0f;
+        MainMenuPanel.GetComponent<CanvasGroup>().alpha = 0f;
+        GradLeft.GetComponent<CanvasGroup>().alpha = 0f;
+        GradRight.GetComponent<CanvasGroup>().alpha = 0f;
+        IconLeft.GetComponent<CanvasGroup>().alpha = 0f;
+        IconRight.GetComponent<CanvasGroup>().alpha = 0f;
+    }
 }

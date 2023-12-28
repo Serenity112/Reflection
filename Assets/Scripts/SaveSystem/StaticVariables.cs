@@ -12,9 +12,9 @@ public static class StaticVariables
     public static bool PAUSE_ANIM_ENDED = false;
     public static bool IN_SETTINGS_MENU = false;
     public static bool IN_SAVE_MENU = false;
-    public static bool GAME_LOADING = false;
+    public static bool GAME_LOADING { get; set; } = false;
 
-    public static void ResetGlags()
+    public static void ResetFlags()
     {
         PAUSED = false;
         WARNING_PANEL = false;

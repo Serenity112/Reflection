@@ -14,10 +14,11 @@ public class SaveBackButton : IExpandableButton
 
     private void Update()
     {
-        if (Input.GetKey(KeyCode.Escape) && 
-            GetComponent<Button>().interactable && 
+        if (Input.GetKey(KeyCode.Escape) &&
+            GetComponent<Button>().interactable &&
             StaticVariables.IN_SAVE_MENU &&
-            !StaticVariables.GAME_LOADING)
+            !StaticVariables.GAME_LOADING &&
+            !StaticVariables.OverlayPanelActive)
         {
             OnClick();
         }

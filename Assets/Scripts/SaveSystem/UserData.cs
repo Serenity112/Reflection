@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Fungus;
 using System;
 using System.Threading;
+using static AudioManager;
 
 public struct SaveData
 {
@@ -16,9 +17,7 @@ public struct SaveData
 
         CurrentBlock = null;
 
-        CurrentMusic = (null, 1);
-        CurrentAmbient = (null, 1);
-        CurrentAmbient2 = (null, 1);
+        audioData = new();
 
         LogBlocks = new List<string>();
 
@@ -32,9 +31,7 @@ public struct SaveData
     public string CurrentBlock;
 
     // Music
-    public (string Name, float Volume) CurrentMusic;
-    public (string Name, float Volume) CurrentAmbient;
-    public (string Name, float Volume) CurrentAmbient2;
+    public AudioDataSaveFile audioData;
 
     public List<string> LogBlocks;
 
@@ -54,11 +51,6 @@ public class UserData : MonoBehaviour
 
     // Bg
     public string CurrentBG { get; set; } = null;
-
-    // Music
-    public (string Name, float Volume) CurrentMusic { get; set; }
-
-    public (string Name, float Volume) CurrentAmbient { get; set; }
 
     // Events
 
@@ -113,8 +105,7 @@ public class UserData : MonoBehaviour
         newSave.SpriteData = SpriteController.instance.GameSpriteData;
 
         // Музыка
-        newSave.CurrentMusic = instance.CurrentMusic;
-        newSave.CurrentAmbient = instance.CurrentAmbient;
+        newSave.audioData = AudioManager.instance.GetSaveData();
         //newSave.CurrentAmbient2 = instance.CurrentAmbient2;
 
         // Ивенты
@@ -222,32 +213,11 @@ public class UserData : MonoBehaviour
         });
 
         // Музыка
-        CurrentMusic = newSave.CurrentMusic;
-        AudioManager.instance.currentMusicVolume = CurrentMusic.Volume;
-
-
-
-        /*// Музыка
-        // Отгрузка
-        yield return StartCoroutine(AudioManager.instance.FadeOutCurrent());
-
-        // Загрузка
-        CurrentMusic = newSave.CurrentMusic;
-        CurrentAmbient1 = newSave.CurrentAmbient1;
-        CurrentAmbient2 = newSave.CurrentAmbient2;
-
-        if (CurrentMusic.Name != null)
+        IEnumerator i_music = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
         {
-            AudioManager.instance.MusicStart(CurrentMusic.Name, 3f, CurrentMusic.Volume);
-        }
-        if (CurrentAmbient1.Name != null)
-        {
-            AudioManager.instance.AmbientStart(CurrentAmbient1.Name, 3f, CurrentAmbient1.Volume, false);
-        }
-        if (CurrentAmbient2.Name != null)
-        {
-            AudioManager.instance.AmbientStart(CurrentAmbient2.Name, 3f, CurrentAmbient2.Volume, true);
-        }*/
+            AudioManager.instance.FadeOutCurrent(),
+            AudioManager.instance.FadeInCurrent(newSave.audioData),
+        });
 
         // Лог
         LogManager.instance.DelLog();
@@ -260,10 +230,12 @@ public class UserData : MonoBehaviour
         //ChoiceManager.instance.ReleaseChoiceBox();
         //ChoiceManager.instance.LoadSavedChoices(actualSaveNum);
 
+        // Весь процесс загрузки
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
             i_bg,
-            i_sprite
+            i_sprite,
+            i_music
         }));
 
 

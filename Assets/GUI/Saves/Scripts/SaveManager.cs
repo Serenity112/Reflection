@@ -181,20 +181,30 @@ public class SaveManager : MonoBehaviour
 
     public void LoadFirstPage()
     {
-        for (int saveNum = 0; saveNum < savesPerPage; saveNum++)
+        for (int i = 0; i < savesPerPage; i++)
         {
-            SaveFileFields saveFileFields = allFiles[saveNum].GetComponent<SaveFileFields>();
+            SaveFileFields saveFileFields = allFiles[i].GetComponent<SaveFileFields>();
+            saveFileFields.ResetVisuals();
+            var fs = allFiles[i].GetComponent<FirstSaveAnimator>();
+            fs.InstantHideCassette();
+
+            var sca = allFiles[i].GetComponent<SaveChoiseIconAnimator>();
+            sca.InstantHideAll();
+
+            var sca2 = allFiles[i].GetComponent<SaveChoiseAnimator>();
+            sca2.HideCross();
+            
 
             GameObject savedPanel = saveFileFields.SavedPanel;
             GameObject unsavedPanel = saveFileFields.UnSavedPanel;
             GameObject MainMenuPanel = saveFileFields.MainMenuPanel;
 
-            GameObject screenshot = allScreenshots[saveNum];
+            GameObject screenshot = allScreenshots[i];
 
             GameObject noImage = saveFileFields.NoImage;
             GameObject overPanel = saveFileFields.overPanel;
 
-            if (savesTaken[saveNum])
+            if (savesTaken[i])
             {
                 if (StaticVariables.ifInMainMenu)
                 {
@@ -205,12 +215,12 @@ public class SaveManager : MonoBehaviour
                     FadeManager.FadeObject(savedPanel, true);
                 }
 
-                saveFileFields.datetime.GetComponent<Text>().text = saveDataTimes[saveNum];
+                saveFileFields.datetime.GetComponent<Text>().text = saveDataTimes[i];
                 saveFileFields.datetime.GetComponent<CanvasGroup>().alpha = 1f;
 
-                var texture = ES3.LoadImage($"{ScreenshotsFolder}/screenshot{saveNum}.png");
-                texture.name = "screenshot" + saveNum;
-                currentTextures[saveNum] = texture;
+                var texture = ES3.LoadImage($"{ScreenshotsFolder}/screenshot{i}.png");
+                texture.name = "screenshot" + i;
+                currentTextures[i] = texture;
 
                 screenshot.GetComponent<RawImage>().texture = texture;
 
@@ -231,7 +241,7 @@ public class SaveManager : MonoBehaviour
                 saveFileFields.datetime.GetComponent<CanvasGroup>().alpha = 0f;
 
                 screenshot.GetComponent<RawImage>().texture = null;
-                currentTextures[saveNum] = null;
+                currentTextures[i] = null;
 
                 screenshot.GetComponent<CanvasGroup>().alpha = 0f;
                 if (!StaticVariables.ifInMainMenu)
@@ -259,6 +269,7 @@ public class SaveManager : MonoBehaviour
             int a_next = pageToLoad * savesPerPage + i;
 
             SaveFileFields saveFileFields = allFiles[i].GetComponent<SaveFileFields>();
+
             GameObject savedPanel = saveFileFields.SavedPanel;
             GameObject unsavedPanel = saveFileFields.UnSavedPanel;
             GameObject mainMenuPanel = saveFileFields.MainMenuPanel;
@@ -375,7 +386,21 @@ public class SaveManager : MonoBehaviour
 
         // Очистка текущих скринов
         ClearCurrenTextures();
+        for (int i = 0; i < savesPerPage; i++)
+        {
+            SaveFileFields saveFileFields = allFiles[i].GetComponent<SaveFileFields>();
+            saveFileFields.ResetVisuals();
 
+            var fs = allFiles[i].GetComponent<FirstSaveAnimator>();
+            fs.InstantHideCassette();
+
+            var sca = allFiles[i].GetComponent<SaveChoiseIconAnimator>();
+            sca.InstantHideAll();
+
+            var sca2 = allFiles[i].GetComponent<SaveChoiseAnimator>();
+            sca2.HideCross();
+        }
+           
         // Загрузка текстур новых скринов
         for (int i = 0; i < savesPerPage; i++)
         {
@@ -568,6 +593,7 @@ public class SaveManager : MonoBehaviour
         _update = IUpdate();
         StartCoroutine(_update);
     }
+
 
     public void OnSaveClose()
     {

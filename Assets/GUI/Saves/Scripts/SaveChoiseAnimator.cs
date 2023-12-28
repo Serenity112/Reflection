@@ -240,4 +240,9 @@ public class SaveChoiseAnimator : MonoBehaviour
         saveFileFields.resetCassettePosition(IconRight);
         StaticVariables.UIsystemDown = false;
     }
+
+    public void HideCross()
+    {
+        DeleteCross.GetComponent<CanvasGroup>().alpha = 0f;
+    }
 }

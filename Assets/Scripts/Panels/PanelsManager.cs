@@ -74,7 +74,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         Typewriter.Instance.SetText("");
         NameChanger.instance.SetName(Character.None);
     }
-
+    
     public void DisableGuiOnStart()
     {
         FadeManager.FadeObject(BlackPanel, true);

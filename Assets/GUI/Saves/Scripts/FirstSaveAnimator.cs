@@ -55,7 +55,7 @@ public class FirstSaveAnimator : MonoBehaviour
         }
     }
 
-    private void InstantHideCassette()
+    public void InstantHideCassette()
     {
         FadeManager.FadeObject(CassetteImg, false);
     }

@@ -1,27 +1,44 @@
+using System.Collections;
 using UnityEngine;
 
-public class ConfirmationPanelButton : MonoBehaviour
+public class ConfirmationPanelButton : IDraggableButton
 {
     [SerializeField]
     private float FadingSpeed;
 
     private GameObject spacing;
 
-    private void OnEnable()
+    public override void Awake()
     {
+        base.Awake();
         spacing = transform.GetChild(0).gameObject;
         spacing.GetComponent<CanvasGroup>().alpha = 0f;
     }
 
-    private void OnMouseEnter()
+    public override void EnterAction()
     {
         StopAllCoroutines();
         StartCoroutine(FadeManager.FadeOnly(spacing, true, FadingSpeed));
     }
 
-    private void OnMouseExit()
+    public override void ExitAction()
     {
         StopAllCoroutines();
         StartCoroutine(FadeManager.FadeOnly(spacing, false, FadingSpeed));
+    }
+
+    public override IEnumerator IClick()
+    {
+        yield break;
+    }
+
+    public override void ResetButtonState()
+    {
+        spacing.GetComponent<CanvasGroup>().alpha = 0f;
+    }
+
+    private void OnEnable()
+    {
+        spacing.GetComponent<CanvasGroup>().alpha = 0f;
     }
 }

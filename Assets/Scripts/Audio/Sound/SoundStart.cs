@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace Fungus
@@ -14,9 +15,16 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            AudioManager.instance.SoundStart(SoundName);
+            StartCoroutine(IOnEnter());
+        }
+
+        private IEnumerator IOnEnter()
+        {
+            yield return AudioManager.instance.StartCoroutine(AudioManager.instance.SoundStart(SoundName));
+
             Continue();
         }
+
 
         public override Color GetButtonColor()
         {
