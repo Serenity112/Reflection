@@ -27,7 +27,7 @@ public class PauseOptionButton : IDraggableButton
 
     public void Start()
     {
-        PauseButtonsManager.instance.SubscribeButton(this.gameObject);
+        PauseButtonsManager.instance.SubscribeButton(this.gameObject.GetComponent<IDraggableButton>());
     }
 
     public override void EnterAction()

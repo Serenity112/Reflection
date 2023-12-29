@@ -269,8 +269,6 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         Addressables.ReleaseInstance(savesPanelHandler);
 
-        MMButtonsManager.instance.EnableButtons();
-
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
 
         Resources.UnloadUnusedAssets();
@@ -326,8 +324,6 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
 
         Addressables.ReleaseInstance(aboutUsHandler);
-
-        MMButtonsManager.instance.EnableButtons();
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
 

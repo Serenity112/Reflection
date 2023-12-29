@@ -11,6 +11,9 @@ namespace Fungus
         [SerializeField]
         private string SoundName;
 
+        [SerializeField]
+        private float Volume;
+
         public override void OnEnter()
         {
             UserData.instance.CurrentCommandIndex += 1;
@@ -20,7 +23,7 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            yield return AudioManager.instance.StartCoroutine(AudioManager.instance.SoundStart(SoundName));
+            yield return AudioManager.instance.StartCoroutine(AudioManager.instance.SoundStart(SoundName, Volume));
 
             Continue();
         }

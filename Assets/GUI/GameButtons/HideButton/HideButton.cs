@@ -41,7 +41,15 @@ public class HideButton : IExpandableButton
 
     public void Start()
     {
-        GameButtonsManager.instance.SubscribeButton(this.gameObject);
+        GameButtonsManager.instance.SubscribeButton(this.gameObject.GetComponent<IExpandableButton>());
+    }
+
+    private bool GetAllowStatus()
+    {
+        return (!StaticVariables.PAUSED &&
+                !StaticVariables.OVERLAY_UI_OPENED &&
+                !StaticVariables.GAME_LOADING &&
+                !GameButtonsManager.instance.BlockButtonsClick);
     }
 
     public override void EnterAction()
@@ -86,7 +94,12 @@ public class HideButton : IExpandableButton
 
     public override IEnumerator IClick()
     {
-        StaticVariables.OVER_UI = true;
+        if (!GetAllowStatus())
+        {
+            yield break;
+        }
+
+        StaticVariables.OVERLAY_UI_OPENED = true;
 
         HideOverlayButton.SetActive(true);
         animator.Play(HideA);
@@ -168,11 +181,13 @@ public class HideButton : IExpandableButton
         }));
 
         HideOverlayButton.SetActive(false);
-        StaticVariables.OVER_UI = false;
+        StaticVariables.OVERLAY_UI_OPENED = false;
     }
 
     public override void ResetButtonState()
     {
         gameObject.transform.localScale = origScale;
+        StopInputWait();
+        HideOverlayButton.SetActive(false);
     }
 }

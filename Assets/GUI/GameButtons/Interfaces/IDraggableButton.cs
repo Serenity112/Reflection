@@ -31,7 +31,7 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
     {
         enter = true;
 
-        if (/*!StaticVariables.OverlayPanelActive && */!pointer_down)
+        if (!pointer_down)
         {
             EnterAction();
         }
@@ -41,7 +41,7 @@ public abstract class IDraggableButton : MonoBehaviour, IPointerEnterHandler, IP
     {
         enter = false;
 
-        if (/*!StaticVariables.OverlayPanelActive && */!pointer_down)
+        if (!pointer_down)
         {
             ExitAction();
         }

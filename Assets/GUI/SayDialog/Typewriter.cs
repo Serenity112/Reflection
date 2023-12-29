@@ -79,7 +79,7 @@ public class Typewriter : MonoBehaviour
             StaticVariables.PAUSED ||
             StaticVariables.WARNING_PANEL ||
             StaticVariables.CONFIRM_PANEL ||
-            StaticVariables.OVER_UI /*||*/
+            StaticVariables.OVERLAY_UI_OPENED /*||*/
             //StaticVariables.SPRITE_LOADING
             //StaticVariables.SPRITE_MOVING
             );

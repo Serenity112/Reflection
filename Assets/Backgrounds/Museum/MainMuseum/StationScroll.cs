@@ -1,4 +1,6 @@
+using Fungus;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 public enum StationScrollState
 {
@@ -23,9 +25,11 @@ public class StationScroll : MonoBehaviour, ISpecialEvent
         SpecialEventManager.instance.SetEvent(this, SpecialEvent.StationScroll);
     }
 
-    public IEnumerator IScrollBg(float speed, bool skip)
+    public IEnumerator IScrollBg(float speed)
     {
         currentData = ((int)StationScrollState.Scroll).ToString();
+
+        GameButtonsManager.instance.BlockButtonsClick = true;
 
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed));
         StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed));
@@ -34,8 +38,13 @@ public class StationScroll : MonoBehaviour, ISpecialEvent
         yield return new WaitForSeconds(2.1f);
         Typewriter.Instance.SetText("");
 
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed));
-        yield return StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed));
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed),
+            FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed)
+        }));
+
+        GameButtonsManager.instance.BlockButtonsClick = false;
     }
 
 

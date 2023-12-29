@@ -12,43 +12,20 @@ public class GameButtonsManager : IButtonManager
         instance = this;
     }
 
-    public IEnumerator HideTextBoxButtons(float speed)
-    {
-        List<IEnumerator> list = new List<IEnumerator>();
-        foreach (var button_obj in GameButtons)
-        {
-            list.Add(FadeManager.FadeObject(button_obj, false, speed));
-        }
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
-    }
-
-    public IEnumerator ShowAllButtons(float speed)
-    {
-        List<IEnumerator> list = new List<IEnumerator>();
-        foreach (var button_obj in GameButtons)
-        {
-            list.Add(FadeManager.FadeObject(button_obj, true, speed));
-        }
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
-    }
+    // Флаг для запрета нажатия на кнопки
+    public bool BlockButtonsClick { get; set; } = false;
 
     public override void ResetAllButtonsState()
     {
-        // -
-    }
-
-    public override void EnableButtons()
-    {
-        // -
-    }
-
-    public override void DisableButtons()
-    {
-        // -
+        foreach (var button in GameButtons)
+        {
+            button.ResetButtonState();
+        }
     }
 
     public override void ResetManager()
     {
-        throw new System.NotImplementedException();
+        BlockButtonsClick = false;
+        ResetAllButtonsState();
     }
 }

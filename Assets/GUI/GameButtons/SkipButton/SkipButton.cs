@@ -43,7 +43,7 @@ public class SkipButton : IExpandableButton
 
     public void Start()
     {
-        GameButtonsManager.instance.SubscribeButton(this.gameObject);
+        GameButtonsManager.instance.SubscribeButton(this.gameObject.GetComponent<IExpandableButton>());
     }
 
     public override void EnterAction()
@@ -95,6 +95,11 @@ public class SkipButton : IExpandableButton
 
     public override IEnumerator IClick()
     {
+        if (GameButtonsManager.instance.BlockButtonsClick)
+        {
+            yield break;
+        }
+
         StopAllCoroutines();
         StartCoroutine(IClickAnimation());
 

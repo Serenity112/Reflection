@@ -34,7 +34,7 @@ public class LogButton : IExpandableButton
 
     public void Start()
     {
-        GameButtonsManager.instance.SubscribeButton(this.gameObject);
+        GameButtonsManager.instance.SubscribeButton(this.gameObject.GetComponent<IExpandableButton>());
     }
 
     public override void EnterAction()

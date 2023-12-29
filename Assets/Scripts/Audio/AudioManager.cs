@@ -2,13 +2,10 @@ using Fungus;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Reflection;
-using System.Xml.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static AudioManager;
+using UnityEngine.UIElements;
 
 public class AudioManager : MonoBehaviour
 {
@@ -37,10 +34,6 @@ public class AudioManager : MonoBehaviour
     private int MusicSourceCount = 0;
     private int AmbientSourceCount = 0;
     private int SoundSourceCount = 0;
-
-    public float currentMusicVolume = 1;
-    public float currentAmbientVolume = 1;
-    public float currentSoundVolume = 1;
 
     public struct SingleOstData
     {
@@ -195,14 +188,6 @@ public class AudioManager : MonoBehaviour
         return data;
     }
 
-    public void UploadSaveData(AudioDataSaveFile data)
-    {
-        InitAudioData();
-
-        _data[AudioLine.Music].SetOstData(data.saveData[AudioLine.Music]);
-        _data[AudioLine.Ambient].SetOstData(data.saveData[AudioLine.Ambient]);
-    }
-
     public IEnumerator FadeOutCurrent()
     {
         //StopAllCoroutines();
@@ -223,18 +208,29 @@ public class AudioManager : MonoBehaviour
 
     public IEnumerator FadeInCurrent(AudioDataSaveFile data)
     {
+        InitAudioData();
+
         List<IEnumerator> list = new List<IEnumerator>();
         for (int i = 0; i < MusicSourceCount; i++)
         {
             var ostData = data.saveData[AudioLine.Music][i];
             if (ostData.OstName != null)
             {
-                IEnumerator fadeout = AudioLineStart(AudioLine.Music, ostData.OstName, 0.25f, ostData.Volume);
-                list.Add(fadeout);
+                IEnumerator fadein = AudioLineStart(AudioLine.Music, ostData.OstName, 0.25f, ostData.Volume);
+                list.Add(fadein);
+            }
+        }
+        for (int i = 0; i < AmbientSourceCount; i++)
+        {
+            var ostData = data.saveData[AudioLine.Ambient][i];
+            if (ostData.OstName != null)
+            {
+                IEnumerator fadein = AudioLineStart(AudioLine.Ambient, ostData.OstName, 0.25f, ostData.Volume);
+                list.Add(fadein);
             }
         }
 
-        yield return WaitForAll(list);
+        yield return StartCoroutine(WaitForAll(list));
     }
 
     public void OnSkipStart()
@@ -318,8 +314,21 @@ public class AudioManager : MonoBehaviour
         _data[line].TodoActions[index] = delegate { };
     }
 
+    private void StopLineCoroutine(IEnumerator enumerator)
+    {
+        if (enumerator != null)
+        {
+            StopCoroutine(enumerator);
+        }
+    }
+
     public IEnumerator AudioLineStart(AudioLine line, string name, float time, float targetVolume)
     {
+        if (name == null || name == string.Empty)
+        {
+            yield break;
+        }
+
         int freeSourceId = GetAvaliableAudioSourceId(line);
         if (freeSourceId == -1)
         {
@@ -328,10 +337,7 @@ public class AudioManager : MonoBehaviour
             {
                 freeSourceId = fade_out_sources[0];
                 IEnumerator free_ienum = _data[line].IEnumerators[freeSourceId];
-                if (free_ienum != null)
-                {
-                    StopCoroutine(free_ienum);
-                }
+                StopLineCoroutine(free_ienum);
                 CompleteAfterTask(line, freeSourceId);
             }
             else
@@ -359,7 +365,10 @@ public class AudioManager : MonoBehaviour
 
         IEnumerator fadein = LinearFadeTime(targetSource, time, targetVolume);
         _data[line].IEnumerators[freeSourceId] = fadein;
-        AddAfterTask(line, freeSourceId, delegate { _data[line].transitionType[freeSourceId] = TransitionType.Play; });
+        AddAfterTask(line, freeSourceId, delegate
+        {
+            _data[line].transitionType[freeSourceId] = TransitionType.Play;
+        });
 
         StartCoroutine(ProcessAudioLineStart(fadein, line, freeSourceId));
     }
@@ -372,32 +381,35 @@ public class AudioManager : MonoBehaviour
 
     public IEnumerator AudioLineEnd(AudioLine line, string name, float time, bool full_wait = false)
     {
-        int sourceId = GetSourceIdByName(line, name);
-        if (sourceId == -1 /*|| !Music.ContainsKey(name)*/)
+        if (name == null || name == string.Empty)
         {
             yield break;
         }
 
-        _data[line].transitionType[sourceId] = TransitionType.End;
-        _data[line].OstData[sourceId].OstName = null;
-
-        CompleteAfterTask(line, sourceId);
-        IEnumerator curr = _data[line].IEnumerators[sourceId];
-        if (curr != null)
+        int sourceId = GetSourceIdByName(line, name);
+        if (sourceId == -1)
         {
-            StopCoroutine(curr);
+            yield break;
         }
 
-        IEnumerator fadeOut = LinearFadeTime(_sources[line][sourceId], time, 0);
+        IEnumerator curr = _data[line].IEnumerators[sourceId];
+        StopLineCoroutine(curr);
+        CompleteAfterTask(line, sourceId);
+
+        _data[line].transitionType[sourceId] = TransitionType.End;
+        _data[line].OstData[sourceId] = new SingleOstData(null, 0);
+
+        AudioSource source = _sources[line][sourceId];
+        IEnumerator fadeOut = LinearFadeTime(source, time, 0);
         _data[line].IEnumerators[sourceId] = fadeOut;
 
+        var old_handler = _data[line].Handlers[sourceId];
         AddAfterTask(line, sourceId, delegate
         {
             _data[line].transitionType[sourceId] = TransitionType.None;
-            ReleaseHandler(_data[line].Handlers[sourceId]);
-            var source = _sources[line][sourceId];
-            source.clip = null;
+            ReleaseHandler(old_handler);
             source.Stop();
+            source.clip = null;
         });
 
         if (full_wait)
@@ -419,6 +431,11 @@ public class AudioManager : MonoBehaviour
     // Переход трека в трек
     public IEnumerator AudioLineTransition(AudioLine line, string prev_name, string new_name, float time, float targetVolume)
     {
+        if (name == null || name == string.Empty)
+        {
+            yield break;
+        }
+
         int freeSourceId = GetAvaliableAudioSourceId(line);
         if (freeSourceId == -1)
         {
@@ -427,10 +444,7 @@ public class AudioManager : MonoBehaviour
             {
                 freeSourceId = fade_out_sources[0];
                 IEnumerator free_ienum = _data[line].IEnumerators[freeSourceId];
-                if (free_ienum != null)
-                {
-                    StopCoroutine(free_ienum);
-                }
+                StopLineCoroutine(free_ienum);
                 CompleteAfterTask(line, freeSourceId);
             }
             else
@@ -444,16 +458,14 @@ public class AudioManager : MonoBehaviour
         {
             yield break;
         }
-        IEnumerator old_enum = _data[line].IEnumerators[currentSourceId];
-        if (old_enum != null)
-        {
-            StopCoroutine(old_enum);
-        }
+        IEnumerator curr_enum = _data[line].IEnumerators[currentSourceId];
+        StopLineCoroutine(curr_enum);
+        CompleteAfterTask(line, currentSourceId);
 
         AudioSource targetSource = _sources[line][freeSourceId];
         AudioSource currentSource = _sources[line][currentSourceId];
 
-        _data[line].OstData[currentSourceId].OstName = null;
+        _data[line].OstData[currentSourceId] = new SingleOstData(null, 0);
         _data[line].transitionType[currentSourceId] = TransitionType.End;
 
         _data[line].OstData[freeSourceId] = new SingleOstData(new_name, targetVolume);
@@ -476,36 +488,42 @@ public class AudioManager : MonoBehaviour
         IEnumerator fadeout = LinearFadeTime(currentSource, time, 0);
         _data[line].IEnumerators[currentSourceId] = fadeout;
 
+        var old_handler = _data[line].Handlers[currentSourceId];
+        AddAfterTask(line, currentSourceId, delegate
+        {
+            _data[line].transitionType[currentSourceId] = TransitionType.None;
+            ReleaseHandler(old_handler);
+            currentSource.volume = 0;
+            currentSource.Stop();
+            currentSource.clip = null;
+        });
         AddAfterTask(line, freeSourceId, delegate
         {
             _data[line].transitionType[freeSourceId] = TransitionType.Play;
-            _data[line].transitionType[currentSourceId] = TransitionType.None;
-            ReleaseHandler(_data[line].Handlers[currentSourceId]);
-            currentSource.clip = null;
-            currentSource.Stop();
         });
 
-        StartCoroutine(ProcessLineTransition(fadein, fadeout, line, freeSourceId));
+        StartCoroutine(ProcessLineTransition1(fadein, line, freeSourceId));
+        StartCoroutine(ProcessLineTransition2(fadeout, line, currentSourceId));
     }
 
-    private IEnumerator ProcessLineTransition(IEnumerator fadein, IEnumerator fadeout, AudioLine line, int new_id)
+    private IEnumerator ProcessLineTransition1(IEnumerator fadein, AudioLine line, int id)
     {
-        yield return StartCoroutine(WaitForAll(new List<IEnumerator>() { fadein, fadeout }));
-        CompleteAfterTask(line, new_id);
+        yield return StartCoroutine(fadein);
+        CompleteAfterTask(line, id);
+    }
+
+    private IEnumerator ProcessLineTransition2(IEnumerator fadeout, AudioLine line, int id)
+    {
+        yield return StartCoroutine(fadeout);
+        CompleteAfterTask(line, id);
     }
 
     // Трек -> тишина -> трек
     public IEnumerator AudioLineChange(AudioLine line, string old_name, string new_name, float fade_time, float delay_time, float targetVolume)
     {
-        int currentSourceId = GetSourceIdByName(line, old_name);
-        if (currentSourceId == -1)
+        if (name == null || name == string.Empty)
         {
             yield break;
-        }
-        IEnumerator old_enum = _data[line].IEnumerators[currentSourceId];
-        if (old_enum != null)
-        {
-            StopCoroutine(old_enum);
         }
 
         int freeSourceId = GetAvaliableAudioSourceId(line);
@@ -516,10 +534,7 @@ public class AudioManager : MonoBehaviour
             {
                 freeSourceId = fade_out_sources[0];
                 IEnumerator free_ienum = _data[line].IEnumerators[freeSourceId];
-                if (free_ienum != null)
-                {
-                    StopCoroutine(free_ienum);
-                }
+                StopLineCoroutine(free_ienum);
                 CompleteAfterTask(line, freeSourceId);
             }
             else
@@ -528,10 +543,19 @@ public class AudioManager : MonoBehaviour
             }
         }
 
+        int currentSourceId = GetSourceIdByName(line, old_name);
+        if (currentSourceId == -1)
+        {
+            yield break;
+        }
+        IEnumerator old_enum = _data[line].IEnumerators[currentSourceId];
+        StopLineCoroutine(old_enum);
+        CompleteAfterTask(line, currentSourceId);
+
         AudioSource targetSource = _sources[line][freeSourceId];
         AudioSource currentSource = _sources[line][currentSourceId];
 
-        _data[line].OstData[currentSourceId].OstName = null;
+        _data[line].OstData[currentSourceId] = new SingleOstData(null, 0);
         _data[line].transitionType[currentSourceId] = TransitionType.End;
 
         _data[line].OstData[freeSourceId] = new SingleOstData(new_name, targetVolume);
@@ -553,28 +577,36 @@ public class AudioManager : MonoBehaviour
         IEnumerator fadein = LinearFadeTime(targetSource, fade_time, targetVolume);
         _data[line].IEnumerators[freeSourceId] = fadein;
 
+        var old_handler = _data[line].Handlers[currentSourceId];
+        AddAfterTask(line, currentSourceId, delegate
+        {
+            _data[line].transitionType[currentSourceId] = TransitionType.None;
+            ReleaseHandler(old_handler);
+            currentSource.Stop();
+            currentSource.volume = 0;
+            currentSource.clip = null;
+
+        });
         AddAfterTask(line, freeSourceId, delegate
         {
             _data[line].transitionType[freeSourceId] = TransitionType.Play;
-            _data[line].transitionType[currentSourceId] = TransitionType.None;
-            ReleaseHandler(_data[line].Handlers[currentSourceId]);
-            currentSource.clip = null;
-            currentSource.Stop();
-            targetSource.Play();
         });
 
-        StartCoroutine(ProcessLineChange(line, fadein, fadeout, currentSourceId, freeSourceId, delay_time, targetSource));
+        StartCoroutine(ProcessLineChange1(line, fadein, freeSourceId, delay_time));
+        StartCoroutine(ProcessLineChange2(line, fadeout, currentSourceId));
     }
 
-    private IEnumerator ProcessLineChange(AudioLine line, IEnumerator fadein, IEnumerator fadeout, int old_id, int new_id, float delay_time, AudioSource targetSource)
+    private IEnumerator ProcessLineChange1(AudioLine line, IEnumerator fadein, int id, float delay_time)
+    {
+        yield return StartCoroutine(fadein);
+        yield return StartCoroutine(IDelay(delay_time));
+        CompleteAfterTask(line, id);
+    }
+
+    private IEnumerator ProcessLineChange2(AudioLine line, IEnumerator fadeout, int id)
     {
         yield return StartCoroutine(fadeout);
-
-        yield return StartCoroutine(IDelay(delay_time));
-
-        CompleteAfterTask(line, new_id);
-
-        StartCoroutine(fadein);
+        CompleteAfterTask(line, id);
     }
 
     private void ReleaseHandler(AsyncOperationHandle<AudioClip>? handler)
@@ -591,6 +623,11 @@ public class AudioManager : MonoBehaviour
 
     public IEnumerator AudioLineVolChange(AudioLine line, string name, float time, float volume)
     {
+        if (name == null || name == string.Empty)
+        {
+            yield break;
+        }
+
         int sourceId = GetSourceIdByName(line, name);
         if (sourceId == -1)
         {
@@ -600,12 +637,8 @@ public class AudioManager : MonoBehaviour
         _data[line].transitionType[sourceId] = TransitionType.VolChange;
         _data[line].OstData[sourceId] = new SingleOstData(name, volume);
 
+        StopLineCoroutine(_data[line].IEnumerators[sourceId]);
         CompleteAfterTask(line, sourceId);
-        IEnumerator curr = _data[line].IEnumerators[sourceId];
-        if (curr != null)
-        {
-            StopCoroutine(curr);
-        }
 
         IEnumerator volFade = LinearFadeTime(_sources[line][sourceId], time, volume);
         _data[line].IEnumerators[sourceId] = volFade;
@@ -624,8 +657,13 @@ public class AudioManager : MonoBehaviour
         CompleteAfterTask(line, id);
     }
 
-    public IEnumerator SoundStart(string name)
+    public IEnumerator SoundStart(string name, float targetVolume)
     {
+        if (name == null || name == string.Empty)
+        {
+            yield break;
+        }
+
         int sourceId = 0;
         AudioLine line = AudioLine.Sound;
 
@@ -639,14 +677,16 @@ public class AudioManager : MonoBehaviour
         AudioSource source = _sources[AudioLine.Sound][sourceId];
 
         source.Stop();
+        source.volume = targetVolume;
         source.clip = newAudioClip;
         source.Play();
 
+        var old_handler = _data[line].Handlers[sourceId];
         AddAfterTask(line, sourceId, delegate
         {
-            ReleaseHandler(_data[line].Handlers[sourceId]);
-            source.clip = null;
+            ReleaseHandler(old_handler);
             source.Stop();
+            source.clip = null;       
         });
 
         StartCoroutine(ProcessSound(source, sourceId));
@@ -711,7 +751,7 @@ public class AudioManager : MonoBehaviour
     }
 
     private const float SkipStep = 10f;
-    private const float DefaultStep = 1;
+    private const float DefaultStep = 1f;
     public IEnumerator LinearFadeTime(AudioSource source, float fadeTime, float targetVolume_linear)
     {
         float currentTime = 0;

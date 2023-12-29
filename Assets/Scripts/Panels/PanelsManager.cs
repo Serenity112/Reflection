@@ -136,6 +136,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         // Так как внутри ClearCurrent идёт чтение из файла, это ломает корутины почему-то...
         yield return new WaitForSeconds(0.1f);
         //PauseButtonsManager.instance.ResetManager();
+        GameButtonsManager.instance.ResetManager();
         PanelsCamera.enabled = false;
         savePanelHandler.Result.SetActive(false);
 

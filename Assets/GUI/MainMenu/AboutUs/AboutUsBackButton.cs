@@ -15,8 +15,9 @@ public class AboutUsBackButton : IDraggableButton
     private Vector3 origScale;
     private Vector3 expandedScale;
 
-    void Awake()
+    public override void Awake()
     {
+        base.Awake();
         animator = GetComponent<Animator>();
 
         buttonParent = transform.parent.gameObject;

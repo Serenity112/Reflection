@@ -76,8 +76,6 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
-        MMButtonsManager.instance.EnableButtons();
-
         Addressables.ReleaseInstance(handler);
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));

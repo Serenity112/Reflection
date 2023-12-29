@@ -20,41 +20,22 @@ public class MMButtonsManager : IButtonManager
     {
         instance = this;
 
-        GameButtons = new List<GameObject>();
+        GameButtons = new List<IDraggableButton>();
     }
 
     private void Start()
     {
-        EnableButtons();
         ResetAllButtonsState();
     }
 
     public override void ResetAllButtonsState()
     {
-        foreach (GameObject button in GameButtons)
+        foreach (var button in GameButtons)
         {
             MMOptionButton underlineButton = button.GetComponent<MMOptionButton>();
             //underlineButton.ResetFlags();
             //GameObject spacing = underlineButton.spacing;
            // spacing.GetComponent<CanvasGroup>().alpha = 0f;
-        }
-    }
-
-    public override void EnableButtons()
-    {
-        foreach (GameObject button_obj in GameButtons)
-        {
-            button_obj.GetComponent<BoxCollider>().enabled = true;
-            button_obj.GetComponent<Button>().interactable = true;
-        }
-    }
-
-    public override void DisableButtons()
-    {
-        foreach (GameObject button_obj in GameButtons)
-        {
-            button_obj.GetComponent<BoxCollider>().enabled = false;
-            button_obj.GetComponent<Button>().interactable = false;
         }
     }
 

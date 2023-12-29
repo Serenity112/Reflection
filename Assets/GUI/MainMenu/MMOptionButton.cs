@@ -51,7 +51,6 @@ public class MMOptionButton : IDraggableButtonGroup
 
     public override IEnumerator IClick()
     {
-        MMButtonsManager.instance.DisableButtons();
         MMButtonsManager.instance.ExecuteOption(option);
         yield return null;
     }

@@ -18,20 +18,22 @@ public class PauseButton : IExpandableButton
 
     public void Start()
     {
-        GameButtonsManager.instance.SubscribeButton(this.gameObject);
+        GameButtonsManager.instance.SubscribeButton(this.gameObject.GetComponent<IExpandableButton>());
+    }
+
+    private bool GetAllowStatus()
+    {
+        return (!StaticVariables.PAUSED &&
+                !StaticVariables.OVERLAY_UI_OPENED &&
+                !StaticVariables.GAME_LOADING &&
+                !GameButtonsManager.instance.BlockButtonsClick);
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape) && GetAllowStatus())
         {
-            if (!StaticVariables.PAUSED && 
-                !StaticVariables.OVER_UI &&
-                !StaticVariables.GAME_LOADING)
-            {
-                StaticVariables.PAUSED = true;
-                StartCoroutine(IClickAnimation());
-            }
+            StartCoroutine(IClickAnimation());
         }
     }
 
@@ -42,7 +44,7 @@ public class PauseButton : IExpandableButton
 
         expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(expandOnEnter);
-        
+
     }
 
     public override void ExitAction()
@@ -56,7 +58,14 @@ public class PauseButton : IExpandableButton
 
     public override IEnumerator IClick()
     {
-        yield return StartCoroutine(IClickAnimation());
+        if (!GetAllowStatus())
+        {
+            yield break;
+        }
+        else
+        {
+            yield return StartCoroutine(IClickAnimation());
+        }
     }
 
     private IEnumerator IClickAnimation()
@@ -67,8 +76,6 @@ public class PauseButton : IExpandableButton
 
         PauseButtonsManager.instance.PausePanel.GetComponent<CanvasGroup>().alpha = 0f;
         PauseButtonsManager.instance.PausePanel.SetActive(true);
-
-        PauseButtonsManager.instance.EnableButtons();
         PauseButtonsManager.instance.ResetManager();
         PauseButtonsManager.instance.uIBlur.BeginBlur(_speed);
 

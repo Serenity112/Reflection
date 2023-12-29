@@ -36,7 +36,7 @@ public class PauseButtonsManager : IButtonManager
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             if (StaticVariables.PAUSE_ANIM_ENDED &&
-                !StaticVariables.OVER_UI &&
+                !StaticVariables.OVERLAY_UI_OPENED &&
                 !_buttonClicked &&
                 !StaticVariables.GAME_LOADING)
             {
@@ -45,30 +45,11 @@ public class PauseButtonsManager : IButtonManager
         }
     }
 
-    public override void DisableButtons()
-    {
-        foreach (GameObject button_obj in GameButtons)
-        {
-            button_obj.GetComponent<BoxCollider>().enabled = false;
-            button_obj.GetComponent<Button>().interactable = false;
-        }
-    }
-
-    public override void EnableButtons()
-    {
-        foreach (GameObject button_obj in GameButtons)
-        {
-            button_obj.GetComponent<BoxCollider>().enabled = true;
-            button_obj.GetComponent<Button>().interactable = true;
-        }
-    }
-
     public override void ResetAllButtonsState()
     {
-        foreach (GameObject button in GameButtons)
+        foreach (var button in GameButtons)
         {
-            PauseOptionButton pauseOptionButton = button.GetComponent<PauseOptionButton>();
-            pauseOptionButton.ResetButtonState();
+            button.ResetButtonState();
         }
     }
 
@@ -121,26 +102,5 @@ public class PauseButtonsManager : IButtonManager
     {
         _buttonClicked = false;
         ResetAllButtonsState();
-        EnableButtons();
-    }
-
-    public IEnumerator HideManager(float speed)
-    {
-        yield return StartCoroutine(FadeManager.FadeObject(PausePanel, false, speed));
-    }
-
-    public IEnumerator ShowManager(float speed)
-    {
-        yield return StartCoroutine(FadeManager.FadeObject(PausePanel, true, speed));
-    }
-
-    public void SetActive(bool active)
-    {
-        PausePanel.SetActive(active);
-    }
-
-    public void SetAlpha(float alpha)
-    {
-        PausePanel.GetComponent<CanvasGroup>().alpha = alpha;
     }
 }
