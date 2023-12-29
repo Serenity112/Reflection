@@ -106,7 +106,6 @@ public class UserData : MonoBehaviour
 
         // Музыка
         newSave.audioData = AudioManager.instance.GetSaveData();
-        //newSave.CurrentAmbient2 = instance.CurrentAmbient2;
 
         // Ивенты
         newSave.specialEvent = SpecialEventManager.instance.CurrentEventEnum;

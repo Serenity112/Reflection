@@ -139,16 +139,19 @@ public class AudioManager : MonoBehaviour
     {
         for (int i = 0; i < MusicSourceCount; i++)
         {
+            StopLineCoroutine(_data[AudioLine.Music].IEnumerators[i]);
             CompleteAfterTask(AudioLine.Music, i);
         }
 
         for (int i = 0; i < AmbientSourceCount; i++)
         {
+            StopLineCoroutine(_data[AudioLine.Ambient].IEnumerators[i]);
             CompleteAfterTask(AudioLine.Ambient, i);
         }
 
         for (int i = 0; i < SoundSourceCount; i++)
         {
+            StopLineCoroutine(_data[AudioLine.Sound].IEnumerators[i]);
             CompleteAfterTask(AudioLine.Sound, i);
         }
     }
@@ -301,17 +304,12 @@ public class AudioManager : MonoBehaviour
     private void CompleteAfterTask(AudioLine line, int index)
     {
         _data[line].TodoActions[index].Invoke();
-        ClearTask(line, index);
+        _data[line].TodoActions[index] = delegate { };
     }
 
     private void AddAfterTask(AudioLine line, int index, Action action)
     {
         _data[line].TodoActions[index] = action;
-    }
-
-    private void ClearTask(AudioLine line, int index)
-    {
-        _data[line].TodoActions[index] = delegate { };
     }
 
     private void StopLineCoroutine(IEnumerator enumerator)
@@ -322,6 +320,7 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    // Новый трек
     public IEnumerator AudioLineStart(AudioLine line, string name, float time, float targetVolume)
     {
         if (name == null || name == string.Empty)
@@ -379,6 +378,7 @@ public class AudioManager : MonoBehaviour
         CompleteAfterTask(line, id);
     }
 
+    // Закончить трек
     public IEnumerator AudioLineEnd(AudioLine line, string name, float time, bool full_wait = false)
     {
         if (name == null || name == string.Empty)
@@ -428,7 +428,7 @@ public class AudioManager : MonoBehaviour
         CompleteAfterTask(line, id);
     }
 
-    // Переход трека в трек
+    // Кроссфейд трека
     public IEnumerator AudioLineTransition(AudioLine line, string prev_name, string new_name, float time, float targetVolume)
     {
         if (name == null || name == string.Empty)
@@ -518,7 +518,7 @@ public class AudioManager : MonoBehaviour
         CompleteAfterTask(line, id);
     }
 
-    // Трек -> тишина -> трек
+    // Изменение трека с задержкой
     public IEnumerator AudioLineChange(AudioLine line, string old_name, string new_name, float fade_time, float delay_time, float targetVolume)
     {
         if (name == null || name == string.Empty)
@@ -570,11 +570,12 @@ public class AudioManager : MonoBehaviour
         _data[line].Handlers[freeSourceId] = currentOperationHandle;
 
         targetSource.clip = newAudioClip;
+        targetSource.Play();
 
         IEnumerator fadeout = LinearFadeTime(currentSource, fade_time, 0);
         _data[line].IEnumerators[currentSourceId] = fadeout;
 
-        IEnumerator fadein = LinearFadeTime(targetSource, fade_time, targetVolume);
+        IEnumerator fadein = LinearFadeTime(targetSource, fade_time, targetVolume, delay_time + fade_time);
         _data[line].IEnumerators[freeSourceId] = fadein;
 
         var old_handler = _data[line].Handlers[currentSourceId];
@@ -599,7 +600,6 @@ public class AudioManager : MonoBehaviour
     private IEnumerator ProcessLineChange1(AudioLine line, IEnumerator fadein, int id, float delay_time)
     {
         yield return StartCoroutine(fadein);
-        yield return StartCoroutine(IDelay(delay_time));
         CompleteAfterTask(line, id);
     }
 
@@ -621,6 +621,7 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    // Изменение громкости трека
     public IEnumerator AudioLineVolChange(AudioLine line, string name, float time, float volume)
     {
         if (name == null || name == string.Empty)
@@ -657,6 +658,7 @@ public class AudioManager : MonoBehaviour
         CompleteAfterTask(line, id);
     }
 
+    // Включение звука
     public IEnumerator SoundStart(string name, float targetVolume)
     {
         if (name == null || name == string.Empty)
@@ -686,7 +688,7 @@ public class AudioManager : MonoBehaviour
         {
             ReleaseHandler(old_handler);
             source.Stop();
-            source.clip = null;       
+            source.clip = null;
         });
 
         StartCoroutine(ProcessSound(source, sourceId));
@@ -704,28 +706,6 @@ public class AudioManager : MonoBehaviour
         }
 
         CompleteAfterTask(AudioLine.Sound, id);
-    }
-
-    private IEnumerator IDelay(float time)
-    {
-        float currentTime = 0;
-        while (currentTime < time)
-        {
-            float step;
-            if (Typewriter.Instance.SkipIsActive)
-            {
-                step = SkipStep;
-            }
-            else
-            {
-                step = DefaultStep;
-            }
-
-            currentTime += Time.deltaTime * step;
-            yield return null;
-        }
-
-        yield break;
     }
 
     private IEnumerator WaitForAll(List<IEnumerator> coroutines)
@@ -752,8 +732,13 @@ public class AudioManager : MonoBehaviour
 
     private const float SkipStep = 10f;
     private const float DefaultStep = 1f;
-    public IEnumerator LinearFadeTime(AudioSource source, float fadeTime, float targetVolume_linear)
+    public IEnumerator LinearFadeTime(AudioSource source, float fadeTime, float targetVolume_linear, float start_delay = 0f)
     {
+        if (start_delay != 0f)
+        {
+            yield return new WaitForSeconds(start_delay);
+        }
+
         float currentTime = 0;
         float currentVolume_linear = source.volume;
         while (currentTime < fadeTime)
