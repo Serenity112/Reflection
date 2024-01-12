@@ -1,28 +1,66 @@
-using Fungus;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class LogBack : MonoBehaviour
+public class LogBack : IExpandableButton
 {
-    public float speed;
+    private float _speed = 5f;
+    private bool _blockButton = false;
 
-    public Animator logButtonAnimator;
+    private IEnumerator shrink;
+    private IEnumerator expand;
+    private IEnumerator keyExitListener;
 
-    private Animator animator;
+    public override void Awake()
+    {
+        base.Awake();
+        GetComponent<Button>().onClick.AddListener(OnClick);
+    }
 
-    private GameObject Arrow;
+    private void OnEnable()
+    {
+        LogManager.instance.SubscribeButton(this);
+        ResetButtonState();
+    }
 
-    private Vector3 origScale;
+    private bool GetAllowStatus()
+    {
+        return (LogManager.LOG_PANEL_ACTIVE && !_blockButton && LogManager.ANIMATION_ENDED);
+    }
 
-    private Vector3 expandedScale;
+    public override IEnumerator IClick()
+    {
+        if (!GetAllowStatus())
+        {
+            yield break;
+        }
 
-    IEnumerator shrink;
+        animator.Play("CloseLog");
+        StopExitListener();
+        _blockButton = true;
+        GetComponent<Button>().interactable = false;
+        LogManager.instance.logOpenButton.ResetButtonState();
 
-    IEnumerator expand;
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            FadeManager.FadeOnly(LogManager.instance.LogPanel, false, _speed),
+            FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, _speed),
+            FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, _speed),
+            CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+            {
+                ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
+                ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime)
+            })
+        }));
 
-    private void OnMouseEnter()
+        _blockButton = false;
+        LogManager.LOG_PANEL_ACTIVE = false;
+        GetComponent<Button>().interactable = true;
+        LogManager.instance.LogPanel.SetActive(false);
+    }
+
+    public override void EnterAction()
     {
         if (shrink != null)
             StopCoroutine(shrink);
@@ -30,7 +68,7 @@ public class LogBack : MonoBehaviour
         StartCoroutine(expand);
     }
 
-    private void OnMouseExit()
+    public override void ExitAction()
     {
         if (expand != null)
             StopCoroutine(expand);
@@ -38,36 +76,37 @@ public class LogBack : MonoBehaviour
         StartCoroutine(shrink);
     }
 
-    private void Start()
+    private void StopExitListener()
     {
-        origScale = GetComponent<RectTransform>().localScale;
-        expandedScale = origScale * 1.1f;
-
-        animator = GetComponent<Animator>();
-        Arrow = transform.GetChild(0).gameObject;
-    }
-    public void Click()
-    {
-        StartCoroutine(IClick());
+        if (keyExitListener != null)
+        {
+            StopCoroutine(keyExitListener);
+        }
     }
 
-    IEnumerator IClick()
+    private IEnumerator IExitKey()
     {
-        GetComponent<Button>().interactable = false;
+        while (true)
+        {
+            if (Input.GetKey(KeyCode.Tab) || Input.GetKey(KeyCode.Escape))
+            {
+                if (GetAllowStatus())
+                {
+                    StartCoroutine(IClick());
+                }
+            }
+            yield return null;
+        }
+    }
 
-        animator.Play("CloseLog");
-        logButtonAnimator.Play("CloseLog");
+    public override void ResetButtonState()
+    {
+        StopExitListener();
+        keyExitListener = IExitKey();
+        StartCoroutine(keyExitListener);
 
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.ChatLog, false, speed));
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed));
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed));
-        PanelsManager.instance.ChatLog.GetComponent<CanvasGroup>().blocksRaycasts = false;
-
-
-        Vector3 currArrowScale = gameObject.GetComponent<RectTransform>().localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(Arrow, 0.85f, 0.06f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(Arrow, currArrowScale, 0.06f));
-
+        animator.Play("Idle");
+        _blockButton = false;
         GetComponent<Button>().interactable = true;
     }
 }

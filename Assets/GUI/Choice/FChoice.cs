@@ -22,8 +22,6 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
-
             yield return ChoiceManager.instance.CreateChoice(Choices, ChoiceName);
         }
 

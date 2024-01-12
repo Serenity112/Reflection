@@ -49,11 +49,6 @@ public class ConfirmationPanel : MonoBehaviour
 
     public IEnumerator ClosePanel()
     {
-        if (!ANIMATION_ENDED)
-        {
-            yield break;
-        }
-
         yield return StartCoroutine(FadeManager.FadeObject(Panel, false, _fadingSpeed));
 
         CONFIRM_PANEL_ACTIVE = false;
@@ -62,6 +57,11 @@ public class ConfirmationPanel : MonoBehaviour
 
     public void ChooseYes()
     {
+        if (!ANIMATION_ENDED)
+        {
+            return;
+        }
+
         if (IYes != null)
         {
             StartCoroutine(IYes);
@@ -70,6 +70,11 @@ public class ConfirmationPanel : MonoBehaviour
 
     public void ChooseNo()
     {
+        if (!ANIMATION_ENDED)
+        {
+            return;
+        }
+
         if (INo != null)
         {
             StartCoroutine(INo);

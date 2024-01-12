@@ -1,295 +1,120 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
-public class LogManager : MonoBehaviour
+public class LogManager : IButtonManager
 {
     public static LogManager instance = null;
 
-    [SerializeField] AssetReference messagePrefab;
-    [SerializeField] AssetReference namePrefab;
-    [SerializeField] AssetReference spacePrefab;
+    public static bool LOG_PANEL_ACTIVE { get; set; } = false;
+    public static bool ANIMATION_ENDED { get; set; } = false;
 
-    [SerializeField] GameObject messagePrefab2;
-    [SerializeField] GameObject namePrefab2;
-    [SerializeField] GameObject spacePrefab2;
+    private Dictionary<Character, string> NamesColors;
+    private string DefaultColor = "#C8C8C8";
 
-    public RectTransform messageParent;
+    private int counter = 0;
+    private int maxMessages = 300;
 
-    Dictionary<string, string> NamesColors;
-    Dictionary<string, string> ShortNames;
+    public LogButton logOpenButton;
+    public LogBack logBackButton;
 
-    public int counter = -1;
-    public Button button;
+    [HideInInspector]
+    public GameObject LogPanel;
 
-    public List<AsyncOperationHandle<GameObject>> handles;
-    public List<GameObject> handles2;
+    public GameObject Content;
+    public Slider Slider;
 
-    private string currName;
+    // Изменнить, когда будет >1 текста
+    private Text text;
+
+    private Character _currentCharacter = Character.None;
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
 
-        currName = string.Empty;
+        LogPanel = transform.GetChild(0).gameObject;
 
-        handles = new List<AsyncOperationHandle<GameObject>>();
-        handles2 = new List<GameObject>();
-
-        NamesColors = new Dictionary<string, string>
+        NamesColors = new Dictionary<Character, string>
         {
-            { "pas", "#D35400" }, //orange
-            { "kat", "#E74C3C" }, //red
-            { "nas", "#2ECC71" }, //green
-            { "eve", "#7D3C98" }, //magenta
-            { "tan", "#2980B9" }, //blue
-            { "ser", "#7D3C98" } //blue
+            { Character.Pasha, "#D35400" }, //orange
+            { Character.Katya, "#E74C3C" }, //red
+            { Character.Nastya, "#2ECC71" }, //green
+            { Character.Evelina, "#7D3C98" }, //magenta
+            { Character.Tanya, "#2980B9" }, //blue
+            { Character.Sergey, "#7D3C98" } //blue
         };
 
-        ShortNames = new Dictionary<string, string>
-        {
-            { "Pasha", "Паша" },
-            { "Katya", "Катя" },
-            { "Nastya", "Настя" },
-            { "Evelina", "Эвелина" },
-            { "Tanya", "Таня" },
-            { "Sergey", "Сергей" },
-
-
-        };
+        GameObject component = Content.transform.GetChild(0).gameObject;
+        text = component.transform.GetChild(0).GetComponent<Text>();
     }
 
-    public void NewMessageExtended(string MyMessage, string speakerName)
-    {
-
-    }
-
-    public void NewMessage(string MyMessage, string speakerName)
+    public void CreateMessage(Character character, string message)
     {
         counter++;
-
-        if (ShortNames.ContainsKey(speakerName)) // Значит говорит перс
+        if (counter > maxMessages)
         {
-            if (currName != speakerName)
+            ClearLog();
+        }
+
+        StringBuilder stringBuilder = new StringBuilder();
+        if (character != _currentCharacter)
+        {
+            stringBuilder.Append("\n");
+
+            if (character != Character.None)
             {
-                CreateSpace();
-                CreateName(speakerName);
+                string characterLocalizedName = NameChanger.instance.charactersLocalization[character];
+                string color = DefaultColor;
+
+                if (NamesColors.ContainsKey(character))
+                {
+                    color = NamesColors[character];
+                }
+
+                stringBuilder.Append($"<color={color}>{characterLocalizedName}</color>\n");
             }
-
-            CreateMessage(MyMessage);
-
-            currName = speakerName;
         }
-        else // Значит кусок истории
+
+        stringBuilder.Append($"{message}\n");
+
+        // Лимит вертексов
+        try
         {
-            if (currName != string.Empty)
-            {
-                CreateSpace();
-            }
-
-            currName = string.Empty;
-
-            CreateMessage(MyMessage);
+            text.text += stringBuilder.ToString();
         }
-    }
-
-    void setResultToScroll(GameObject result)
-    {
-        result.transform.SetParent(messageParent);
-
-        result.GetComponent<RectTransform>().localScale = new Vector3(1, 1, 1);
-
-        result.GetComponent<RectTransform>().localPosition = new Vector3(result.transform.localPosition.x, result.transform.localPosition.y, 0);
-    }
-
-    void CreateName(string name)
-    {
-        var result = Instantiate(namePrefab2, new Vector3(0, 0, 0), Quaternion.identity);
-        handles2.Add(result);
-
-        setResultToScroll(result);
-
-        string nameBack = $"{ShortNames[name]}: ";
-
-        GameObject textBack = result.transform.GetChild(0).gameObject;
-
-        textBack.GetComponent<Text>().text = nameBack;
-    }
-
-    void CreateSpace()
-    {
-        var result = Instantiate(spacePrefab2, new Vector3(0, 0, 0), Quaternion.identity);
-        handles2.Add(result);
-
-        setResultToScroll(result);
-    }
-
-    void CreateMessage(string message)
-    {
-        var result = Instantiate(messagePrefab2, new Vector3(0, 0, 0), Quaternion.identity);
-        handles2.Add(result);
-
-        setResultToScroll(result);
-
-        result.transform.GetChild(0).GetComponent<Text>().text = message;
-    }
-
-    public void OpenLog()
-    {
-        gameObject.transform.GetChild(0).gameObject.GetComponent<CanvasGroup>().alpha = 1; //ScrollView
-        gameObject.transform.GetChild(0).gameObject.GetComponent<CanvasGroup>().blocksRaycasts = true;
-    }
-
-    public void CloseLog()
-    {
-        gameObject.transform.GetChild(0).gameObject.GetComponent<CanvasGroup>().alpha = 0; //ScrollView
-        gameObject.transform.GetChild(0).gameObject.GetComponent<CanvasGroup>().blocksRaycasts = false;
-    }
-
-    public void DelLog()
-    {
-        foreach (Transform child in messageParent)
+        catch
         {
-            Destroy(child.gameObject, 0f);
+            ClearLog();
         }
 
-        handles2 = new List<GameObject>();
-
-        Resources.UnloadUnusedAssets();
+        _currentCharacter = character;
     }
 
-
-
-
-
-    // Не используется, старый метод
-    public void NewMessage2(string MyMessage, string speakerName)
+    public void ClearLog()
     {
-        counter++;
-
-        StartCoroutine(IMessage(MyMessage, speakerName));
+        text.text = "";
     }
-    IEnumerator IMessage(string MyMessage, string speakerName)
+
+    public void SetSliderToEnd()
     {
-        if (ShortNames.ContainsKey(speakerName)) // Значит говорит перс
-        {
-            if (currName != speakerName)
-            {
-                yield return StartCoroutine(ICreateSpace());
-                yield return StartCoroutine(ICreateName(speakerName));
-            }
-
-            yield return StartCoroutine(ICreateMessage(MyMessage));
-
-            currName = speakerName;
-        }
-        else // Значит кусок истории
-        {
-            if (currName != string.Empty)
-            {
-                yield return StartCoroutine(ICreateSpace());
-            }
-
-            currName = string.Empty;
-
-            yield return StartCoroutine(ICreateMessage(MyMessage));
-        }
+        Slider.value = 1;
+        Slider.onValueChanged.Invoke(1);
     }
-    IEnumerator ICreateName(string name)
+
+    public override void ResetManager()
     {
-        AsyncOperationHandle<GameObject> handle = Addressables.InstantiateAsync(namePrefab);
-        yield return handle;
-        handles.Add(handle);
-
-        if (handle.Status == AsyncOperationStatus.Succeeded)
-        {
-            GameObject result = handle.Result;
-
-            setResultToScroll(result);
-
-            string nameBack = $"<color={NamesColors[name]}>{ShortNames[name]}</color>: ";
-            string NameFront = $"<color={NamesColors[name]}>{ShortNames[name]}</color>: ";
-
-            GameObject textBack = result.transform.GetChild(0).gameObject;
-            GameObject textFront = textBack.transform.GetChild(0).gameObject;
-
-            textBack.GetComponent<Text>().text = nameBack;
-            textFront.GetComponent<Text>().text = NameFront;
-        }
-        else
-        {
-            Debug.Log("error");
-        }
-
-        yield return null;
+        ResetAllButtonsState();
+        SetSliderToEnd();
     }
-    IEnumerator ICreateSpace()
+
+    public override void ResetAllButtonsState()
     {
-        AsyncOperationHandle<GameObject> handle = Addressables.InstantiateAsync(spacePrefab);
-        yield return handle;
-        handles.Add(handle);
-
-        if (handle.Status == AsyncOperationStatus.Succeeded)
+        foreach (var button in GameButtons)
         {
-            GameObject result = handle.Result;
-
-            setResultToScroll(result);
+            button.ResetButtonState();
         }
-        else
-        {
-            Debug.Log("error");
-        }
-
-        yield return null;
-    }
-    IEnumerator ICreateMessage(string message)
-    {
-        AsyncOperationHandle<GameObject> handle = Addressables.InstantiateAsync(messagePrefab);
-        yield return handle;
-        handles.Add(handle);
-
-        if (handle.Status == AsyncOperationStatus.Succeeded)
-        {
-            GameObject result = handle.Result;
-
-            setResultToScroll(result);
-
-            handle.Result.transform.GetChild(0).GetComponent<Text>().text = message;
-        }
-        else
-        {
-            Debug.Log("error");
-        }
-
-        yield return null;
-    }
-    public IEnumerator IDelLog()
-    {
-        foreach (AsyncOperationHandle<GameObject> hand in handles)
-        {
-            Addressables.ReleaseInstance(hand);
-        }
-
-        foreach (Transform child in messageParent)
-        {
-            Destroy(child.gameObject, 0f);
-
-        }
-
-        handles = new List<AsyncOperationHandle<GameObject>>();
-
-        Resources.UnloadUnusedAssets();
-        yield return null;
-
-    }
+    } 
 }

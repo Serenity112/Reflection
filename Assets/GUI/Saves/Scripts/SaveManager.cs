@@ -108,7 +108,9 @@ public class SaveManager : MonoBehaviour
     {
         while (true)
         {
-            if (StaticVariables.IN_SAVE_MENU && !StaticVariables.GAME_IS_LOADING)
+            if (StaticVariables.IN_SAVE_MENU && 
+                !StaticVariables.GAME_IS_LOADING && 
+                !StaticVariables.OVERLAY_ACTIVE)
             {
                 if (Input.GetKeyDown(KeyCode.RightArrow))
                 {

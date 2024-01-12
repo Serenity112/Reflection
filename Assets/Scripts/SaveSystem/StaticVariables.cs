@@ -24,7 +24,7 @@ public static class StaticVariables
        WarningPanel.WARNING_PANEL_ACTIVE ||
        ConfirmationPanel.CONFIRM_PANEL_ACTIVE ||
        HideButton.UI_HIDDEN ||
-       ChoiceManager.CHOICE_IS_ACTIVE;
+       LogManager.LOG_PANEL_ACTIVE;
 
 
 

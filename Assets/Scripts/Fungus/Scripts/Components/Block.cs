@@ -77,6 +77,11 @@ namespace Fungus
             SetExecutionInfo();
         }
 
+        public int GetCurrentIndex()
+        {
+            return activeCommand.CommandIndex;
+        }
+
         /// <summary>
         /// Populate the command metadata used to control execution.
         /// </summary>
@@ -260,7 +265,6 @@ namespace Fungus
             jumpToCommandIndex = commandIndex;
 
 
-           // Debug.Log("1");
             int i = 0;
             while (true)
             {
@@ -323,13 +327,7 @@ namespace Fungus
                 while (jumpToCommandIndex == -1)
                 {
                     yield return null;
-                   // Debug.Log("2");
                 }
-                //if (jumpToCommandIndex != -1)
-                //{
-                //    yield return new WaitForSeconds(1f);
-                //}
-
 #if UNITY_EDITOR
                 if (flowchart.StepPause > 0f)
                 {

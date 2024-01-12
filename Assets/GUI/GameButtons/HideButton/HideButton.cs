@@ -51,8 +51,9 @@ public class HideButton : IExpandableButton
         return (PauseButtonsManager.GAME_IS_PAUSED ||
                 StaticVariables.OVERLAY_ACTIVE ||
                 StaticVariables.GAME_IS_LOADING ||
-                GameButtonsManager.instance.BlockButtonsClick) ||
-                UI_HIDDEN;
+                GameButtonsManager.instance.BlockButtonsClick ||
+                UI_HIDDEN ||
+                ChoiceManager.CHOICE_IS_ACTIVE);
     }
 
     public override void EnterAction()
@@ -97,6 +98,8 @@ public class HideButton : IExpandableButton
 
     public override IEnumerator IClick()
     {
+        yield return null;
+
         if (GetDenyStatus())
         {
             yield break;

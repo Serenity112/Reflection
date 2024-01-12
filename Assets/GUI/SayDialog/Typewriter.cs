@@ -79,7 +79,8 @@ public class Typewriter : MonoBehaviour
     {
         return (
             PauseButtonsManager.GAME_IS_PAUSED ||
-            StaticVariables.OVERLAY_ACTIVE
+            StaticVariables.OVERLAY_ACTIVE ||
+            ChoiceManager.CHOICE_IS_ACTIVE
             );
     }
 
@@ -127,7 +128,7 @@ public class Typewriter : MonoBehaviour
 
     private void UpdateSkip()
     {
-        bool tabSkip = Input.GetKey(KeyCode.Tab);
+        bool tabSkip = Input.GetKey(KeyCode.LeftControl);
         bool skipButtonClicked = skipButton.IfButtonClicked();
 
         if (tabSkip && skipButtonClicked)
@@ -234,7 +235,7 @@ public class Typewriter : MonoBehaviour
     {
         _text.text = "";
 
-        //LogManager.instance.NewMessage(storyText, speaker);
+        LogManager.instance.CreateMessage(speaker, storyText);
 
         if (_say != null)
         {

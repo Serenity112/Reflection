@@ -46,6 +46,7 @@ public class ChoiceButton : IExpandableButton
 
     public override void ResetButtonState()
     {
+        ResetFlags();
         GetComponent<RectTransform>().localScale = origScale;
     }
 }

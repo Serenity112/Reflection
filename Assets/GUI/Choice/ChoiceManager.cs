@@ -33,14 +33,16 @@ public class ChoiceManager : MonoBehaviour
 
     public IEnumerator CreateChoice(ChoiceArr[] choices, string choiceCode)
     {
-        //CHOICE_IS_ACTIVE = true;
+        CHOICE_IS_ACTIVE = true;
         CurrentCode = choiceCode;
 
         // Пока работает только для 2х выборов, исправить в дальнейших эпизодах
         for (int i = 0; i < 2; i++)
         {
             ChoiceButton choiceButton = ChoiceBox.transform.GetChild(i).GetComponent<ChoiceButton>();
+            choiceButton.Awake();
             choiceButton.SetOptions(choices[i].Message, choices[i].BlockName, i);
+            choiceButton.ResetButtonState();
         }
 
         yield return StartCoroutine(OpenChoice());
@@ -84,11 +86,12 @@ public class ChoiceManager : MonoBehaviour
             FadeManager.FadeOnly(ChoiceBox, false, _fadeSpeed),
         });
     }
-    
+
     // Для сейв системы
     public void HideChoiceBox()
     {
         FadeManager.FadeObject(ChoiceBox, false);
+        CHOICE_IS_ACTIVE = false;
     }
 
     public void UploadChoices(Dictionary<string, int> choices)
@@ -103,18 +106,20 @@ public class ChoiceManager : MonoBehaviour
 
     private void LoadBlock(string blockName)
     {
+        Flowchart flowchart = PanelsManager.instance.flowchart;
         string currentBlock = UserData.instance.CurrentBlock;
+
         if (currentBlock != null)
         {
-            Block activeBlock = PanelsManager.instance.flowchart.FindBlock(currentBlock);
+            Block activeBlock = flowchart.FindBlock(currentBlock);
             if (activeBlock != null)
             {
                 activeBlock.Stop();
             }
         }
 
-        Block targetBlock = PanelsManager.instance.flowchart.FindBlock(blockName);
+        Block targetBlock =flowchart.FindBlock(blockName);
         UserData.instance.CurrentBlock = blockName;
-        PanelsManager.instance.flowchart.ExecuteBlock(targetBlock, 0);
+        flowchart.ExecuteBlock(targetBlock, 0);
     }
 }

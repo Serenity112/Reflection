@@ -23,7 +23,7 @@ public class PauseButton : IExpandableButton
 
     private bool GetDenyStatus()
     {
-        return (PauseButtonsManager.GAME_IS_PAUSED||
+        return (PauseButtonsManager.GAME_IS_PAUSED ||
                 StaticVariables.OVERLAY_ACTIVE ||
                 StaticVariables.GAME_IS_LOADING ||
                 GameButtonsManager.instance.BlockButtonsClick);
@@ -33,7 +33,7 @@ public class PauseButton : IExpandableButton
     {
         if (Input.GetKeyDown(KeyCode.Escape) && !GetDenyStatus())
         {
-            StartCoroutine(IClickAnimation());
+            StartCoroutine(IClick());
         }
     }
 
@@ -57,18 +57,13 @@ public class PauseButton : IExpandableButton
 
     public override IEnumerator IClick()
     {
+        yield return null;
+
         if (GetDenyStatus())
         {
             yield break;
         }
-        else
-        {
-            yield return StartCoroutine(IClickAnimation());
-        }
-    }
 
-    private IEnumerator IClickAnimation()
-    {
         animator.Play("pauseanim");
         gameObject.GetComponent<Button>().interactable = false;
         PauseButtonsManager.GAME_IS_PAUSED = true;

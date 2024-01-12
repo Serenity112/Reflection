@@ -102,8 +102,8 @@ public class UserData : MonoBehaviour
         newSave.Background = instance.CurrentBG;
         newSave.CurrentBlock = instance.CurrentBlock;
 
-        // Команды
-        newSave.CurrentCommandIndex = instance.CurrentCommandIndex;
+        // Команды        
+        newSave.CurrentCommandIndex = PanelsManager.instance.flowchart.FindBlock(CurrentBlock).GetCurrentIndex();
 
         //Спрайты
         newSave.SpriteData = SpriteController.instance.GameSpriteData;
@@ -120,8 +120,6 @@ public class UserData : MonoBehaviour
         Typewriter.Instance.SaveDialogSaves();
 
         // Выборы
-        //ChoiceManager.instance.SaveChoices(actualSaveNum);
-
         newSave.SavedChoices = ChoiceManager.instance.GetSavedChoices();
 
         new Thread(() =>
@@ -157,10 +155,10 @@ public class UserData : MonoBehaviour
     {
         string fileName = $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3";
         SaveData newSave = ES3.Load<SaveData>($"SaveFile{actualSaveNum}", fileName);
-
         Flowchart flowchart = PanelsManager.instance.flowchart;
 
-        // Block
+
+        // Block + index
         if (CurrentBlock != null)
         {
             Block activeBlock = flowchart.FindBlock(CurrentBlock);
@@ -169,10 +167,7 @@ public class UserData : MonoBehaviour
                 activeBlock.Stop();
             }
         }
-
         CurrentBlock = newSave.CurrentBlock;
-
-        // Index
 
         CurrentCommandIndex = newSave.CurrentCommandIndex;
 
@@ -198,8 +193,8 @@ public class UserData : MonoBehaviour
             i_bg_load,
         });
 
-        // Sprites
 
+        // Sprites
         IEnumerator i_sprite_unload = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
             PackageConntector.instance.IDisconnectAllPackages(),
@@ -217,6 +212,7 @@ public class UserData : MonoBehaviour
             i_sprite_load,
         });
 
+
         // Музыка
         IEnumerator i_music = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
         {
@@ -224,16 +220,20 @@ public class UserData : MonoBehaviour
             AudioManager.instance.FadeInCurrent(newSave.AudioData),
         });
 
+
         // Лог
-        LogManager.instance.DelLog();
+        //LogManager.instance.DelLog();
+
 
         // Прочитанные диалоги
         Typewriter.Instance.LoadDialogSaves();
         Typewriter.Instance.SetText("");
 
+
         // Выборы игрока
         ChoiceManager.instance.UploadChoices(newSave.SavedChoices);
         ChoiceManager.instance.HideChoiceBox();
+
 
         // Весь процесс загрузки
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()

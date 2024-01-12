@@ -23,6 +23,7 @@ public class LogButton : IExpandableButton
     private IEnumerator expandOnEnter;
 
     private float speed = 5.0f;
+    private bool _blockButton = false;
 
     public override void Awake()
     {
@@ -30,6 +31,8 @@ public class LogButton : IExpandableButton
         ShadeBox = transform.GetChild(0).transform.GetChild(0).gameObject;
         ShadeLine1 = transform.GetChild(1).transform.GetChild(0).gameObject;
         ShadeLine2 = transform.GetChild(2).transform.GetChild(0).gameObject;
+
+        GetComponent<Button>().onClick.AddListener(OnClick);
     }
 
     public void Start()
@@ -37,11 +40,33 @@ public class LogButton : IExpandableButton
         GameButtonsManager.instance.SubscribeButton(this.gameObject.GetComponent<IExpandableButton>());
     }
 
+    private bool GetDenyStatus()
+    {
+        return (
+           StaticVariables.GAME_IS_LOADING ||
+           StaticVariables.OVERLAY_ACTIVE ||
+           GameButtonsManager.instance.BlockButtonsClick ||
+           LogManager.LOG_PANEL_ACTIVE ||
+           PauseButtonsManager.GAME_IS_PAUSED ||
+           _blockButton);
+    }
+
+    private void Update()
+    {
+        if (Input.GetKey(KeyCode.Tab))
+        {
+            if (!GetDenyStatus())
+            {
+                StartCoroutine(IClick());
+            }
+        }
+    }
+
     public override void EnterAction()
     {
         if (shrinkOnExit != null)
             StopCoroutine(shrinkOnExit);
-        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
+        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(expandOnEnter);
 
         if (shades1out != null)
@@ -64,7 +89,7 @@ public class LogButton : IExpandableButton
     {
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
-        shrinkOnExit = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
+        shrinkOnExit = ExpandManager.ExpandObject(gameObject, origScale, expandTime);
         StartCoroutine(shrinkOnExit);
 
 
@@ -84,33 +109,44 @@ public class LogButton : IExpandableButton
         StartCoroutine(shades3out);
     }
 
-    public void Click()
-    {
-
-        StartCoroutine(IClick());
-    }
-
     public override IEnumerator IClick()
     {
+        if (GetDenyStatus())
+        {
+            yield break;
+        }
+
+        _blockButton = true;
+        LogManager.LOG_PANEL_ACTIVE = true;
+        LogManager.ANIMATION_ENDED = false;
         GetComponent<Button>().interactable = false;
         animator.Play("OpenLog");
 
-        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
+        LogManager.instance.LogPanel.SetActive(true);
+        LogManager.instance.ResetManager();
 
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            FadeManager.FadeObject(LogManager.instance.LogPanel, true, speed),
+            FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed),
+            FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed),
+            CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+            {
+                ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
+                ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime)
+            })
+        }));
 
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.ChatLog, true, speed));
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed));
-        StartCoroutine(FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed));
-        PanelsManager.instance.ChatLog.GetComponent<CanvasGroup>().blocksRaycasts = true;
-
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.06f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.06f));
-
+        LogManager.ANIMATION_ENDED = true;
+        _blockButton = false;
         GetComponent<Button>().interactable = true;
     }
 
     public override void ResetButtonState()
     {
+        _blockButton = false;
+        animator.Play("Idle");
+        GetComponent<Button>().interactable = true;
         gameObject.transform.localScale = origScale;
     }
 }

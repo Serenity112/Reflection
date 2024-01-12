@@ -6,7 +6,7 @@ public class NameChanger : MonoBehaviour
 {
     public static NameChanger instance = null;
 
-    private Dictionary<Character, string> charactersLocalization = new()
+    public Dictionary<Character, string> charactersLocalization = new()
     {
         {Character.Sergey, "Сергей"},
         {Character.Pasha, "Паша"},
@@ -51,9 +51,7 @@ public class NameChanger : MonoBehaviour
 
     private void SetNameText(string text)
     {
-        foreach (Transform child in gameObject.transform)
-        {
-            child.gameObject.GetComponent<Text>().text = text;
-        }
+        gameObject.transform.GetChild(0).GetComponent<Text>().text = text;
+        gameObject.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = text;
     }
 }

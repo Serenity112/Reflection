@@ -4,12 +4,13 @@ using System.Collections;
 public class LogSlider : MonoBehaviour
 {
     public ScrollRect Rect;
-    public Slider ScrollSlider;
+    private Slider ScrollSlider;
 
-    private void Start()
+    private void Awake()
     {
-        
+        ScrollSlider = GetComponent<Slider>();
     }
+
     private void OnEnable()
     {
         ScrollSlider.onValueChanged.AddListener(UpdateScrollPosition);
@@ -17,7 +18,7 @@ public class LogSlider : MonoBehaviour
     }
 
     private void OnDisable()
-    {   
+    {
         // important! Don't forget to unsubscribe from events! 
         ScrollSlider.onValueChanged.RemoveListener(UpdateScrollPosition);
         Rect.onValueChanged.RemoveListener(UpdateSliderValue);
