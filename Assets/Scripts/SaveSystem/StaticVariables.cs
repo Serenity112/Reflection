@@ -23,7 +23,8 @@ public static class StaticVariables
     public static bool OVERLAY_ACTIVE =>
        WarningPanel.WARNING_PANEL_ACTIVE ||
        ConfirmationPanel.CONFIRM_PANEL_ACTIVE ||
-       HideButton.UI_HIDDEN;
+       HideButton.UI_HIDDEN ||
+       ChoiceManager.CHOICE_IS_ACTIVE;
 
 
 

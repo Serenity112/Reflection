@@ -2,31 +2,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using Fungus;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.AddressableAssets;
 using System.Collections;
 
 public class ChoiceManager : MonoBehaviour
 {
     public static ChoiceManager instance = null;
 
-    [SerializeField]
-    private GameObject TextBox;
-
-    private AsyncOperationHandle<GameObject> _options_handler;
-
-    private static string _optionsPrefabName = "OptionsBox";
+    public static bool CHOICE_IS_ACTIVE { get; set; } = false;
 
     private float _fadeSpeed = 5f;
 
-    private ChoiceArr[] _currentChoices;
+    private Dictionary<string, int> SavedChoices = new Dictionary<string, int>();
 
-    private string _currentChoiceCode;
+    private GameObject ChoiceBox;
 
-    private string _savedChoicesName = "SavedChoices";
-    private string _saveFileName = "SaveFiles.es3";
-
-    private Dictionary<string, int> _saveFileChoices;
+    private string CurrentCode = null;
 
     [Serializable]
     public struct ChoiceArr
@@ -37,102 +27,78 @@ public class ChoiceManager : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
-
-        _saveFileChoices = new Dictionary<string, int>();
+        instance = this;
+        ChoiceBox = transform.GetChild(0).gameObject;
     }
 
-    public void CreateChoice(ChoiceArr[] choices, string choiceCode)
+    public IEnumerator CreateChoice(ChoiceArr[] choices, string choiceCode)
     {
-        StartCoroutine(ICreateChoice(choices, choiceCode));
-    }
-
-    private IEnumerator ICreateChoice(ChoiceArr[] choices, string choiceCode)
-    {
-
-        _currentChoices = choices;
-        _currentChoiceCode = choiceCode;
-
-        _options_handler = Addressables.InstantiateAsync(_optionsPrefabName, gameObject.GetComponent<RectTransform>(), false, true);
-        yield return _options_handler;
-
-        if (_options_handler.Status != AsyncOperationStatus.Succeeded)
-        {
-            Debug.Log("Error");
-        }
-
-        GameObject result = _options_handler.Result;
+        //CHOICE_IS_ACTIVE = true;
+        CurrentCode = choiceCode;
 
         // Пока работает только для 2х выборов, исправить в дальнейших эпизодах
         for (int i = 0; i < 2; i++)
         {
-            ChoiceButton choiceButton = result.transform.GetChild(i).GetComponent<ChoiceButton>();
-            choiceButton.SetOptions(choices[i].Message, choices[i].BlockName);
+            ChoiceButton choiceButton = ChoiceBox.transform.GetChild(i).GetComponent<ChoiceButton>();
+            choiceButton.SetOptions(choices[i].Message, choices[i].BlockName, i);
         }
 
-        yield return StartCoroutine(ShowOptionsBox(_fadeSpeed));
+        yield return StartCoroutine(OpenChoice());
     }
 
-    public IEnumerator LoadChoise(string blockName)
+    public IEnumerator LoadChoise(string blockName, int number)
     {
         Typewriter.Instance.SetText("");
 
-        yield return StartCoroutine(HideOptionsBox(_fadeSpeed));
-        ReleaseChoiceBox();
+        yield return StartCoroutine(CloseChoice());
 
-        for (int i = 0; i < _currentChoices.Length; i++)
+        if (SavedChoices.ContainsKey(CurrentCode))
         {
-            if (_currentChoices[i].BlockName == blockName)
-            {
-                if (_saveFileChoices.ContainsKey(blockName))
-                {
-                    _saveFileChoices[_currentChoiceCode] = i;
-                }
-                else
-                {
-                    // Пофиксить )))
-                    //_saveFileChoices.Add(_currentChoiceCode, i);
-                }
-            }
+            SavedChoices[CurrentCode] = number;
         }
-
+        else
+        {
+            SavedChoices.Add(CurrentCode, number);
+        }
         LoadBlock(blockName);
 
+        FadeManager.FadeObject(ChoiceBox, false);
+        CHOICE_IS_ACTIVE = false;
     }
 
-    public IEnumerator ShowOptionsBox(float speed)
+    private IEnumerator OpenChoice()
     {
         yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
-            //GameButtonsManager.instance.HideTextBoxButtons(speed),
-            FadeManager.FadeOnly(gameObject, true, speed),
-            FadeManager.FadeObject(TextBox, false, speed),
+            FadeManager.FadeObject(ChoiceBox, true, _fadeSpeed),
         });
     }
 
-    public IEnumerator HideOptionsBox(float speed)
+    public IEnumerator CloseChoice()
     {
+        GameObject gameGui = PanelsManager.instance.GameGuiPanel;
+        GameObject gameButtons = PanelsManager.instance.GameButtons;
+
         yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
-            //GameButtonsManager.instance.ShowTextBoxButtons(speed),
-            FadeManager.FadeOnly(gameObject, false, speed),
-            FadeManager.FadeObject(TextBox, true, speed)
+            FadeManager.FadeOnly(ChoiceBox, false, _fadeSpeed),
         });
     }
-
-    public void ReleaseChoiceBox()
+    
+    // Для сейв системы
+    public void HideChoiceBox()
     {
-        if (_options_handler.IsValid())
-        {
-            Addressables.ReleaseInstance(_options_handler);
-        }
+        FadeManager.FadeObject(ChoiceBox, false);
+    }
+
+    public void UploadChoices(Dictionary<string, int> choices)
+    {
+        SavedChoices = choices;
+    }
+
+    public Dictionary<string, int> GetSavedChoices()
+    {
+        return SavedChoices;
     }
 
     private void LoadBlock(string blockName)
@@ -149,28 +115,6 @@ public class ChoiceManager : MonoBehaviour
 
         Block targetBlock = PanelsManager.instance.flowchart.FindBlock(blockName);
         UserData.instance.CurrentBlock = blockName;
-        if (targetBlock != null)
-        {
-            targetBlock.Stop();
-            PanelsManager.instance.flowchart.ExecuteBlock(targetBlock, 0);
-        }
-    }
-
-    public void SaveChoices(int saveNum)
-    {
-        string savedChoicesName = $"{_savedChoicesName}{saveNum}";
-        if (ES3.FileExists(_saveFileName))
-        {
-            ES3.Save<Dictionary<string, int>>(savedChoicesName, _saveFileChoices, _saveFileName);
-        }
-    }
-
-    public void LoadSavedChoices(int saveNum)
-    {
-        string savedChoicesName = $"{_savedChoicesName}{saveNum}";
-        if (ES3.FileExists(_saveFileName) && ES3.KeyExists(savedChoicesName, _saveFileName))
-        {
-            _saveFileChoices = ES3.Load<Dictionary<string, int>>(savedChoicesName, _saveFileName);
-        }
+        PanelsManager.instance.flowchart.ExecuteBlock(targetBlock, 0);
     }
 }

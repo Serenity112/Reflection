@@ -2,49 +2,50 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ChoiceButton : MonoBehaviour
+public class ChoiceButton : IExpandableButton
 {
     private string _blockName;
+    private int _optionNumber;
 
     private IEnumerator _shrinkOnExit;
     private IEnumerator _expandOnEnter;
 
-    private Vector3 _origScale;
-    private Vector3 _expandedScale;
-    private float _expandTime = 0.05f;
-
-    private void Awake()
+    public override void Awake()
     {
-        gameObject.GetComponent<Button>().onClick.AddListener(LoadBlock);
-
-        _origScale = GetComponent<RectTransform>().localScale;
-        _expandedScale = _origScale * 1.1f;
+        base.Awake();
+        GetComponent<Button>().onClick.AddListener(OnClick);
     }
 
-    public void SetOptions(string message, string blockName)
+    public void SetOptions(string message, string blockName, int number)
     {
         _blockName = blockName;
+        _optionNumber = number;
         gameObject.transform.GetChild(0).GetComponent<Text>().text = message;
     }
 
-    public void LoadBlock()
-    {
-        StartCoroutine(ChoiceManager.instance.LoadChoise(_blockName));
-    }
-
-    private void OnMouseEnter()
+    public override void EnterAction()
     {
         if (_shrinkOnExit != null)
             StopCoroutine(_shrinkOnExit);
-        _expandOnEnter = ExpandManager.ExpandObject(gameObject, _expandedScale, _expandTime);
+        _expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(_expandOnEnter);
     }
 
-    private void OnMouseExit()
+    public override void ExitAction()
     {
         if (_expandOnEnter != null)
             StopCoroutine(_expandOnEnter);
-        _shrinkOnExit = ExpandManager.ExpandObject(gameObject, _origScale, _expandTime);
+        _shrinkOnExit = ExpandManager.ExpandObject(gameObject, origScale, expandTime);
         StartCoroutine(_shrinkOnExit);
+    }
+
+    public override IEnumerator IClick()
+    {
+        yield return StartCoroutine(ChoiceManager.instance.LoadChoise(_blockName, _optionNumber));
+    }
+
+    public override void ResetButtonState()
+    {
+        GetComponent<RectTransform>().localScale = origScale;
     }
 }

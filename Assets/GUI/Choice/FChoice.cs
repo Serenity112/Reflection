@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using static ChoiceManager;
 
@@ -16,9 +17,14 @@ namespace Fungus
 
         public override void OnEnter()
         {
+            StartCoroutine(IOnEnter());
+        }
+
+        private IEnumerator IOnEnter()
+        {
             UserData.instance.CurrentCommandIndex += 1;
 
-            ChoiceManager.instance.CreateChoice(Choices, ChoiceName);
+            yield return ChoiceManager.instance.CreateChoice(Choices, ChoiceName);
         }
 
         public override Color GetButtonColor()

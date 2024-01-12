@@ -23,6 +23,8 @@ public struct SaveData
 
         specialEvent = SpecialEvent.none;
         specialEventData = null;
+
+        SavedChoices = new();
     }
 
     public SpriteData[] SpriteData;
@@ -37,6 +39,8 @@ public struct SaveData
 
     public SpecialEvent specialEvent;
     public string specialEventData;
+
+    public Dictionary<string, int> SavedChoices;
 }
 
 
@@ -118,6 +122,7 @@ public class UserData : MonoBehaviour
         // Выборы
         //ChoiceManager.instance.SaveChoices(actualSaveNum);
 
+        newSave.SavedChoices = ChoiceManager.instance.GetSavedChoices();
 
         new Thread(() =>
         {
@@ -224,11 +229,11 @@ public class UserData : MonoBehaviour
 
         // Прочитанные диалоги
         Typewriter.Instance.LoadDialogSaves();
+        Typewriter.Instance.SetText("");
 
         // Выборы игрока
-        //StartCoroutine(ChoiceManager.instance.HideOptionsBox(20f));
-        //ChoiceManager.instance.ReleaseChoiceBox();
-        //ChoiceManager.instance.LoadSavedChoices(actualSaveNum);
+        ChoiceManager.instance.UploadChoices(newSave.SavedChoices);
+        ChoiceManager.instance.HideChoiceBox();
 
         // Весь процесс загрузки
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()

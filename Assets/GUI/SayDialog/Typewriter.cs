@@ -185,8 +185,6 @@ public class Typewriter : MonoBehaviour
         skipButton.DisableSkipAnimation();
 
 
-        AudioManager.instance.OnSkipEnd();
-
         if (!SpriteExpand.instance.isExecuting)
         {
             //SpriteExpand.instance.StopPrev(false);

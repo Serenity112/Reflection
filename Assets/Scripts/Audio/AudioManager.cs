@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.UIElements;
 
 public class AudioManager : MonoBehaviour
 {
@@ -236,17 +235,6 @@ public class AudioManager : MonoBehaviour
         yield return StartCoroutine(WaitForAll(list));
     }
 
-    public void OnSkipStart()
-    {
-
-    }
-
-    public void OnSkipEnd()
-    {
-
-    }
-
-
     // Функционал
 
     private int GetAvaliableAudioSourceId(AudioLine line)
@@ -431,91 +419,11 @@ public class AudioManager : MonoBehaviour
     // Кроссфейд трека
     public IEnumerator AudioLineTransition(AudioLine line, string prev_name, string new_name, float time, float targetVolume)
     {
-        if (name == null || name == string.Empty)
+        yield return StartCoroutine(WaitForAll(new List<IEnumerator>()
         {
-            yield break;
-        }
-
-        int freeSourceId = GetAvaliableAudioSourceId(line);
-        if (freeSourceId == -1)
-        {
-            var fade_out_sources = GetSourcesByState(line, TransitionType.End);
-            if (fade_out_sources.Count > 0)
-            {
-                freeSourceId = fade_out_sources[0];
-                IEnumerator free_ienum = _data[line].IEnumerators[freeSourceId];
-                StopLineCoroutine(free_ienum);
-                CompleteAfterTask(line, freeSourceId);
-            }
-            else
-            {
-                yield break;
-            }
-        }
-
-        int currentSourceId = GetSourceIdByName(line, prev_name);
-        if (currentSourceId == -1)
-        {
-            yield break;
-        }
-        IEnumerator curr_enum = _data[line].IEnumerators[currentSourceId];
-        StopLineCoroutine(curr_enum);
-        CompleteAfterTask(line, currentSourceId);
-
-        AudioSource targetSource = _sources[line][freeSourceId];
-        AudioSource currentSource = _sources[line][currentSourceId];
-
-        _data[line].OstData[currentSourceId] = new SingleOstData(null, 0);
-        _data[line].transitionType[currentSourceId] = TransitionType.End;
-
-        _data[line].OstData[freeSourceId] = new SingleOstData(new_name, targetVolume);
-        _data[line].transitionType[freeSourceId] = TransitionType.Start;
-
-        targetSource.Stop();
-        targetSource.volume = 0;
-
-        var currentOperationHandle = Addressables.LoadAssetAsync<AudioClip>(new_name);
-        yield return currentOperationHandle;
-        var newAudioClip = currentOperationHandle.Result;
-        _data[line].Handlers[freeSourceId] = currentOperationHandle;
-
-        targetSource.clip = newAudioClip;
-        targetSource.Play();
-
-        IEnumerator fadein = LinearFadeTime(targetSource, time, targetVolume);
-        _data[line].IEnumerators[freeSourceId] = fadein;
-
-        IEnumerator fadeout = LinearFadeTime(currentSource, time, 0);
-        _data[line].IEnumerators[currentSourceId] = fadeout;
-
-        var old_handler = _data[line].Handlers[currentSourceId];
-        AddAfterTask(line, currentSourceId, delegate
-        {
-            _data[line].transitionType[currentSourceId] = TransitionType.None;
-            ReleaseHandler(old_handler);
-            currentSource.volume = 0;
-            currentSource.Stop();
-            currentSource.clip = null;
-        });
-        AddAfterTask(line, freeSourceId, delegate
-        {
-            _data[line].transitionType[freeSourceId] = TransitionType.Play;
-        });
-
-        StartCoroutine(ProcessLineTransition1(fadein, line, freeSourceId));
-        StartCoroutine(ProcessLineTransition2(fadeout, line, currentSourceId));
-    }
-
-    private IEnumerator ProcessLineTransition1(IEnumerator fadein, AudioLine line, int id)
-    {
-        yield return StartCoroutine(fadein);
-        CompleteAfterTask(line, id);
-    }
-
-    private IEnumerator ProcessLineTransition2(IEnumerator fadeout, AudioLine line, int id)
-    {
-        yield return StartCoroutine(fadeout);
-        CompleteAfterTask(line, id);
+            AudioLineStart(line, new_name, time, targetVolume),
+            AudioLineEnd(line, prev_name, time)
+        }));
     }
 
     // Изменение трека с задержкой
