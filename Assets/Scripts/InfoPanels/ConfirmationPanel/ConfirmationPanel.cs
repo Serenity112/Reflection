@@ -1,98 +1,78 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class ConfirmationPanel : MonoBehaviour
 {
     public static ConfirmationPanel instance = null;
 
-    private float FadingSpeed = 5f;
+    public static bool CONFIRM_PANEL_ACTIVE { get; set; } = false;
+
+    private static bool ANIMATION_ENDED { get; set; } = false;
+
+    private float _fadingSpeed = 5f;
 
     private IEnumerator IYes;
     private IEnumerator INo;
 
-    private bool _panelOpen = false;
-
-    [HideInInspector]
-    public GameObject ActivePanels;
-
     private GameObject Panel;
-
-    private AsyncOperationHandle<GameObject> handler;
-
-    private bool creation_ended = false;
+    private Confirmation confirmation;
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
-    }
+        instance = this;
 
-    private void OnEnable()
-    {
+        Panel = transform.GetChild(1).gameObject;
+        confirmation = Panel.GetComponent<Confirmation>();
     }
 
     public IEnumerator CreateConfirmationPanel(string title, IEnumerator YesAction, IEnumerator NoAction)
     {
-        StaticVariables.OverlayPanelActive = true;
-
-        if (!_panelOpen)
+        if (CONFIRM_PANEL_ACTIVE)
         {
-            _panelOpen = true;
-
-            handler = Addressables.InstantiateAsync("ConfirmationPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
-            yield return handler;
-
-            if (handler.Status == AsyncOperationStatus.Succeeded)
-            {
-                Panel = handler.Result;
-                Panel.GetComponent<CanvasGroup>().alpha = 0f;
-                Panel.name = "ConfirmationPanel";
-
-                IYes = YesAction;
-                INo = NoAction;
-
-                Panel.GetComponent<Confirmation>().SetTitle(title);
-
-                yield return instance.StartCoroutine(FadeManager.FadeOnly(Panel, true, FadingSpeed));
-            }
-            else
-            {
-                Debug.Log("Error loading");
-            }
-
-            creation_ended = true;
+            yield break;
         }
+
+        CONFIRM_PANEL_ACTIVE = true;
+
+        Panel.GetComponent<CanvasGroup>().alpha = 0f;
+        Panel.SetActive(true);
+        confirmation.ResetButtons();
+        confirmation.SetTitle(title);
+
+        IYes = YesAction;
+        INo = NoAction;
+
+        yield return StartCoroutine(FadeManager.FadeObject(Panel, true, _fadingSpeed));
+
+        ANIMATION_ENDED = true;
     }
 
     public IEnumerator ClosePanel()
     {
-        yield return StartCoroutine(FadeManager.FadeOnly(Panel, false, FadingSpeed));
+        if (!ANIMATION_ENDED)
+        {
+            yield break;
+        }
 
-        _panelOpen = false;
+        yield return StartCoroutine(FadeManager.FadeObject(Panel, false, _fadingSpeed));
 
-        StaticVariables.OverlayPanelActive = false;
-        creation_ended = false;
-
-        Addressables.ReleaseInstance(handler);
-
-        Resources.UnloadUnusedAssets();
+        CONFIRM_PANEL_ACTIVE = false;
+        ANIMATION_ENDED = false;
     }
 
     public void ChooseYes()
     {
-        StartCoroutine(IYes);
+        if (IYes != null)
+        {
+            StartCoroutine(IYes);
+        }
     }
 
     public void ChooseNo()
     {
-        StartCoroutine(INo);
+        if (INo != null)
+        {
+            StartCoroutine(INo);
+        }
     }
 }

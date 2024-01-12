@@ -12,9 +12,14 @@ public enum PauseOptions
     Quit
 }
 
+// По сути весь менеджер над меню паузы
 public class PauseButtonsManager : IButtonManager
 {
     public static PauseButtonsManager instance = null;
+
+    public static bool GAME_IS_PAUSED { get; set; } = false;
+
+    public static bool PAUSE_ANIMATION_ENDED { get; set; } = false;
 
     private float _speed = 5f;
 
@@ -27,18 +32,21 @@ public class PauseButtonsManager : IButtonManager
     public void Awake()
     {
         instance = this;
+    }
 
-        PausePanel = transform.GetChild(0).gameObject;
+    private bool GetAllowStatus()
+    {
+        return  PAUSE_ANIMATION_ENDED &&
+                !StaticVariables.OVERLAY_ACTIVE &&
+                !_buttonClicked &&
+                !StaticVariables.GAME_IS_LOADING;
     }
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (StaticVariables.PAUSE_ANIM_ENDED &&
-                !StaticVariables.OVERLAY_UI_OPENED &&
-                !_buttonClicked &&
-                !StaticVariables.GAME_LOADING)
+            if (GetAllowStatus())
             {
                 ExecuteOption(PauseOptions.Continue);
             }
@@ -56,7 +64,7 @@ public class PauseButtonsManager : IButtonManager
     public void ExecuteOption(PauseOptions option)
     {
         // Избежать нажатия на другие кнопки при уже нажатой одной
-        if (_buttonClicked)
+        if (!GetAllowStatus())
         {
             return;
         }
@@ -88,14 +96,14 @@ public class PauseButtonsManager : IButtonManager
         {
             FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, _speed),
             FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, _speed * 0.5f),
-            FadeManager.FadeOnly(PausePanel, false, _speed)
+            FadeManager.FadeObject(PausePanel, false, _speed)
         }));
 
         ResetAllButtonsState();
         PausePanel.SetActive(false);
 
-        StaticVariables.PAUSED = false;
-        StaticVariables.PAUSE_ANIM_ENDED = false;
+        GAME_IS_PAUSED = false;
+        PAUSE_ANIMATION_ENDED = false;
     }
 
     public override void ResetManager()

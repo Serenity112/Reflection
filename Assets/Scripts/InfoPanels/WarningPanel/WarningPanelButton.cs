@@ -1,29 +1,38 @@
+using System.Collections;
 using UnityEngine;
 
-public class WarningPanelButton : MonoBehaviour
+public class WarningPanelButton : IDraggableButton
 {
     [HideInInspector]
     public GameObject spacing;
 
-    void Start()
+    public override void Awake()
     {
+        base.Awake();
         spacing = transform.GetChild(0).gameObject;
     }
 
-    public void CloseWarningPanel()
-    {
-        WarningPanel.instance.CloseWarningPanel();
-    }
-
-    private void OnMouseEnter()
+    public override void EnterAction()
     {
         StopAllCoroutines();
         StartCoroutine(FadeManager.FadeObject(spacing, true, 5f));
     }
 
-    private void OnMouseExit()
+    public override void ExitAction()
     {
         StopAllCoroutines();
         StartCoroutine(FadeManager.FadeObject(spacing, false, 5f));
+    }
+
+    public override IEnumerator IClick()
+    {
+        WarningPanel.instance.CloseWarningPanel();
+        yield return null;
+    }
+
+    public override void ResetButtonState()
+    {
+        FadeManager.FadeObject(spacing, false);
+        ResetFlags();
     }
 }

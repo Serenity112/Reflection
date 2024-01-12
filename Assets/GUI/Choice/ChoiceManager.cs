@@ -56,7 +56,6 @@ public class ChoiceManager : MonoBehaviour
 
     private IEnumerator ICreateChoice(ChoiceArr[] choices, string choiceCode)
     {
-       Typewriter.Instance.DenySkip();
 
         _currentChoices = choices;
         _currentChoiceCode = choiceCode;
@@ -106,7 +105,6 @@ public class ChoiceManager : MonoBehaviour
 
         LoadBlock(blockName);
 
-       Typewriter.Instance.AllowSkip();
     }
 
     public IEnumerator ShowOptionsBox(float speed)

@@ -31,32 +31,6 @@ public class FadeManager : MonoBehaviour
         }
     }
 
-    public static IEnumerator FadeObject2(GameObject obj, bool fadein, float speed)
-    {
-        obj.SetActive(true);
-        float color = obj.GetComponent<CanvasGroup>().alpha;
-
-        if (fadein)
-        {
-            for (float i = color; i <= 1; i += speed * Time.deltaTime)
-            {
-                obj.GetComponent<CanvasGroup>().alpha = i;
-                yield return null;
-            }
-            obj.GetComponent<CanvasGroup>().alpha = 1;
-        }
-        else
-        {
-            for (float i = color; i >= 0; i -= speed * Time.deltaTime)
-            {
-                obj.GetComponent<CanvasGroup>().alpha = i;
-                yield return null;
-            }
-            obj.GetComponent<CanvasGroup>().alpha = 0;
-            obj.SetActive(false);
-        }
-    }
-
     public static IEnumerator FadeOnly(GameObject obj, bool fadein, float speed)
     {
         obj.SetActive(true);

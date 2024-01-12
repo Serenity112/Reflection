@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using UnityEditor.Overlays;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Audio;
@@ -13,6 +14,8 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
 
     private GameObject PanelsCanvas;
 
+    private GameObject OverlaysCanvas;
+
     private GameObject ActivePanels;
 
     private GameObject blackPanelGame;
@@ -25,35 +28,30 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     private Camera PanelsCamera;
 
     private float speed = 5f;
-
-    private AsyncOperationHandle<GameObject> settingsPanelHandler;
+    [SerializeField]
+    private GameObject SettingsPanel;
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
+
+        
     }
 
     void Start()
     {
         GameCanvas = PanelsManager.instance.GameCanvas;
         PanelsCanvas = PanelsManager.instance.PanelsCanvas;
+        OverlaysCanvas = PanelsManager.instance.OverlaysCanvas;
         ActivePanels = PanelsManager.instance.ActivePanels;
         blackPanelGame = PanelsManager.instance.BlackPanel;
         blackPanelPanels = PanelsManager.instance.blackPanelPanels;
         PanelsCamera = PanelsManager.instance.PanelsCamera;
+        SettingsPanel = ActivePanels.transform.GetChild(0).gameObject;
 
         SettingsConfig.LoadSettingsFromMemory();
 
         ApplySettingsOnStart();
-
-        StartCoroutine(IPreloadSettingsPanel());
     }
 
     public void OpenSettings()
@@ -65,19 +63,6 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     {
         StartCoroutine(ICloseSettings());
     }
-
-    private IEnumerator IPreloadSettingsPanel()
-    {
-        settingsPanelHandler = Addressables.InstantiateAsync("SettingsGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
-        yield return settingsPanelHandler;
-
-        if (settingsPanelHandler.Status == AsyncOperationStatus.Succeeded)
-        {
-            settingsPanelHandler.Result.name = "SettingsGui";
-            settingsPanelHandler.Result.SetActive(false);
-        }
-    }
-
     private IEnumerator IOpenSettings()
     {
         SettingsConfig.currentManager = GetComponent<SettingsManager>();
@@ -86,8 +71,8 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, true, speed));
 
         PanelsCamera.enabled = true;
-        settingsPanelHandler.Result.SetActive(true);
-        settingsPanelHandler.Result.GetComponent<SettingsController>().InitialReset();
+        FadeManager.FadeObject(SettingsPanel, true);
+        SettingsPanel.GetComponent<SettingsController>().InitialReset();
 
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, speed));
         FadeManager.FadeObject(blackPanelGame, false);
@@ -100,7 +85,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, speed));
 
         PanelsCamera.enabled = false;
-        settingsPanelHandler.Result.SetActive(false);
+        FadeManager.FadeObject(SettingsPanel, false);
 
         PauseButtonsManager.instance.ResetManager();
 
@@ -157,6 +142,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
             case SettingsList.BlackFramesMode:
                 SettingsConfig.ChangeBlackFramesMode(GameCanvas, value);
                 SettingsConfig.ChangeBlackFramesMode(PanelsCanvas, value);
+                SettingsConfig.ChangeBlackFramesMode(OverlaysCanvas, value);
                 break;
             case SettingsList.Resolution:
                 SettingsConfig.ChangeResoulution(value);

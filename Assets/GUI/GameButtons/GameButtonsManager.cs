@@ -13,7 +13,20 @@ public class GameButtonsManager : IButtonManager
     }
 
     // Флаг для запрета нажатия на кнопки
-    public bool BlockButtonsClick { get; set; } = false;
+
+    private bool _blockButtonsClick = false;
+
+    public bool BlockButtonsClick
+    {
+        get
+        {
+            return _blockButtonsClick;
+        }
+        set
+        {
+            _blockButtonsClick = value;
+        }
+    }
 
     public override void ResetAllButtonsState()
     {

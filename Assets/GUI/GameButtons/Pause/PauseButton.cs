@@ -21,17 +21,17 @@ public class PauseButton : IExpandableButton
         GameButtonsManager.instance.SubscribeButton(this.gameObject.GetComponent<IExpandableButton>());
     }
 
-    private bool GetAllowStatus()
+    private bool GetDenyStatus()
     {
-        return (!StaticVariables.PAUSED &&
-                !StaticVariables.OVERLAY_UI_OPENED &&
-                !StaticVariables.GAME_LOADING &&
-                !GameButtonsManager.instance.BlockButtonsClick);
+        return (PauseButtonsManager.GAME_IS_PAUSED||
+                StaticVariables.OVERLAY_ACTIVE ||
+                StaticVariables.GAME_IS_LOADING ||
+                GameButtonsManager.instance.BlockButtonsClick);
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape) && GetAllowStatus())
+        if (Input.GetKeyDown(KeyCode.Escape) && !GetDenyStatus())
         {
             StartCoroutine(IClickAnimation());
         }
@@ -44,7 +44,6 @@ public class PauseButton : IExpandableButton
 
         expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(expandOnEnter);
-
     }
 
     public override void ExitAction()
@@ -58,7 +57,7 @@ public class PauseButton : IExpandableButton
 
     public override IEnumerator IClick()
     {
-        if (!GetAllowStatus())
+        if (GetDenyStatus())
         {
             yield break;
         }
@@ -72,7 +71,8 @@ public class PauseButton : IExpandableButton
     {
         animator.Play("pauseanim");
         gameObject.GetComponent<Button>().interactable = false;
-        StaticVariables.PAUSED = true;
+        PauseButtonsManager.GAME_IS_PAUSED = true;
+        PauseButtonsManager.PAUSE_ANIMATION_ENDED = false;
 
         PauseButtonsManager.instance.PausePanel.GetComponent<CanvasGroup>().alpha = 0f;
         PauseButtonsManager.instance.PausePanel.SetActive(true);
@@ -91,8 +91,8 @@ public class PauseButton : IExpandableButton
             })
         }));
 
-        GetComponent<Button>().interactable = true;
-        StaticVariables.PAUSE_ANIM_ENDED = true;
+        gameObject.GetComponent<Button>().interactable = true;
+        PauseButtonsManager.PAUSE_ANIMATION_ENDED = true;
         ResetButtonState();
     }
 

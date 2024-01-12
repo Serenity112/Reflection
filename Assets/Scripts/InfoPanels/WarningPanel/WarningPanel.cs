@@ -4,70 +4,125 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
+using static WarningPanelMessages;
+
+public static class WarningPanelMessages
+{
+    public enum WarningTemplate
+    {
+        PatchRelease,
+        MemoryLeak,
+        SaveSystemCorrupt,
+        AssetLoading
+    }
+
+    public static Dictionary<WarningTemplate, string> Warnings;
+
+    static WarningPanelMessages()
+    {
+        Warnings = new()
+        {
+            { WarningTemplate.PatchRelease, PatchRelease },
+            { WarningTemplate.MemoryLeak, MemoryLeak },
+            { WarningTemplate.SaveSystemCorrupt, SaveSystemCorrupt },
+            { WarningTemplate.AssetLoading, AssetLoading },
+        };
+    }
+
+    public static string PatchRelease =
+      "В связи с выходом обновления игры, некоторые сохранения могут быть\n" +
+      "Удалены или отброшены по прогрессу\n" +
+      "Приносим извинения.";
+
+    public static string MemoryLeak =
+      "Произошла утечка памяти!\n" +
+      "Игра может работать нестабильно. Стабильное решение - перезагрузка игры.\n" +
+      "Приносим извинения.";
+
+    public static string SaveSystemCorrupt =
+      "В системе сохранений возникла ошибка!\n" +
+      "Некоторые элементы игры могут быть сброшены и/или работать нестабильно.\n" +
+      "Если вы не взаимодействовали с файлами игры, просим вас сообщить об ошибке разработчикам.\n" +
+      "Приносим извинения за доставленные неудобства! (нам похуй если честно)";
+
+    public static string AssetLoading =
+     "Ошибка загрузки внутриигрового ассета.\n" +
+     "Проверьте целостность файлов игры";
+}
 
 public class WarningPanel : MonoBehaviour
 {
     public static WarningPanel instance = null;
-
-    //private float FadingSpeed = 5f;
-
-    public static string SavingErrorMessage =
-       "В системе сохранений возникла ошибка!\n" +
-       "Некоторые элементы игры могут быть сброшены и/или работать нестабильно.\n" +
-       "Если вы не взаимодействовали с файлами игры, просим вас сообщить об ошибке разработчикам.\n" +
-       "Приносим извинения за доставленные неудобства! (нам похуй)";
+    public static bool WARNING_PANEL_ACTIVE { get; set; } = false;
 
     private AsyncOperationHandle<GameObject> handler;
 
+    private Queue<(WarningTemplate, string)> WarningMessagesQueue = new();
+
+    private GameObject Panel;
+
+    private WarningPanelButton Button;
+
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
+
+        Panel = transform.GetChild(0).gameObject;
+        Button = Panel.transform.GetChild(0).GetChild(0).GetComponent<WarningPanelButton>();
     }
 
-    private void Start()
+    public void ResetPanelState()
     {
+        SetText("");
+        Button.ResetButtonState();
     }
 
-    public void CreateWarningPanel(string title, Transform parent)
+    private void SetText(string text)
     {
-        StartCoroutine(ICreateWarningPanel(title, parent));
+        Panel.transform.GetChild(1).GetComponent<Text>().text = text;
     }
 
-    private IEnumerator ICreateWarningPanel(string title, Transform parent)
+    public void CreateWarningMessage(WarningTemplate template, string errorCode)
     {
-        if (StaticVariables.OverlayPanelActive)
+        FadeManager.FadeObject(Panel, true);
+
+        WarningMessagesQueue.Enqueue((template, errorCode));
+
+        if (!WARNING_PANEL_ACTIVE)
         {
-            yield break;
+            ProcessQueue();
         }
 
-        StaticVariables.OverlayPanelActive = true;
+        WARNING_PANEL_ACTIVE = true;
+    }
 
-        handler = Addressables.InstantiateAsync("WarningPanel", parent.GetComponent<RectTransform>(), false, true);
-        yield return handler;
-
-        if (handler.Status == AsyncOperationStatus.Succeeded)
+    private void ProcessQueue()
+    {
+        if (WarningMessagesQueue.Count > 0)
         {
-            GameObject result = handler.Result;
-            result.name = "WarningPanel";
-            result.transform.GetChild(1).GetComponent<Text>().text = title;
-        }
-        else
-        {
-            Debug.Log("Error loading");
+            var warning = WarningMessagesQueue.Dequeue();
+            SetText($"{Warnings[warning.Item1]}\n\nКоды ошибки: {warning.Item2}");
         }
     }
 
     public void CloseWarningPanel()
     {
-        StaticVariables.OverlayPanelActive = false;
+        SetText("");
 
+        if (WarningMessagesQueue.Count > 0)
+        {
+            ProcessQueue();
+        }
+        else
+        {
+            ResetPanelState();
+            WARNING_PANEL_ACTIVE = false;
+            FadeManager.FadeObject(Panel, false);
+        }
+    }
+
+    public void ReleasePanel()
+    {
         Addressables.ReleaseInstance(handler);
 
         Resources.UnloadUnusedAssets();

@@ -11,7 +11,7 @@ public class SaveChoiseIconAnimator : MonoBehaviour
 
     private SaveFileFields saveFileFields;
 
-    private void Start()
+    private void Awake()
     {
         saveFileFields = GetComponent<SaveFileFields>();
 

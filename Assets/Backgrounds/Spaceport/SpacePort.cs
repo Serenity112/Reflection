@@ -34,7 +34,7 @@ public class SpacePort : MonoBehaviour, ISpecialEvent
         RocketStandPanel.GetComponent<CanvasGroup>().alpha = 0f;
         RocketLaunchPanel.GetComponent<CanvasGroup>().alpha = 1f;
 
-        if (!Typewriter.Instance.SkipIsActive && !StaticVariables.GAME_LOADING)
+        if (!Typewriter.Instance.SkipIsActive && !StaticVariables.GAME_IS_LOADING)
         {
             RocketLaunchPanel.GetComponent<Shaker>().Shake();
         }

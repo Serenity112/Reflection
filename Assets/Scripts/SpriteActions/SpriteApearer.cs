@@ -7,6 +7,8 @@ public class SpriteApearer : MonoBehaviour
 {
     public static SpriteApearer instance = null;
 
+    public static bool SPRITE_LOADING { get; private set; } = false;
+
     private void Awake()
     {
         if (instance == null)
@@ -21,7 +23,7 @@ public class SpriteApearer : MonoBehaviour
 
     public IEnumerator SpriteAppear(Character character, int pose, int emotion, Vector3 position, float speed, bool skip, bool waitForFinished, bool stopPrev)
     {
-        StaticVariables.SPRITE_LOADING = true;
+        SPRITE_LOADING = true;
 
         GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteByName(character);
 
@@ -60,7 +62,7 @@ public class SpriteApearer : MonoBehaviour
         {
             yield return SpriteFade.instance.StartCoroutine(SpriteFade.instance.WaitForAll(list));
 
-            StaticVariables.SPRITE_LOADING = false;
+            SPRITE_LOADING = false;
         }
         else
         {

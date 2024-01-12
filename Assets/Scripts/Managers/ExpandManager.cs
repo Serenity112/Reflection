@@ -44,8 +44,6 @@ public class ExpandManager : MonoBehaviour
 
     public static IEnumerator ExpandObject(GameObject obj, Vector3 newScale, float smoothTime)
     {
-        Vector3 scale = obj.transform.localScale;
-
         Vector3 velocity1 = Vector3.zero;
 
         while (obj.transform.localScale != newScale)

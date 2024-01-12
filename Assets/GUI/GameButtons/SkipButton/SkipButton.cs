@@ -34,10 +34,10 @@ public class SkipButton : IExpandableButton
     public override void Awake()
     {
         base.Awake();
+
         ShadeTriangle = transform.GetChild(0).transform.GetChild(0).gameObject;
         ShadeArrow = transform.GetChild(1).transform.GetChild(0).gameObject;
         ShadeArrowCopy = transform.GetChild(2).transform.GetChild(0).gameObject;
-        animator = GetComponent<Animator>();
         state = SkipButtonState.SkipOff;
     }
 
@@ -110,7 +110,7 @@ public class SkipButton : IExpandableButton
                 EnableSkipAnimation();
                 break;
             case SkipButtonState.SkipOn:
-                if (!(Input.GetKey(KeyCode.Tab)))
+                if (!(Typewriter.Instance.SkipIsActive))
                 {
                     DisableSkipState();
                     DisableSkipAnimation();
@@ -155,6 +155,8 @@ public class SkipButton : IExpandableButton
 
     public override void ResetButtonState()
     {
+        DisableSkipAnimation();
+        DisableSkipState();
         gameObject.transform.localScale = origScale;
     }
 }

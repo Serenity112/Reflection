@@ -32,6 +32,8 @@ public class HideButton : IExpandableButton
     private string HideA = "Hide";
     private string UnHideA = "Unhide";
 
+    public static bool UI_HIDDEN = false;
+
     public override void Awake()
     {
         base.Awake();
@@ -44,12 +46,13 @@ public class HideButton : IExpandableButton
         GameButtonsManager.instance.SubscribeButton(this.gameObject.GetComponent<IExpandableButton>());
     }
 
-    private bool GetAllowStatus()
+    private bool GetDenyStatus()
     {
-        return (!StaticVariables.PAUSED &&
-                !StaticVariables.OVERLAY_UI_OPENED &&
-                !StaticVariables.GAME_LOADING &&
-                !GameButtonsManager.instance.BlockButtonsClick);
+        return (PauseButtonsManager.GAME_IS_PAUSED ||
+                StaticVariables.OVERLAY_ACTIVE ||
+                StaticVariables.GAME_IS_LOADING ||
+                GameButtonsManager.instance.BlockButtonsClick) ||
+                UI_HIDDEN;
     }
 
     public override void EnterAction()
@@ -94,12 +97,12 @@ public class HideButton : IExpandableButton
 
     public override IEnumerator IClick()
     {
-        if (!GetAllowStatus())
+        if (GetDenyStatus())
         {
             yield break;
         }
 
-        StaticVariables.OVERLAY_UI_OPENED = true;
+        UI_HIDDEN = true;
 
         HideOverlayButton.SetActive(true);
         animator.Play(HideA);
@@ -113,11 +116,16 @@ public class HideButton : IExpandableButton
         gui1out = FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed / 2f);
         gui2out = FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed / 2f);
 
-        StartCoroutine(gui1out);
-        StartCoroutine(gui2out);
-
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+            {
+                ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
+                ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime)
+            }),
+            gui1out,
+            gui2out
+        }));
 
         HideOverlayButton.GetComponent<Button>().interactable = true;
 
@@ -181,7 +189,7 @@ public class HideButton : IExpandableButton
         }));
 
         HideOverlayButton.SetActive(false);
-        StaticVariables.OVERLAY_UI_OPENED = false;
+        UI_HIDDEN = false;
     }
 
     public override void ResetButtonState()

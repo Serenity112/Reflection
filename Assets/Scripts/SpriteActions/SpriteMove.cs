@@ -69,7 +69,6 @@ public class SpriteMove : MonoBehaviour
                 if (Math.Abs(diff) < 1)
                 {
                     sprite.SetPosition(targetVect);
-                    Typewriter.Instance.AllowSkip();
                     yield break;
                 }
 

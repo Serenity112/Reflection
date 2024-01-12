@@ -37,12 +37,6 @@ public class SpecialEventManager : MonoBehaviour
         CurrentEventEnum = evenEnum;
     }
 
-    public void DeleteEvent()
-    {
-        CurrentEventEnum = SpecialEvent.none;
-        CurrentEventObject = null;
-    }
-
     public IEnumerator IReleaseCurrentEvent()
     {
         if (CurrentEventEnum == SpecialEvent.none)
@@ -51,19 +45,18 @@ public class SpecialEventManager : MonoBehaviour
         }
 
         yield return StartCoroutine(CurrentEventObject.IReleaseEvent());
-        DeleteEvent();
+
+        CurrentEventEnum = SpecialEvent.none;
+        CurrentEventObject = null;
     }
 
     public IEnumerator ILoadCurrentEventByState(SpecialEvent specialEvent, string data)
     {
-        //SetEventEnum(specialEvent);
-
         if (CurrentEventEnum == SpecialEvent.none)
         {
             yield break;
         }
 
-        //Debug.Log("if (currentEvent != null)");
         if (CurrentEventObject != null)
         {
             yield return StartCoroutine(CurrentEventObject.ILoadEventByData(data));

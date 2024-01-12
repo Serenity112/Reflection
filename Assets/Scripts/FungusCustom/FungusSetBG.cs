@@ -26,8 +26,6 @@ namespace Fungus
         {
             UserData.instance.CurrentCommandIndex += 1;
 
-            UserData.instance.CurrentBG = BackgroundName;
-
             yield return StartCoroutine(BackgroundManager.instance.ISwap(BackgroundName, FadeType, AppearSpeed, Delay));
 
             Continue();

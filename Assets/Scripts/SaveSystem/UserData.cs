@@ -17,7 +17,7 @@ public struct SaveData
 
         CurrentBlock = null;
 
-        audioData = new();
+        AudioData = new();
 
         LogBlocks = new List<string>();
 
@@ -31,7 +31,7 @@ public struct SaveData
     public string CurrentBlock;
 
     // Music
-    public AudioDataSaveFile audioData;
+    public AudioDataSaveFile AudioData;
 
     public List<string> LogBlocks;
 
@@ -105,7 +105,7 @@ public class UserData : MonoBehaviour
         newSave.SpriteData = SpriteController.instance.GameSpriteData;
 
         // Музыка
-        newSave.audioData = AudioManager.instance.GetSaveData();
+        newSave.AudioData = AudioManager.instance.GetSaveData();
 
         // Ивенты
         newSave.specialEvent = SpecialEventManager.instance.CurrentEventEnum;
@@ -141,6 +141,7 @@ public class UserData : MonoBehaviour
         FadeManager.FadeObject(PanelsManager.instance.BlackPanel, true);
 
         yield return StartCoroutine(ILoadGame(actualSaveNum));
+        yield return new WaitForSeconds(0.1f);
 
         StartCoroutine(PanelsManager.instance.EnableGuiOnStart(true));
 
@@ -215,7 +216,7 @@ public class UserData : MonoBehaviour
         IEnumerator i_music = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
         {
             AudioManager.instance.FadeOutCurrent(),
-            AudioManager.instance.FadeInCurrent(newSave.audioData),
+            AudioManager.instance.FadeInCurrent(newSave.AudioData),
         });
 
         // Лог

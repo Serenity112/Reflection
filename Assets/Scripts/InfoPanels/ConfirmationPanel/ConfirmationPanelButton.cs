@@ -3,8 +3,7 @@ using UnityEngine;
 
 public class ConfirmationPanelButton : IDraggableButton
 {
-    [SerializeField]
-    private float FadingSpeed;
+    private float _fadingSpeed = 5f;
 
     private GameObject spacing;
 
@@ -18,13 +17,13 @@ public class ConfirmationPanelButton : IDraggableButton
     public override void EnterAction()
     {
         StopAllCoroutines();
-        StartCoroutine(FadeManager.FadeOnly(spacing, true, FadingSpeed));
+        StartCoroutine(FadeManager.FadeOnly(spacing, true, _fadingSpeed));
     }
 
     public override void ExitAction()
     {
         StopAllCoroutines();
-        StartCoroutine(FadeManager.FadeOnly(spacing, false, FadingSpeed));
+        StartCoroutine(FadeManager.FadeOnly(spacing, false, _fadingSpeed));
     }
 
     public override IEnumerator IClick()
@@ -33,11 +32,6 @@ public class ConfirmationPanelButton : IDraggableButton
     }
 
     public override void ResetButtonState()
-    {
-        spacing.GetComponent<CanvasGroup>().alpha = 0f;
-    }
-
-    private void OnEnable()
     {
         spacing.GetComponent<CanvasGroup>().alpha = 0f;
     }

@@ -69,6 +69,7 @@ public class BackgroundManager : MonoBehaviour
 
     public IEnumerator ISwap(string bg_adress, BgSwapType type, float speed, float delay)
     {
+        UserData.instance.CurrentBG = bg_adress;
         Typewriter.Instance.ResetInstantSkip();
 
         switch (type)
@@ -123,6 +124,8 @@ public class BackgroundManager : MonoBehaviour
     {
         AsyncOperationHandle<GameObject> old_handler = bg_handler;
 
+        yield return SpecialEventManager.instance.IReleaseCurrentEvent();
+
         bg_handler = Addressables.InstantiateAsync(bg_adress, _backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
 
@@ -140,8 +143,6 @@ public class BackgroundManager : MonoBehaviour
         newBg.GetComponent<CanvasGroup>().alpha = 1f;
         newBg.transform.SetSiblingIndex(newBg.transform.childCount - 1);
 
-        yield return SpecialEventManager.instance.IReleaseCurrentEvent();
-
         //yield return StartCoroutine(SetTextBoxTheme(bg_adress));
 
         Resources.UnloadUnusedAssets();
@@ -151,6 +152,7 @@ public class BackgroundManager : MonoBehaviour
     public IEnumerator IOverlayBackground(string bg_adress, float speed)
     {
         AsyncOperationHandle<GameObject> old_handler = bg_handler;
+        yield return SpecialEventManager.instance.IReleaseCurrentEvent();
 
         bg_handler = Addressables.InstantiateAsync(bg_adress, _backgroundsPanel.gameObject.GetComponent<RectTransform>(), false, true);
         yield return bg_handler;
@@ -176,12 +178,6 @@ public class BackgroundManager : MonoBehaviour
         {
             Addressables.ReleaseInstance(old_handler);
         }
-
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
-        {
-            SpecialEventManager.instance.IReleaseCurrentEvent(),
-
-        }));
 
         Resources.UnloadUnusedAssets();
     }

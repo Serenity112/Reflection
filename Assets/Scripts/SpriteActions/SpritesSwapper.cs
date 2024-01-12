@@ -9,6 +9,8 @@ public class SpritesSwapper : MonoBehaviour
 {
     public static SpritesSwapper instance = null;
 
+    public static bool SPRITE_LOADING { get; private set; } = false;
+
     private const int ignoreXval = -1;
 
     void Awake()
@@ -41,6 +43,8 @@ public class SpritesSwapper : MonoBehaviour
 
     public IEnumerator SwapSprites(Character character, int pose, int emotion, Vector3 newPosition, float disappearSpeed, float appearSpeed, float moveSpeed, bool skip, bool waitForFinished, bool stopPrev)
     {
+        SPRITE_LOADING = true;
+
         GameSpriteObject? sprite1_obj = SpriteController.instance.GetSpriteByName(character);
 
         if (sprite1_obj == null)
@@ -150,12 +154,12 @@ public class SpritesSwapper : MonoBehaviour
             if (waitForFinished || skip)
             {
                 yield return StartCoroutine(IDelayedActions(enumerators, postActions));
-                StaticVariables.SPRITE_LOADING = false;
+                SPRITE_LOADING = false;
             }
             else
             {
                 StartCoroutine(IDelayedActions(enumerators, postActions));
-                StaticVariables.SPRITE_LOADING = false;
+                SPRITE_LOADING = false;
             }
 
             yield return null;
@@ -199,7 +203,7 @@ public class SpritesSwapper : MonoBehaviour
             {
 
                  delegate { Resources.UnloadUnusedAssets(); },
-                 delegate { StaticVariables.SPRITE_LOADING = false; },
+                 delegate { SPRITE_LOADING = false; },
             };
 
 

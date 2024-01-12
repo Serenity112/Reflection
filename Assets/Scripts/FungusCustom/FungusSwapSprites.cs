@@ -45,8 +45,6 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            StaticVariables.SPRITE_LOADING = true;
-
             var parsed = Enum.TryParse<global::Character>(CharacterName, true, out global::Character character);
             var character_input = parsed ? character : global::Character.None;
 

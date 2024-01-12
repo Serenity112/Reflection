@@ -13,8 +13,6 @@ public class Typewriter : MonoBehaviour
 
     private Text _text;
 
-    public bool SkipIsActive { get; private set; } = false;
-
     private Coroutine _say;
 
     private bool extern_button_click_flag = false;
@@ -29,8 +27,12 @@ public class Typewriter : MonoBehaviour
 
     private Dictionary<string, int> DialogSaves = new Dictionary<string, int>();
 
-    // Скип табом / кнопкой
+    // Зависимый скип от загрузок, паузы
     private bool _SKIP_ENABLE = false;
+
+    //Независимый скип, по сути просто индикато нажатия Tab
+    public bool SkipIsActive { get; private set; } = false;
+
     private bool _POST_SKIP = false;
 
     // Клик игровой кнопки / Enter / Space
@@ -76,12 +78,8 @@ public class Typewriter : MonoBehaviour
     private bool GetDenyStatus()
     {
         return (
-            StaticVariables.PAUSED ||
-            StaticVariables.WARNING_PANEL ||
-            StaticVariables.CONFIRM_PANEL ||
-            StaticVariables.OVERLAY_UI_OPENED /*||*/
-            //StaticVariables.SPRITE_LOADING
-            //StaticVariables.SPRITE_MOVING
+            PauseButtonsManager.GAME_IS_PAUSED ||
+            StaticVariables.OVERLAY_ACTIVE
             );
     }
 
@@ -171,8 +169,6 @@ public class Typewriter : MonoBehaviour
 
     private void OnSkipStart()
     {
-        AudioManager.instance.OnSkipStart();
-
         skipButton.EnableSkipAnimation();
     }
 
@@ -195,16 +191,6 @@ public class Typewriter : MonoBehaviour
         {
             //SpriteExpand.instance.StopPrev(false);
         }
-    }
-
-    public void AllowSkip()
-    {
-        //denySkip = false;
-    }
-
-    public void DenySkip()
-    {
-        //denySkip = true;
     }
 
     public void SetTextSpeed(float value)
@@ -310,7 +296,6 @@ public class Typewriter : MonoBehaviour
         {
             if (_POST_SKIP)
             {
-
                 _POST_SKIP = false;
                 OnPostSkipEnd();
             }

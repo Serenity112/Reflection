@@ -90,7 +90,7 @@ public class SaveChoiseAnimator : MonoBehaviour
                 yield return StartCoroutine(ExpandManager.ExpandObject(IconRight, loadScale, 0.05f));
 
                 yield return StartCoroutine(ConfirmationPanel.instance.CreateConfirmationPanel("Загрузить сохранение?", LoadFile(), CancelLoad()));
-
+                StaticVariables.OverlayPanelActive = false;
                 break;
         }
     }

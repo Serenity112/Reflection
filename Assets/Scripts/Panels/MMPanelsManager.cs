@@ -52,7 +52,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     private void Start()
     {
-        ConfirmationPanel.instance.ActivePanels = ActivePanels;
+        //ConfirmationPanel.instance.ActivePanels = ActivePanels;
         //WarningPanel.instance.ActivePanels = ActivePanels;
         UpdateContinueButtonState();
 

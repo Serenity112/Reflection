@@ -57,22 +57,19 @@ public class SaveManager : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
 
         SaveFilesData = SaveSystemUtils.SaveFilesData;
         SaveFilesFolder = SaveSystemUtils.SaveFilesFolder;
         SaveFileName = SaveSystemUtils.SaveFileName;
         ScreenshotsFolder = SaveSystemUtils.ScreenshotsFolder;
+
+        bottomPages = bottomPagesObj.GetComponent<BottomPages>();
+
+        InitFiles();
     }
 
-    private void Start()
+    private void InitFiles()
     {
         GameObject Files = transform.GetChild(1).gameObject;
 
@@ -82,8 +79,6 @@ public class SaveManager : MonoBehaviour
             allFiles[i] = file;
             allScreenshots[i] = file.GetComponent<SaveFileFields>().screenshot;
         }
-
-        GameCamera = PanelsConfig.CurrentManager.GetGameCamera();
 
         if (ES3.FileExists(SaveFilesData) && ES3.KeyExists("saveTaken", SaveFilesData))
         {
@@ -102,15 +97,18 @@ public class SaveManager : MonoBehaviour
             }
             ES3.Save<string[]>("saveDataTimes", saveDataTimes, SaveFilesData);
         }
+    }
 
-        bottomPages = bottomPagesObj.GetComponent<BottomPages>();
+    private void Start()
+    {
+        GameCamera = PanelsConfig.CurrentManager.GetGameCamera();
     }
 
     private IEnumerator IUpdate()
     {
         while (true)
         {
-            if (StaticVariables.IN_SAVE_MENU && !StaticVariables.GAME_LOADING)
+            if (StaticVariables.IN_SAVE_MENU && !StaticVariables.GAME_IS_LOADING)
             {
                 if (Input.GetKeyDown(KeyCode.RightArrow))
                 {
@@ -193,7 +191,7 @@ public class SaveManager : MonoBehaviour
 
             var sca2 = allFiles[i].GetComponent<SaveChoiseAnimator>();
             sca2.HideCross();
-            
+
 
             GameObject savedPanel = saveFileFields.SavedPanel;
             GameObject unsavedPanel = saveFileFields.UnSavedPanel;
@@ -400,7 +398,7 @@ public class SaveManager : MonoBehaviour
             var sca2 = allFiles[i].GetComponent<SaveChoiseAnimator>();
             sca2.HideCross();
         }
-           
+
         // Загрузка текстур новых скринов
         for (int i = 0; i < savesPerPage; i++)
         {

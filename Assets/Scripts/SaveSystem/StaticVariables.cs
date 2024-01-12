@@ -1,39 +1,35 @@
 public static class StaticVariables
 {
-    // Игра на паузе
-    public static bool PAUSED { get; set; } = false;
+    // Навигационные статусы
+    public static bool PAUSED =>
+        PauseButtonsManager.GAME_IS_PAUSED;
 
-    //
-    public static bool WARNING_PANEL { get; set; } = false;
-
-    //
-    public static bool CONFIRM_PANEL { get; set; } = false;
-
-    // Открыто какое-то визуальное UI меню, пока оно не закроается, другие открывать нельзя
-    public static bool OVERLAY_UI_OPENED { get; set; } = false;
-
-    //
-    public static bool SPRITE_LOADING { get; set; } = false;
-
-    //
-    public static bool SPRITE_MOVING { get; set; } = false;
-
-    // Дауснкие статусы
-    public static bool PAUSE_ANIM_ENDED { get; set; } = false;
     public static bool IN_SETTINGS_MENU { get; set; } = false;
     public static bool IN_SAVE_MENU { get; set; } = false;
-    public static bool GAME_LOADING { get; set; } = false;
 
-    public static void ResetFlags()
-    {
-        PAUSED = false;
-        WARNING_PANEL = false;
-        CONFIRM_PANEL = false;
-        OVERLAY_UI_OPENED = false;
-        PAUSE_ANIM_ENDED = false;
-        IN_SETTINGS_MENU = false;
-        IN_SAVE_MENU = false;
-    }
+
+    public static bool SPRITE_MOVING { get; set; } = false;
+
+    // Вспомогательные статусы (а.к.а. анимации)
+
+
+    // Идёт какая-то прогрузка
+    public static bool GAME_IS_LOADING =>
+        SpriteApearer.SPRITE_LOADING ||
+        SpritesSwapper.SPRITE_LOADING ||
+        PanelsManager.GAME_LOADING;
+
+    // Присутствует любой оверлей
+    public static bool OVERLAY_ACTIVE =>
+       WarningPanel.WARNING_PANEL_ACTIVE ||
+       ConfirmationPanel.CONFIRM_PANEL_ACTIVE ||
+       HideButton.UI_HIDDEN;
+
+
+
+
+    //___________________________________________________________________________________________
+
 
     // В главном ли меню игра
     public static bool ifInMainMenu { get; set; } = true;

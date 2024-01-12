@@ -40,7 +40,7 @@ public class BottomPages : MonoBehaviour
 
     public void loadPageOnClick(int page)
     {
-        if (page != SaveManager.instance.currentPage && !StaticVariables.UIsystemDown && !StaticVariables.GAME_LOADING)
+        if (page != SaveManager.instance.currentPage && !StaticVariables.UIsystemDown && !StaticVariables.GAME_IS_LOADING)
         {
             StaticVariables.UIsystemDown = true;
 

@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class TextBoxController : MonoBehaviour
 {
@@ -12,6 +11,8 @@ public class TextBoxController : MonoBehaviour
 
     [SerializeField]
     private GameObject TextBoxGuiDark;
+
+    private GameObject[] ThemesObjects;
 
     private ThemeStyle _currentTheme = ThemeStyle.Light;
 
@@ -26,16 +27,7 @@ public class TextBoxController : MonoBehaviour
     void Awake()
     {
         instance = this;
-    }
-
-    public IEnumerator ISetDefaultTheme()
-    {
-        yield return StartCoroutine(IChangeTheme(ThemeStyle.Light, 0.8f));
-    }
-
-    public void ChangeTheme()
-    {
-
+        ThemesObjects = new GameObject[] { TextBoxGuiLight, TextBoxGuiDark };
     }
 
     public IEnumerator ClearThemes()
@@ -54,15 +46,7 @@ public class TextBoxController : MonoBehaviour
 
         if (newTheme == _currentTheme)
         {
-            GameObject mathingGui;
-            if (newTheme == ThemeStyle.Light)
-            {
-                mathingGui = TextBoxGuiLight;
-            }
-            else
-            {
-                mathingGui = TextBoxGuiDark;
-            }
+            GameObject mathingGui = ThemesObjects[(int)newTheme];
 
             if (skip)
             {
@@ -76,19 +60,8 @@ public class TextBoxController : MonoBehaviour
         }
         else
         {
-            GameObject oldGui;
-            GameObject newGui;
-
-            if (newTheme == ThemeStyle.Light && _currentTheme == ThemeStyle.Dark)
-            {
-                newGui = TextBoxGuiLight;
-                oldGui = TextBoxGuiDark;
-            }
-            else
-            {
-                newGui = TextBoxGuiDark;
-                oldGui = TextBoxGuiLight;
-            }
+            GameObject oldGui = ThemesObjects[(int)_currentTheme];
+            GameObject newGui = ThemesObjects[(int)newTheme];
 
             newGui.GetComponent<CanvasGroup>().alpha = 0f;
             newGui.transform.SetSiblingIndex(0);
