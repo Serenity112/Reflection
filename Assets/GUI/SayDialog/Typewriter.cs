@@ -25,7 +25,7 @@ public class Typewriter : MonoBehaviour
 
     private string DialogSavesFile;
 
-    private Dictionary<string, int> DialogSaves = new Dictionary<string, int>();
+    private Dictionary<string, int> DialogReadSaves = new Dictionary<string, int>();
 
     // Зависимый скип от загрузок, паузы
     private bool _SKIP_ENABLE = false;
@@ -63,7 +63,7 @@ public class Typewriter : MonoBehaviour
 
     private void Start()
     {
-        LoadDialogSaves();
+        LoadDialogReadSaves();
     }
 
     public void ResetTypewritterFlags()
@@ -214,18 +214,21 @@ public class Typewriter : MonoBehaviour
 
     private bool CalculateWasRead(string block, int index)
     {
-        if (!DialogSaves.ContainsKey(block))
+        if (DialogReadSaves.ContainsKey(block))
         {
-            DialogSaves.Add(block, 0);
-        }
-
-        if (index <= DialogSaves[block])
-        {
-            return true;
+            if (index <= DialogReadSaves[block])
+            {
+                return true;
+            }
+            else
+            {
+                DialogReadSaves[block] = index;
+                return false;
+            }
         }
         else
         {
-            DialogSaves[block] = index;
+            DialogReadSaves.Add(block, 0);
             return false;
         }
     }
@@ -364,12 +367,12 @@ public class Typewriter : MonoBehaviour
 
     #region SaveSystem
 
-    public void SaveDialogSaves()
+    public void SaveDialogReadSaves()
     {
-        ES3.Save<Dictionary<string, int>>(DialogSavesFile, DialogSaves, $"{DialogSavesFile}.es3");
+        ES3.Save<Dictionary<string, int>>(DialogSavesFile, DialogReadSaves, $"{DialogSavesFile}.es3");
     }
 
-    public void LoadDialogSaves()
+    public void LoadDialogReadSaves()
     {
         try
         {
@@ -378,19 +381,14 @@ public class Typewriter : MonoBehaviour
                 var loaded = ES3.Load<Dictionary<string, int>>(DialogSavesFile, $"{DialogSavesFile}.es3");
                 if (loaded != null)
                 {
-                    DialogSaves = loaded;
+                    DialogReadSaves = loaded;
                 }
             }
         }
         catch (Exception ex)
         {
-            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage, PanelsManager.instance.ActivePanels.transform);
-        }
-    }
 
-    void OnApplicationQuit()
-    {
-        SaveDialogSaves();
+        }
     }
 
     #endregion

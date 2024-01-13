@@ -12,11 +12,9 @@ namespace Fungus
 
     public class FungusSayDialog : Command
     {
-        [SerializeField]
-        private string storyText = string.Empty;
+        public string storyText = string.Empty;
 
-        [SerializeField]
-        private string speaker = string.Empty;
+        public string speaker = string.Empty;
 
         public override void OnEnter()
         {

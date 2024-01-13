@@ -23,7 +23,6 @@ public class LogButton : IExpandableButton
     private IEnumerator expandOnEnter;
 
     private float speed = 5.0f;
-    private bool _blockButton = false;
 
     public override void Awake()
     {
@@ -47,13 +46,12 @@ public class LogButton : IExpandableButton
            StaticVariables.OVERLAY_ACTIVE ||
            GameButtonsManager.instance.BlockButtonsClick ||
            LogManager.LOG_PANEL_ACTIVE ||
-           PauseButtonsManager.GAME_IS_PAUSED ||
-           _blockButton);
+           PauseButtonsManager.GAME_IS_PAUSED);
     }
 
     private void Update()
     {
-        if (Input.GetKey(KeyCode.Tab))
+        if (Input.GetKeyDown(KeyCode.Tab))
         {
             if (!GetDenyStatus())
             {
@@ -116,9 +114,8 @@ public class LogButton : IExpandableButton
             yield break;
         }
 
-        _blockButton = true;
         LogManager.LOG_PANEL_ACTIVE = true;
-        LogManager.ANIMATION_ENDED = false;
+        LogManager.LOG_PANEL_ACTIVE_POST = false;
         GetComponent<Button>().interactable = false;
         animator.Play("OpenLog");
 
@@ -137,14 +134,12 @@ public class LogButton : IExpandableButton
             })
         }));
 
-        LogManager.ANIMATION_ENDED = true;
-        _blockButton = false;
+        LogManager.LOG_PANEL_ACTIVE_POST = true;
         GetComponent<Button>().interactable = true;
     }
 
     public override void ResetButtonState()
     {
-        _blockButton = false;
         animator.Play("Idle");
         GetComponent<Button>().interactable = true;
         gameObject.transform.localScale = origScale;

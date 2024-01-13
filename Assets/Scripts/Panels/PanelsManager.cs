@@ -126,7 +126,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         GAME_LOADING = false;
         StaticVariables.IN_SAVE_MENU = false;
         PauseButtonsManager.GAME_IS_PAUSED = false;
-        PauseButtonsManager.PAUSE_ANIMATION_ENDED = false;
+        PauseButtonsManager.GAME_IS_PAUSED_POST = false;
     }
 
     public void OpenSaveMenu() => StartCoroutine(IopenSaveMenu());

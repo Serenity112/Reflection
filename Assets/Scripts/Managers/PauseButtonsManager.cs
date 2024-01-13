@@ -19,7 +19,7 @@ public class PauseButtonsManager : IButtonManager
 
     public static bool GAME_IS_PAUSED { get; set; } = false;
 
-    public static bool PAUSE_ANIMATION_ENDED { get; set; } = false;
+    public static bool GAME_IS_PAUSED_POST { get; set; } = false;
 
     private float _speed = 5f;
 
@@ -36,7 +36,7 @@ public class PauseButtonsManager : IButtonManager
 
     private bool GetAllowStatus()
     {
-        return  PAUSE_ANIMATION_ENDED &&
+        return  GAME_IS_PAUSED_POST &&
                 !StaticVariables.OVERLAY_ACTIVE &&
                 !_buttonClicked &&
                 !StaticVariables.GAME_IS_LOADING;
@@ -103,7 +103,7 @@ public class PauseButtonsManager : IButtonManager
         PausePanel.SetActive(false);
 
         GAME_IS_PAUSED = false;
-        PAUSE_ANIMATION_ENDED = false;
+        GAME_IS_PAUSED_POST = false;
     }
 
     public override void ResetManager()

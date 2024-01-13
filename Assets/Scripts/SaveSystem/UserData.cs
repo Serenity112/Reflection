@@ -19,8 +19,6 @@ public struct SaveData
 
         AudioData = new();
 
-        LogBlocks = new List<string>();
-
         specialEvent = SpecialEvent.none;
         specialEventData = null;
 
@@ -34,8 +32,6 @@ public struct SaveData
 
     // Music
     public AudioDataSaveFile AudioData;
-
-    public List<string> LogBlocks;
 
     public SpecialEvent specialEvent;
     public string specialEventData;
@@ -115,9 +111,8 @@ public class UserData : MonoBehaviour
         newSave.specialEvent = SpecialEventManager.instance.CurrentEventEnum;
         newSave.specialEventData = newSave.specialEvent == SpecialEvent.none ? null : SpecialEventManager.instance.CurrentEventObject.GetData();
 
-        // Внешние сейвы
         // Прочитанные диалоги
-        Typewriter.Instance.SaveDialogSaves();
+        Typewriter.Instance.SaveDialogReadSaves();
 
         // Выборы
         newSave.SavedChoices = ChoiceManager.instance.GetSavedChoices();
@@ -126,8 +121,6 @@ public class UserData : MonoBehaviour
         {
             ES3.Save<SaveData>("SaveFile" + actualSaveNum, newSave, $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3");
         }).Start();
-
-        //newSave.LogBlocks = LogBlocks;
     }
 
     private IEnumerator ILoadGameFromStart()
@@ -167,9 +160,10 @@ public class UserData : MonoBehaviour
                 activeBlock.Stop();
             }
         }
-        CurrentBlock = newSave.CurrentBlock;
 
+        CurrentBlock = newSave.CurrentBlock;
         CurrentCommandIndex = newSave.CurrentCommandIndex;
+        Block targetBlock = flowchart.FindBlock(CurrentBlock);
 
         // Backgrounds + special event
         CurrentBG = newSave.Background;
@@ -222,11 +216,12 @@ public class UserData : MonoBehaviour
 
 
         // Лог
-        //LogManager.instance.DelLog();
+        LogManager.instance.ClearLog();
+        LogManager.instance.RestoreLogByBlock(targetBlock, CurrentCommandIndex);
 
 
         // Прочитанные диалоги
-        Typewriter.Instance.LoadDialogSaves();
+        Typewriter.Instance.LoadDialogReadSaves();
         Typewriter.Instance.SetText("");
 
 
@@ -244,7 +239,7 @@ public class UserData : MonoBehaviour
         }));
 
 
-        flowchart.ExecuteBlock(flowchart.FindBlock(CurrentBlock), CurrentCommandIndex);
+        flowchart.ExecuteBlock(targetBlock, CurrentCommandIndex);
         CurrentCommandIndex--;
     }
 }

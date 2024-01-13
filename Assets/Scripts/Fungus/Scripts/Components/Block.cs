@@ -41,7 +41,7 @@ namespace Fungus
         [Tooltip("An optional Event Handler which can execute the block when an event occurs")]
         [SerializeField] protected EventHandler eventHandler;
 
-        [SerializeField] protected List<Command> commandList = new List<Command>();
+        [SerializeField] public List<Command> commandList = new List<Command>();
 
         protected ExecutionState executionState;
 

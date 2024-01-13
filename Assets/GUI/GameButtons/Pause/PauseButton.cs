@@ -57,8 +57,6 @@ public class PauseButton : IExpandableButton
 
     public override IEnumerator IClick()
     {
-        yield return null;
-
         if (GetDenyStatus())
         {
             yield break;
@@ -67,7 +65,7 @@ public class PauseButton : IExpandableButton
         animator.Play("pauseanim");
         gameObject.GetComponent<Button>().interactable = false;
         PauseButtonsManager.GAME_IS_PAUSED = true;
-        PauseButtonsManager.PAUSE_ANIMATION_ENDED = false;
+        PauseButtonsManager.GAME_IS_PAUSED_POST = false;
 
         PauseButtonsManager.instance.PausePanel.GetComponent<CanvasGroup>().alpha = 0f;
         PauseButtonsManager.instance.PausePanel.SetActive(true);
@@ -87,7 +85,7 @@ public class PauseButton : IExpandableButton
         }));
 
         gameObject.GetComponent<Button>().interactable = true;
-        PauseButtonsManager.PAUSE_ANIMATION_ENDED = true;
+        PauseButtonsManager.GAME_IS_PAUSED_POST = true;
         ResetButtonState();
     }
 

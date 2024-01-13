@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class LogBack : IExpandableButton
 {
     private float _speed = 5f;
-    private bool _blockButton = false;
 
     private IEnumerator shrink;
     private IEnumerator expand;
@@ -26,7 +25,7 @@ public class LogBack : IExpandableButton
 
     private bool GetAllowStatus()
     {
-        return (LogManager.LOG_PANEL_ACTIVE && !_blockButton && LogManager.ANIMATION_ENDED);
+        return (LogManager.LOG_PANEL_ACTIVE && LogManager.LOG_PANEL_ACTIVE_POST);
     }
 
     public override IEnumerator IClick()
@@ -38,7 +37,7 @@ public class LogBack : IExpandableButton
 
         animator.Play("CloseLog");
         StopExitListener();
-        _blockButton = true;
+        LogManager.LOG_PANEL_ACTIVE_POST = false;
         GetComponent<Button>().interactable = false;
         LogManager.instance.logOpenButton.ResetButtonState();
 
@@ -54,7 +53,6 @@ public class LogBack : IExpandableButton
             })
         }));
 
-        _blockButton = false;
         LogManager.LOG_PANEL_ACTIVE = false;
         GetComponent<Button>().interactable = true;
         LogManager.instance.LogPanel.SetActive(false);
@@ -88,7 +86,7 @@ public class LogBack : IExpandableButton
     {
         while (true)
         {
-            if (Input.GetKey(KeyCode.Tab) || Input.GetKey(KeyCode.Escape))
+            if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.Escape))
             {
                 if (GetAllowStatus())
                 {
@@ -106,7 +104,6 @@ public class LogBack : IExpandableButton
         StartCoroutine(keyExitListener);
 
         animator.Play("Idle");
-        _blockButton = false;
         GetComponent<Button>().interactable = true;
     }
 }

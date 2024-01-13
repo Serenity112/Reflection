@@ -1,6 +1,9 @@
+using Fungus;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,7 +12,7 @@ public class LogManager : IButtonManager
     public static LogManager instance = null;
 
     public static bool LOG_PANEL_ACTIVE { get; set; } = false;
-    public static bool ANIMATION_ENDED { get; set; } = false;
+    public static bool LOG_PANEL_ACTIVE_POST { get; set; } = false;
 
     private Dictionary<Character, string> NamesColors;
     private string DefaultColor = "#C8C8C8";
@@ -88,6 +91,7 @@ public class LogManager : IButtonManager
         catch
         {
             ClearLog();
+            text.text += stringBuilder.ToString();
         }
 
         _currentCharacter = character;
@@ -116,5 +120,26 @@ public class LogManager : IButtonManager
         {
             button.ResetButtonState();
         }
-    } 
+    }
+
+    public void RestoreLogByBlock(Block block, int targetIndex)
+    {
+        int restoreCount = 100;
+        int startIndex = targetIndex - restoreCount > 0 ? targetIndex - restoreCount : 0;
+
+        for (int i = startIndex; i < targetIndex; i++)
+        {
+            var command = block.commandList[i];
+            if (command.GetType() == typeof(FungusSayDialog))
+            {
+                FungusSayDialog say = (FungusSayDialog)command;
+                bool parsed = Enum.TryParse<Character>(say.speaker, true, out Character character);
+                Character character_input = parsed ? character : Character.None;
+
+                string story_text = say.storyText;
+
+                CreateMessage(character_input, story_text);
+            }
+        }
+    }
 }
