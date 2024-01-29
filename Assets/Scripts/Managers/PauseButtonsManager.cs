@@ -29,6 +29,9 @@ public class PauseButtonsManager : IButtonManager
 
     public GameObject PausePanel;
 
+    [SerializeField]
+    private PauseMusicDisplay _pauseMusicDisplay;
+
     public void Awake()
     {
         instance = this;
@@ -36,7 +39,7 @@ public class PauseButtonsManager : IButtonManager
 
     private bool GetAllowStatus()
     {
-        return  GAME_IS_PAUSED_POST &&
+        return GAME_IS_PAUSED_POST &&
                 !StaticVariables.OVERLAY_ACTIVE &&
                 !_buttonClicked &&
                 !StaticVariables.GAME_IS_LOADING;
@@ -104,6 +107,11 @@ public class PauseButtonsManager : IButtonManager
 
         GAME_IS_PAUSED = false;
         GAME_IS_PAUSED_POST = false;
+    }
+
+    public void UpdateDisplayMusic()
+    {
+        _pauseMusicDisplay.UpdateDisplayMusic();
     }
 
     public override void ResetManager()

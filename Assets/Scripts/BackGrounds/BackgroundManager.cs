@@ -29,6 +29,8 @@ public class BackgroundManager : MonoBehaviour
 {
     public static BackgroundManager instance = null;
 
+    public string CurrentBG { get; set; } = null;
+
     [SerializeField]
     private GameObject storytext;
 
@@ -54,9 +56,8 @@ public class BackgroundManager : MonoBehaviour
 
         _backgroundsPanel = gameObject;
 
-         _textBoxThemes.Add("SpacePort", new TextBoxTheme(ThemeStyle.Dark, 0.9f));
-         _textBoxThemes.Add("AssemblyHall", new TextBoxTheme(ThemeStyle.Light, 0.5f));
-         _textBoxThemes.Add("SkverDay", new TextBoxTheme(ThemeStyle.Light, 0.75f));
+        _textBoxThemes.Add("AssemblyHall", new TextBoxTheme(ThemeStyle.Light, 0.5f));
+        _textBoxThemes.Add("SkverDay", new TextBoxTheme(ThemeStyle.Light, 0.75f));
     }
 
     public IEnumerator IReleaseBackground()
@@ -69,8 +70,9 @@ public class BackgroundManager : MonoBehaviour
 
     public IEnumerator ISwap(string bg_adress, BgSwapType type, float speed, float delay)
     {
-        UserData.instance.CurrentBG = bg_adress;
+        CurrentBG = bg_adress;
         Typewriter.Instance.ResetInstantSkip();
+        GameButtonsManager.instance.BlockButtonsClick = true;
 
         switch (type)
         {
@@ -84,13 +86,17 @@ public class BackgroundManager : MonoBehaviour
                 yield return StartCoroutine(IOverlayBackground(bg_adress, speed));
                 break;
         }
+
+        GameButtonsManager.instance.BlockButtonsClick = false;
     }
 
     // Фон -> чёрный экран -> фон
     public IEnumerator IBlackFadeBackground(string bg_adress, float speed, float delay)
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
+
         Typewriter.Instance.SetText("");
+        NameChanger.instance.SetName(Character.None);
 
         // Удаление старых фонов    
         if (bg_handler.IsValid())

@@ -4,129 +4,116 @@ using UnityEngine;
 
 public class SaveChoiseIconAnimator : MonoBehaviour
 {
-    private GameObject GradLeft;
-    private GameObject GradRight;
-    private GameObject IconLeft;
-    private GameObject IconRight;
+    public GameObject GradLeft;
+    public GameObject GradRight;
+    public GameObject IconLeft;
+    public GameObject IconRight;
 
     private SaveFileFields saveFileFields;
+
+    private float _speed = 4f;
+
+    public bool exitLeft { get; set; } = true;
+    public bool exitRight { get; set; } = true;
 
     private void Awake()
     {
         saveFileFields = GetComponent<SaveFileFields>();
-
-        GradLeft = saveFileFields.GradLeft;
-        GradRight = saveFileFields.GradRight;
-        IconLeft = saveFileFields.IconLeft;
-        IconRight = saveFileFields.IconRight;
     }
+
     public void AppearSide(Side side)
     {
+        Debug.Log("Appear side: " + side);
+
         StartCoroutine(saveFileFields.CloseOverPanel());
+
         switch (side)
         {
             case Side.Left:
+                StopAllCoroutines();
+                exitLeft = false;
                 AppearLeft();
                 break;
-            case Side.Right:
-                AppearRight();
-                break;
-        }
-    }
 
-    public void RemoveSide(Side side)
-    {
-        switch (side)
-        {
-            case Side.Left:
-                if (saveFileFields.exitRight)
-                {
-                    StartCoroutine(saveFileFields.OpenOverPanel());
-                }
-                ExitLeft();
-                break;
             case Side.Right:
-                if (saveFileFields.exitLeft)
-                {
-                    StartCoroutine(saveFileFields.OpenOverPanel());
-                }
-                ExitRight();
+                StopAllCoroutines();
+                exitRight = false;
+                AppearRight();
                 break;
         }
     }
 
     public void AppearLeft()
     {
-        StopAllCoroutines();
-        saveFileFields.exitLeft = false;
+        StartCoroutine(FadeManager.FadeOnly(GradRight, true, _speed));
+        StartCoroutine(FadeManager.FadeOnly(IconLeft, true, _speed));
 
-        StartCoroutine(FadeManager.FadeOnly(GradRight, true, SaveManager.instance.speed));
-        StartCoroutine(FadeManager.FadeOnly(IconLeft, true, SaveManager.instance.speed));
-
-        StartCoroutine(FadeManager.FadeOnly(GradLeft, false, SaveManager.instance.speed));
-        StartCoroutine(FadeManager.FadeOnly(IconRight, false, SaveManager.instance.speed));
+        StartCoroutine(FadeManager.FadeOnly(GradLeft, false, _speed));
+        StartCoroutine(FadeManager.FadeOnly(IconRight, false, _speed));
     }
 
     public void AppearRight()
     {
-        StopAllCoroutines();
-        saveFileFields.exitRight = false;
+        StartCoroutine(FadeManager.FadeOnly(GradLeft, true, _speed));
+        StartCoroutine(FadeManager.FadeOnly(IconRight, true, _speed));
 
-        StartCoroutine(FadeManager.FadeOnly(GradLeft, true, SaveManager.instance.speed));
-        StartCoroutine(FadeManager.FadeOnly(IconRight, true, SaveManager.instance.speed));
+        StartCoroutine(FadeManager.FadeOnly(GradRight, false, _speed));
+        StartCoroutine(FadeManager.FadeOnly(IconLeft, false, _speed));
+    }
 
-        StartCoroutine(FadeManager.FadeOnly(GradRight, false, SaveManager.instance.speed));
-        StartCoroutine(FadeManager.FadeOnly(IconLeft, false, SaveManager.instance.speed));
+
+    public void RemoveSide(Side side)
+    {
+        switch (side)
+        {
+            case Side.Left:
+                StopAllCoroutines();
+                exitLeft = true;
+                ExitLeft();
+
+                if (exitRight)
+                {
+                    ExitRight();
+                    StartCoroutine(saveFileFields.OpenOverPanel());
+                }
+
+                break;
+            case Side.Right:
+                StopAllCoroutines();
+                exitRight = true;
+                ExitRight();
+
+                if (exitLeft)
+                {
+                    ExitLeft();
+                    StartCoroutine(saveFileFields.OpenOverPanel());
+                }
+
+                break;
+        }
     }
 
     public void ExitLeft()
     {
-        StopAllCoroutines();
-        saveFileFields.exitLeft = true;
-
-        StartCoroutine(FadeManager.FadeOnly(GradRight, false, SaveManager.instance.speed));
-        StartCoroutine(FadeManager.FadeOnly(IconLeft, false, SaveManager.instance.speed));
-
-        if (saveFileFields.exitRight)
-        {
-            StartCoroutine(FadeManager.FadeOnly(GradLeft, false, SaveManager.instance.speed));
-            StartCoroutine(FadeManager.FadeOnly(IconRight, false, SaveManager.instance.speed));
-        }
+        StartCoroutine(FadeManager.FadeOnly(GradRight, false, _speed));
+        StartCoroutine(FadeManager.FadeOnly(IconLeft, false, _speed));
     }
 
     public void ExitRight()
     {
-        StopAllCoroutines();
-        saveFileFields.exitRight = true;
-
-        StartCoroutine(FadeManager.FadeOnly(GradLeft, false, SaveManager.instance.speed));
-        StartCoroutine(FadeManager.FadeOnly(IconRight, false, SaveManager.instance.speed));
-
-        if (saveFileFields.exitLeft)
-        {
-            StartCoroutine(FadeManager.FadeOnly(GradRight, false, SaveManager.instance.speed));
-            StartCoroutine(FadeManager.FadeOnly(IconLeft, false, SaveManager.instance.speed));
-        }
+        StartCoroutine(FadeManager.FadeOnly(GradLeft, false, _speed));
+        StartCoroutine(FadeManager.FadeOnly(IconRight, false, _speed));
     }
 
-    public void InstantHideAll()
+    public void ResetPanel()
     {
         StopAllCoroutines();
         GradLeft.GetComponent<CanvasGroup>().alpha = 0f;
         GradRight.GetComponent<CanvasGroup>().alpha = 0f;
         IconLeft.GetComponent<CanvasGroup>().alpha = 0f;
         IconRight.GetComponent<CanvasGroup>().alpha = 0f;
-    }
 
-    public void HideLeft()
-    {
-        StartCoroutine(FadeManager.FadeOnly(GradRight, false, SaveManager.instance.speed));
-        StartCoroutine(FadeManager.FadeOnly(IconLeft, false, SaveManager.instance.speed));
-    }
-
-    public void HideRight()
-    {
-        StartCoroutine(FadeManager.FadeOnly(GradLeft, false, SaveManager.instance.speed));
-        StartCoroutine(FadeManager.FadeOnly(IconRight, false, SaveManager.instance.speed));
+        exitLeft = true;
+        exitRight = true;
     }
 }

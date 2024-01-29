@@ -11,78 +11,70 @@ public class SpriteApearer : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
     }
 
-    public IEnumerator SpriteAppear(Character character, int pose, int emotion, Vector3 position, float speed, bool skip, bool waitForFinished, bool stopPrev)
+    public IEnumerator SpriteAppear(Character character, int pose, int emotion, Vector3 position, float fadeTime, bool skip, bool waitForFinished)
     {
-        SPRITE_LOADING = true;
-
-        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteByName(character);
-
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteByCharacter(character);
         if (sprite_obj == null)
         {
             yield break;
         }
-
-        if (stopPrev)
-        {
-            SpriteMove.instance.StopSpriteMoving();
-            SpriteFade.instance.StopSpritesFading();
-            SpriteController.instance.LoadSpritesDataInfo();
-        }
-
         GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
-        SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, false);
 
-        SpriteController.instance.SaveSpriteData(sprite.num, character, pose, emotion, position, 1f, false);
+        sprite.CompletePostAction();
+        SpriteController.instance.CompleteAnimations(sprite.Number);
+        SpriteController.instance.LoadSpriteActualData(character);
 
+        SpriteController.instance.SaveSpriteDataPreloaded(character, false);
+        SpriteController.instance.SaveSpriteData(character, pose, emotion, position, 1f, false);
+
+        float scale = SpriteScalesBase.GetCharacterScale(character);
+        sprite.SetScale(new Vector3(scale, scale, scale));
         sprite.SetAlpha(0f);
-
-        SpriteController.instance.SetScaleByName(sprite, character);
-
         sprite.SetPosition(position);
 
+        SPRITE_LOADING = true;
         yield return StartCoroutine(SpriteController.instance.LoadSpriteByParts(sprite, character, pose, emotion));
+        SPRITE_LOADING = false;
 
         List<IEnumerator> list = new List<IEnumerator>()
         {
-            SpriteFade.instance.ISetFadingSprite(sprite.ByPart(SpritePart.Body), true, 0.1f, skip),
-            SpriteFade.instance.ISetFadingSprite(sprite.ByPart(SpritePart.Face1), true, 0.1f, skip)
+            SpriteFade.instance.IFadeSprite(sprite.ByPart(SpritePart.Body), fadeTime, 1f, skip),
+            SpriteFade.instance.IFadeSprite(sprite.ByPart(SpritePart.Face1), fadeTime, 1f, skip)
         };
+        SpriteController.instance.AddAnimation(sprite.Number, list);
 
         if (waitForFinished || skip)
         {
-            yield return SpriteFade.instance.StartCoroutine(SpriteFade.instance.WaitForAll(list));
-
-            SPRITE_LOADING = false;
+            yield return StartCoroutine(WaitForAll(list));
         }
         else
         {
-            /*List<Action> postActions = new List<Action>
-            {
-                delegate { StaticVariables.SPRITE_LOADING = false; },
-            };
-
-            StartCoroutine(IDelayedActions(list, postActions));*/
+            StartCoroutine(WaitForAll(list));
         }
     }
 
-    private IEnumerator IDelayedActions(List<IEnumerator> enumerators, List<Action> actions)
+    private IEnumerator WaitForAll(List<IEnumerator> coroutines)
     {
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators));
+        int tally = 0;
 
-        foreach (Action action in actions)
+        foreach (IEnumerator c in coroutines)
         {
-            action.Invoke();
+            StartCoroutine(RunCoroutine(c));
+        }
+
+        while (tally > 0)
+        {
             yield return null;
+        }
+
+        IEnumerator RunCoroutine(IEnumerator c)
+        {
+            tally++;
+            yield return StartCoroutine(c);
+            tally--;
         }
     }
 }

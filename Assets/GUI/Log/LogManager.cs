@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -57,7 +56,7 @@ public class LogManager : IButtonManager
     public void CreateMessage(Character character, string message)
     {
         counter++;
-        if (counter > maxMessages)
+        if (counter > maxMessages || text.text.Length > 16000)
         {
             ClearLog();
         }
@@ -83,23 +82,15 @@ public class LogManager : IButtonManager
 
         stringBuilder.Append($"{message}\n");
 
-        // Лимит вертексов
-        try
-        {
-            text.text += stringBuilder.ToString();
-        }
-        catch
-        {
-            ClearLog();
-            text.text += stringBuilder.ToString();
-        }
+        text.text += stringBuilder.ToString();
 
         _currentCharacter = character;
     }
 
     public void ClearLog()
     {
-        text.text = "";
+        counter = 0;
+        text.text = "\n";
     }
 
     public void SetSliderToEnd()
@@ -127,19 +118,26 @@ public class LogManager : IButtonManager
         int restoreCount = 100;
         int startIndex = targetIndex - restoreCount > 0 ? targetIndex - restoreCount : 0;
 
-        for (int i = startIndex; i < targetIndex; i++)
+        try
         {
-            var command = block.commandList[i];
-            if (command.GetType() == typeof(FungusSayDialog))
+            for (int i = startIndex; i < targetIndex; i++)
             {
-                FungusSayDialog say = (FungusSayDialog)command;
-                bool parsed = Enum.TryParse<Character>(say.speaker, true, out Character character);
-                Character character_input = parsed ? character : Character.None;
+                var command = block.commandList[i];
+                if (command.GetType() == typeof(FungusSayDialog))
+                {
+                    FungusSayDialog say = (FungusSayDialog)command;
+                    bool parsed = Enum.TryParse<Character>(say.speaker, true, out Character character);
+                    Character character_input = parsed ? character : Character.None;
 
-                string story_text = say.storyText;
+                    string story_text = say.storyText;
 
-                CreateMessage(character_input, story_text);
+                    CreateMessage(character_input, story_text);
+                }
             }
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e.Message);
         }
     }
 }

@@ -19,13 +19,13 @@ namespace Fungus
         private int Emotion;
 
         [SerializeField]
-        private Vector3 newPosition = new Vector3(-1, 0, 0);
+        private float PositionX = -1;
 
         [SerializeField]
-        private float AppearSpeed = 3f;
+        private float AppearTime = 0.3f;
 
         [SerializeField]
-        private float DisappearSpeed = 5f;
+        private float DisappearTime = 0.3f;
 
         [SerializeField]
         private float MovementTime = 0.1f;
@@ -33,13 +33,8 @@ namespace Fungus
         [SerializeField]
         private bool WaitForFinished = false;
 
-        [SerializeField]
-        private bool StopPrev = true;
-
         public override void OnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
-
             StartCoroutine(IOnEnter());
         }
 
@@ -48,7 +43,12 @@ namespace Fungus
             var parsed = Enum.TryParse<global::Character>(CharacterName, true, out global::Character character);
             var character_input = parsed ? character : global::Character.None;
 
-            yield return StartCoroutine(SpritesSwapper.instance.SwapSprites(character_input, Pose, Emotion, newPosition, DisappearSpeed, AppearSpeed, MovementTime, Typewriter.Instance.SkipIsActive, WaitForFinished, StopPrev));
+            bool skip = Typewriter.Instance.SkipIsActive;
+            Vector3 position = new Vector3(PositionX, 0, 0);
+
+            yield return StartCoroutine(
+                SpritesSwapper.instance.SwapSprites(
+                    character_input, Pose, Emotion, position, DisappearTime, AppearTime, MovementTime, skip, WaitForFinished));
 
             Continue();
         }

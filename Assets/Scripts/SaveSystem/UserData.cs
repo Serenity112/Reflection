@@ -10,7 +10,7 @@ public struct SaveData
 {
     public SaveData(int saveNum)
     {
-        SpriteData = new SpriteData[4];
+        SpriteData = new();
         Background = null;
 
         CurrentCommandIndex = 0;
@@ -25,7 +25,7 @@ public struct SaveData
         SavedChoices = new();
     }
 
-    public SpriteData[] SpriteData;
+    public Dictionary<Character, SpriteData> SpriteData;
     public string Background;
     public int CurrentCommandIndex;
     public string CurrentBlock;
@@ -44,21 +44,9 @@ public class UserData : MonoBehaviour
 {
     public static UserData instance = null;
 
-    // Indexes
-    public int CurrentCommandIndex { get; set; }
-
-    public string CurrentBlock { get; set; } = null;
-
-    // Bg
-    public string CurrentBG { get; set; } = null;
-
-    // Events
-
     private static string SaveFileName;
     private static string SaveFilesFolder;
     private static string SaveFilesData;
-
-    private float speed = 5f;
 
     private void Awake()
     {
@@ -79,30 +67,30 @@ public class UserData : MonoBehaviour
     private void Start()
     {
         // Сейв, заданный в главном меню
-        if (StaticVariables.StartingLoadSaveFile == -1)
+        if (SaveManagerStatic.StartingLoadSaveFile == -1)
         {
             StartCoroutine(ILoadGameFromStart());
         }
         else
         {
-            StartCoroutine(ILoadGameBySaveNum(StaticVariables.StartingLoadSaveFile));
+            StartCoroutine(ILoadGameBySaveNum(SaveManagerStatic.StartingLoadSaveFile));
         }
     }
 
-    public void SavePlayer(int saveNum)
+    public void SavePlayer(int actualSaveNum)
     {
-        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
         SaveData newSave = new SaveData(actualSaveNum);
+        Flowchart flowchart = PanelsManager.instance.flowchart;
 
         // Фоны
-        newSave.Background = instance.CurrentBG;
-        newSave.CurrentBlock = instance.CurrentBlock;
+        newSave.Background = BackgroundManager.instance.CurrentBG;
+        newSave.CurrentBlock = flowchart.ActiveBlock.BlockName;
 
         // Команды        
-        newSave.CurrentCommandIndex = PanelsManager.instance.flowchart.FindBlock(CurrentBlock).GetCurrentIndex();
+        newSave.CurrentCommandIndex = PanelsManager.instance.flowchart.ActiveBlock.GetCurrentIndex();
 
         //Спрайты
-        newSave.SpriteData = SpriteController.instance.GameSpriteData;
+        newSave.SpriteData = SpriteController.instance.CharacterSpriteData;
 
         // Музыка
         newSave.AudioData = AudioManager.instance.GetSaveData();
@@ -125,10 +113,10 @@ public class UserData : MonoBehaviour
 
     private IEnumerator ILoadGameFromStart()
     {
-        string _startingDayName = "Dream";
+        string _startingDayName = "d1_1";
         Flowchart flowchart = PanelsManager.instance.flowchart;
         Block targetBlock = flowchart.FindBlock(_startingDayName);
-        flowchart.ExecuteBlock(targetBlock);
+        flowchart.ExecuteBlock(targetBlock, 0);
         yield return null;
     }
 
@@ -144,6 +132,7 @@ public class UserData : MonoBehaviour
         yield return StartCoroutine(FadeManager.FadeObject(PanelsManager.instance.BlackPanel, false, 3f));
     }
 
+    // Фоновая загрузка игры
     public IEnumerator ILoadGame(int actualSaveNum)
     {
         string fileName = $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3";
@@ -152,21 +141,22 @@ public class UserData : MonoBehaviour
 
 
         // Block + index
-        if (CurrentBlock != null)
+        string currBlockName = flowchart.ActiveBlock?.BlockName;
+        if (currBlockName != null)
         {
-            Block activeBlock = flowchart.FindBlock(CurrentBlock);
+            Block activeBlock = flowchart.FindBlock(currBlockName);
             if (activeBlock != null)
             {
                 activeBlock.Stop();
             }
         }
 
-        CurrentBlock = newSave.CurrentBlock;
-        CurrentCommandIndex = newSave.CurrentCommandIndex;
-        Block targetBlock = flowchart.FindBlock(CurrentBlock);
+        currBlockName = newSave.CurrentBlock;
+        int commandIndex = newSave.CurrentCommandIndex;
+        Block targetBlock = flowchart.FindBlock(currBlockName);
 
         // Backgrounds + special event
-        CurrentBG = newSave.Background;
+        BackgroundManager.instance.CurrentBG = newSave.Background;
 
         IEnumerator i_bg_unload = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
         {
@@ -177,7 +167,7 @@ public class UserData : MonoBehaviour
 
         IEnumerator i_bg_load = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
         {
-            BackgroundManager.instance.ILoadBackground(CurrentBG),
+            BackgroundManager.instance.ILoadBackground(BackgroundManager.instance.CurrentBG),
             SpecialEventManager.instance.ILoadCurrentEventByState(newSave.specialEvent, newSave.specialEventData)
         });
 
@@ -197,7 +187,7 @@ public class UserData : MonoBehaviour
 
         IEnumerator i_sprite_load = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
-            SpriteController.instance.LoadSprites(newSave.SpriteData),
+            SpriteController.instance.IUploadSprites(newSave.SpriteData),
         });
 
         IEnumerator i_sprite = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
@@ -217,7 +207,7 @@ public class UserData : MonoBehaviour
 
         // Лог
         LogManager.instance.ClearLog();
-        LogManager.instance.RestoreLogByBlock(targetBlock, CurrentCommandIndex);
+        LogManager.instance.RestoreLogByBlock(targetBlock, commandIndex);
 
 
         // Прочитанные диалоги
@@ -229,6 +219,8 @@ public class UserData : MonoBehaviour
         ChoiceManager.instance.UploadChoices(newSave.SavedChoices);
         ChoiceManager.instance.HideChoiceBox();
 
+        // Другие менеджеры
+        SpriteExpand.instance.ResetManager();
 
         // Весь процесс загрузки
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
@@ -239,7 +231,6 @@ public class UserData : MonoBehaviour
         }));
 
 
-        flowchart.ExecuteBlock(targetBlock, CurrentCommandIndex);
-        CurrentCommandIndex--;
+        flowchart.ExecuteBlock(targetBlock, commandIndex);
     }
 }

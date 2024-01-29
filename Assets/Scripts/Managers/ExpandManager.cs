@@ -7,18 +7,9 @@ public class ExpandManager : MonoBehaviour
 {
     public static ExpandManager instance = null;
 
-    void Start()
+    void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
-
-        DontDestroyOnLoad(gameObject);
+        instance = this;
     }
 
     public static IEnumerator ExpandObject(GameObject obj, float fraction, float smoothTime)

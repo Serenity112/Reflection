@@ -18,7 +18,7 @@ public class SaveBackButton : IExpandableButton
             GetComponent<Button>().interactable &&
             StaticVariables.IN_SAVE_MENU &&
             !StaticVariables.GAME_IS_LOADING &&
-            !StaticVariables.OverlayPanelActive &&
+            !SaveManagerStatic.OverlayPanelActive &&
             !StaticVariables.OVERLAY_ACTIVE)
         {
             OnClick();

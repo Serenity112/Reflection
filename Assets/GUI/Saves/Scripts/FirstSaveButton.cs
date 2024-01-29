@@ -1,26 +1,61 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class FirstSaveButton : MonoBehaviour
+public class FirstSaveButton : ISaveSystemButton
 {
     [SerializeField] private GameObject File;
+
+    public GameObject CassetteImg;
     private FirstSaveAnimator firstSaveAnimator;
-    private SaveFileFields saveFileFields;
 
-    private void Start()
+    public override void Awake()
     {
+        base.Awake();
+
+        CassetteImg = transform.GetChild(0).gameObject;
         firstSaveAnimator = File.GetComponent<FirstSaveAnimator>();
-        saveFileFields = File.GetComponent<SaveFileFields>();
+        GetComponent<Button>().onClick.AddListener(delegate
+        {
+            StartCoroutine(IClick());
+        });
     }
 
-    private void OnMouseEnter()
+    public override void EnterAction()
     {
-        saveFileFields.OnMouseEnter = true;
-        firstSaveAnimator.AppearCassette();
+        StartCoroutine(firstSaveAnimator.IAppearCassette());
     }
 
-    private void OnMouseExit()
+    public override void ExitAction()
     {
-        saveFileFields.OnMouseEnter = false;
-        firstSaveAnimator.DisappearCassette();
+        if (!SaveManagerStatic.UIsystemDown)
+        {
+            StartCoroutine(firstSaveAnimator.IDisappearCassette());
+        }
+    }
+
+    public override void ResetButtonState()
+    {
+        base.ResetButtonState();
+
+        GetComponent<Button>().interactable = true;
+        animator.Play("FC_Anim_Idle");
+        animator.Play("FC_Fade_Idle");
+    }
+
+    public IEnumerator IClick()
+    {
+        if (!SaveManagerStatic.UIsystemDown)
+        {
+            SaveManagerStatic.UIsystemDown = true;
+            yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
+            yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
+
+            animator.Play("FC_Anim_Rotate");
+            GetComponent<Button>().interactable = false;
+            firstSaveAnimator.FirstSaveIconClick();
+        }
+
+        yield return null;
     }
 }

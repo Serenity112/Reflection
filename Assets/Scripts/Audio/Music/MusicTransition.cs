@@ -15,15 +15,13 @@ namespace Fungus
         private string MusicNew;
 
         [SerializeField]
-        private float Time = 2f;
+        private float Volume = 1f;
 
         [SerializeField]
-        private float Volume = 1f;
+        private float Time = 2f;
 
         public override void OnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
-
             StartCoroutine(IOnEnter());
         }
 

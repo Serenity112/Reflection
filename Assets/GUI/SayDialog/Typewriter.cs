@@ -1,12 +1,25 @@
+using Fungus;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public struct TypewriterSaveData
+{
+    public TypewriterSaveData(int i)
+    {
+        SavedDialogs = new();
+    }
+
+    public Dictionary<string, int> SavedDialogs;
+}
+
 public class Typewriter : MonoBehaviour
 {
     public static Typewriter Instance;
+
+    private Flowchart _flowchart;
 
     [SerializeField] private GameObject StoryText;
     [SerializeField] private SkipButton skipButton;
@@ -23,8 +36,6 @@ public class Typewriter : MonoBehaviour
     // Флаг скорости для опции "бесконечно" в настройках
     private bool instantSpeed = false;
 
-    private string DialogSavesFile;
-
     private Dictionary<string, int> DialogReadSaves = new Dictionary<string, int>();
 
     // Зависимый скип от загрузок, паузы
@@ -32,8 +43,6 @@ public class Typewriter : MonoBehaviour
 
     //Независимый скип, по сути просто индикато нажатия Tab
     public bool SkipIsActive { get; private set; } = false;
-
-    private bool _POST_SKIP = false;
 
     // Клик игровой кнопки / Enter / Space
     private bool _CLICK_ENABLE = false;
@@ -50,8 +59,6 @@ public class Typewriter : MonoBehaviour
 
         _text = StoryText.GetComponent<Text>();
 
-        DialogSavesFile = SaveSystemUtils.DialogSavesFile;
-
         ResetTypewritterFlags();
     }
 
@@ -63,6 +70,8 @@ public class Typewriter : MonoBehaviour
 
     private void Start()
     {
+        _flowchart = PanelsManager.instance.flowchart;
+
         LoadDialogReadSaves();
     }
 
@@ -138,22 +147,22 @@ public class Typewriter : MonoBehaviour
 
         if (tabSkip || skipButtonClicked)
         {
-            if (GetDenyStatus())
+            if (!GetDenyStatus())
+            {
+                _SKIP_ENABLE = true;
+            }
+            else
             {
                 _SKIP_ENABLE = false;
                 // Если был скип и случилась, например, пауза - отменяем скип кнопкой
                 skipButton.DisableSkipState();
                 skipButton.DisableSkipAnimation();
             }
-            else
-            {
-                if (!SkipIsActive)
-                {
-                    SkipIsActive = true;
-                    OnSkipStart();
-                }
 
-                _SKIP_ENABLE = true;
+            if (!SkipIsActive)
+            {
+                SkipIsActive = true;
+                OnSkipStart();
             }
         }
         else
@@ -216,7 +225,7 @@ public class Typewriter : MonoBehaviour
     {
         if (DialogReadSaves.ContainsKey(block))
         {
-            if (index <= DialogReadSaves[block])
+            if (index < DialogReadSaves[block])
             {
                 return true;
             }
@@ -228,7 +237,7 @@ public class Typewriter : MonoBehaviour
         }
         else
         {
-            DialogReadSaves.Add(block, 0);
+            DialogReadSaves.Add(block, index);
             return false;
         }
     }
@@ -252,7 +261,7 @@ public class Typewriter : MonoBehaviour
     {
         _text.text = prevText + " ";
 
-        //LogManager.instance.NewMessageExtended(extendedText, speaker);
+        LogManager.instance.CreateMessage(speaker, extendedText);
 
         if (_say != null)
         {
@@ -273,22 +282,21 @@ public class Typewriter : MonoBehaviour
     // Обобщение вывода текста
     private IEnumerator ISayGeneric(string textToWrite, Character speaker)
     {
-        SpriteExpand.instance.SetExpanding(speaker, SkipIsActive || _POST_SKIP);
+        SpriteExpand.instance.SetExpanding(speaker, SkipIsActive);
 
         NameChanger.instance.SetName(speaker);
 
-        bool allow_skip_flag = (SettingsConfig.skipEverything ||
-            CalculateWasRead(UserData.instance.CurrentBlock, UserData.instance.CurrentCommandIndex));
-
         // Typewriting
+        bool was_read = CalculateWasRead(_flowchart.ActiveBlock.BlockName, _flowchart.ActiveBlock.GetCurrentIndex());
+        bool allow_skip_flag = (SettingsConfig.skipEverything || was_read);
+
         float timeElapsed = 0f;
         bool interrupt_flag = false;
 
         yield return null;
 
-        if (_SKIP_ENABLE)
+        if (_SKIP_ENABLE && allow_skip_flag)
         {
-            _POST_SKIP = true;
             auto_complete_next = true;
             _text.text = textToWrite;
             yield return null;
@@ -296,11 +304,8 @@ public class Typewriter : MonoBehaviour
         }
         else if (auto_complete_next || instantSpeed)
         {
-            if (_POST_SKIP)
-            {
-                _POST_SKIP = false;
-                OnPostSkipEnd();
-            }
+            OnPostSkipEnd();
+
             auto_complete_next = false;
             _text.text = textToWrite;
             yield return null;
@@ -315,19 +320,16 @@ public class Typewriter : MonoBehaviour
 
                 while (timeElapsed < defaultDelay)
                 {
-                    if (allow_skip_flag)
+                    if (_SKIP_ENABLE && allow_skip_flag)
                     {
-                        if (_SKIP_ENABLE)
-                        {
-                            auto_complete_next = true;
-                            interrupt_flag = true;
-                            break;
-                        }
-                        if (_CLICK_ENABLE)
-                        {
-                            interrupt_flag = true;
-                            break;
-                        }
+                        auto_complete_next = true;
+                        interrupt_flag = true;
+                        break;
+                    }
+                    if (_CLICK_ENABLE)
+                    {
+                        interrupt_flag = true;
+                        break;
                     }
 
                     timeElapsed += Time.deltaTime;
@@ -349,9 +351,9 @@ public class Typewriter : MonoBehaviour
         // Ожидание ввода Space / Tab / Нажатия игровой кнопки
         while (true)
         {
-            if (_SKIP_ENABLE || _CLICK_ENABLE)
+            if ((_SKIP_ENABLE && allow_skip_flag) || _CLICK_ENABLE)
             {
-                if (_SKIP_ENABLE)
+                if (_SKIP_ENABLE && allow_skip_flag)
                 {
                     auto_complete_next = true;
                 }
@@ -369,19 +371,21 @@ public class Typewriter : MonoBehaviour
 
     public void SaveDialogReadSaves()
     {
-        ES3.Save<Dictionary<string, int>>(DialogSavesFile, DialogReadSaves, $"{DialogSavesFile}.es3");
+        ES3.Save<TypewriterSaveData>("ReadDialogs",
+            new TypewriterSaveData(0) { SavedDialogs = DialogReadSaves },
+            $"{SaveSystemUtils.SaveFilesData}");
     }
 
     public void LoadDialogReadSaves()
     {
         try
         {
-            if (ES3.KeyExists(DialogSavesFile, $"{DialogSavesFile}.es3"))
+            if (ES3.KeyExists("ReadDialogs", $"{SaveSystemUtils.SaveFilesData}"))
             {
-                var loaded = ES3.Load<Dictionary<string, int>>(DialogSavesFile, $"{DialogSavesFile}.es3");
-                if (loaded != null)
+                TypewriterSaveData loaded = ES3.Load<TypewriterSaveData>("ReadDialogs", $"{SaveSystemUtils.SaveFilesData}");
+                if (loaded.SavedDialogs != null)
                 {
-                    DialogReadSaves = loaded;
+                    DialogReadSaves = loaded.SavedDialogs;
                 }
             }
         }

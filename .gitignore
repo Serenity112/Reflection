@@ -81,6 +81,7 @@ ExportedObj/
 *.mov
 *.bin
 *.settings
+*.csv
 
 # Unity3D generated meta files
 *.pidb.meta

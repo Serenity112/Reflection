@@ -3,14 +3,11 @@ using UnityEngine;
 
 public static class SaveSystemUtils
 {
-    public static string GlobalSettings = "GlobalSettings.es3";
-    public static string SaveFilesData = "SaveFilesData.es3";
-
-    public static string SaveFileName = "SaveFile";
-    public static string ScreenshotsFolder = "ScreenShots";
-    public static string SaveFilesFolder = "SaveFiles";
-
-    public static string DialogSavesFile = "DialogSaves";
+    public static string GlobalSettings { get; set; } = "GlobalSettings.es3";
+    public static string SaveFilesData { get; set; } = "SaveFilesData.es3";
+    public static string SaveFileName { get; set; } = "SaveFile";
+    public static string ScreenshotsFolder { get; set; } = "ScreenShots";
+    public static string SaveFilesFolder { get; set; } = "SaveFiles";
 
     public static void InitialFilesCheck()
     {

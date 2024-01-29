@@ -13,12 +13,9 @@ namespace Fungus
 
         public override void OnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
-
             var parsed = Enum.TryParse<global::Character>(PackageName, true, out global::Character character);
 
-            Debug.Log(parsed + " " + character.ToString());
-
+            // Нет yield return, т.к. должно происходить в фоне
             StartCoroutine(PackageConntector.instance.IConnectPackageGroupPreloaded(parsed ? character : global::Character.None));
 
             Continue();

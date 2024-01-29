@@ -6,6 +6,7 @@ public class NameChanger : MonoBehaviour
 {
     public static NameChanger instance = null;
 
+    // Заменить, когда будет локализация
     public Dictionary<Character, string> charactersLocalization = new()
     {
         {Character.Sergey, "Сергей"},
@@ -19,22 +20,15 @@ public class NameChanger : MonoBehaviour
         {Character.Raketnikov, "Ракетников"},
         {Character.Tumanov, "Туманов"},
 
-        {Character.Neznakomka, "Незнакомка"},
         {Character.Stranger, "Незнакомка"},
         {Character.Speakers, "Выступающие"},
-        {Character.Students, "Студенты"},
+        {Character.Student, "Студент"},
+        {Character.Zriteli, "Зрители"},
     };
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
     }
 
     public void SetName(Character name)

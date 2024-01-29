@@ -97,7 +97,7 @@ namespace Fungus
                     {
                         StopParentBlock();
                     }
-                    StartCoroutine(targetBlock.Execute(index, onComplete));
+                    StartCoroutine(targetBlock.Execute(index));
                 }
                 else
                 {
@@ -106,7 +106,7 @@ namespace Fungus
                         StopParentBlock();
                     }
                     // Execute block in another Flowchart
-                    targetFlowchart.ExecuteBlock(targetBlock, index, onComplete);
+                    targetFlowchart.ExecuteBlock(targetBlock, index);
                 }
             }
 

@@ -110,7 +110,7 @@ public class SkipButton : IExpandableButton
                 EnableSkipAnimation();
                 break;
             case SkipButtonState.SkipOn:
-                if (!(Typewriter.Instance.SkipIsActive))
+                if (!(Input.GetKey(KeyCode.LeftControl)))
                 {
                     DisableSkipState();
                     DisableSkipAnimation();

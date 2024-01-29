@@ -12,12 +12,10 @@ namespace Fungus
         private string SoundName;
 
         [SerializeField]
-        private float Volume;
+        private float Volume = 1f;
 
         public override void OnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
-
             StartCoroutine(IOnEnter());
         }
 

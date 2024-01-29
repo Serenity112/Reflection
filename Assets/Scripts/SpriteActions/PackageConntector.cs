@@ -15,33 +15,26 @@ public class PackageConntector : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
 
         handlers = new Dictionary<string, AsyncOperationHandle<Sprite>>();
         packageSizes = new Dictionary<Character, int>()
         {
             { Character.Pasha, 3 },
             { Character.Katya, 3 },
+            { Character.Nastya, 5 },
+            { Character.Tanya, 3 },
+
             { Character.Tumanov, 2 },
+            { Character.Raketnikov, 2 },
         };
     }
 
     public IEnumerator IConnectPackageGroupPreloaded(Character characterGroup)
     {
-        GameSpriteObject? sprite_obj = SpriteController.instance.GetAvaliableSprite(characterGroup);
-        if (sprite_obj == null)
-        {
-            yield break;
-        }
-        GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
-        SpriteController.instance.SaveSpriteDataPreloaded(sprite.num, true);
+        SpriteController.instance.GetAvaliableSprite(characterGroup);
+
+        SpriteController.instance.SaveSpriteDataPreloaded(characterGroup, true);
 
         yield return StartCoroutine(IConnectPackageGroup(characterGroup));
     }

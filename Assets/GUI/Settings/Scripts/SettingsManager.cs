@@ -25,7 +25,7 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     private Camera PanelsCamera;
 
     private float speed = 5f;
-    [SerializeField]
+
     private GameObject SettingsPanel;
 
     private void Awake()

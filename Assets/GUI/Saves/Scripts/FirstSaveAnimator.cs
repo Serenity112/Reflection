@@ -1,121 +1,102 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class FirstSaveAnimator : MonoBehaviour
 {
-    [SerializeField] private GameObject CassetteImg;
-    [SerializeField] private Button ButtonUnsaved;
-    [SerializeField] private Animator cassetteAnimator;
+    [SerializeField] private FirstSaveButton firstSaveButton;
 
-    private int saveNum;
     private GameObject screenshot;
-    private GameObject SavedPanel;
-    private GameObject UnSavedPanel;
+    private SaveFileFields saveFileFields;
+    private int localSaveNum;
+    private float speed = 4f;
 
     private IEnumerator CassetteFadeIn;
     private IEnumerator CassetteFadeOut;
 
-    private SaveFileFields saveFileFields;
-
-    private void Start()
+    private void Awake()
     {
         saveFileFields = GetComponent<SaveFileFields>();
-        saveNum = saveFileFields.saveNum;
-        screenshot = saveFileFields.screenshot;
-        SavedPanel = saveFileFields.SavedPanel;
-        UnSavedPanel = saveFileFields.UnSavedPanel;
 
-        ButtonUnsaved.interactable = true;
+        localSaveNum = saveFileFields.saveNum;
+        screenshot = saveFileFields.Screenshot;
     }
 
-    public void AppearCassette()
+    public void ResetPanel()
     {
-        if (ButtonUnsaved.interactable && !StaticVariables.OverlayPanelActive)
-        {
-            if (CassetteFadeOut != null)
-                StopCoroutine(CassetteFadeOut);
-
-            CassetteFadeIn = FadeManager.FadeObject(CassetteImg, true, SaveManager.instance.speed);
-            StartCoroutine(CassetteFadeIn);
-        }
-    }
-
-    public void DisappearCassette()
-    {
-        if (ButtonUnsaved.interactable && !StaticVariables.OverlayPanelActive)
-        {
-            if (CassetteFadeIn != null)
-                StopCoroutine(CassetteFadeIn);
-
-            CassetteFadeOut = FadeManager.FadeObject(CassetteImg, false, SaveManager.instance.speed);
-            StartCoroutine(CassetteFadeOut);
-        }
-    }
-
-    public void InstantHideCassette()
-    {
-        FadeManager.FadeObject(CassetteImg, false);
+        Awake();
+        firstSaveButton.ResetButtonState();
     }
 
     public void FirstSaveIconClick()
     {
-        if (!StaticVariables.UIsystemDown)
-        {
-            StartCoroutine(IFirstSaveIconClick());
-        }
+        StartCoroutine(IFirstSaveIconClick());
     }
 
-    IEnumerator IFirstSaveIconClick()
+    private IEnumerator IFirstSaveIconClick()
     {
         Resources.UnloadUnusedAssets();
 
-        StaticVariables.UIsystemDown = true;
-        ButtonUnsaved.interactable = false;
+        int actualSaveNum = SaveManager.instance.GetActualSaveNum(localSaveNum);
 
-        cassetteAnimator.Play("CasseteAnim");
-        Vector3 currScale = CassetteImg.transform.localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(CassetteImg, 0.9f, 0.05f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(CassetteImg, currScale, 0.05f));
+        // Время покрутиться
+        yield return new WaitForSeconds(0.3f);
 
-        // Дата и время
-        FadeManager.FadeObject(saveFileFields.datetime, false);
+        // Установка текущего времени
         string datetime = DateTime.Now.ToString("HH:mm dd/MM/yy");
-        SaveManager.instance.SaveDateTime(saveNum, datetime);
-        saveFileFields.datetime.GetComponent<Text>().text = datetime;
-        StartCoroutine(FadeManager.FadeObject(saveFileFields.datetime, true, SaveManager.instance.speed));
+        saveFileFields.Datetime.HideText();
+        saveFileFields.Datetime.SetText(datetime);
 
-        // Сам сейв
-        UserData.instance.SavePlayer(saveNum);
+        StartCoroutine(SaveManager.instance.SetScreenshot(localSaveNum, screenshot));
 
-        // Скриншот
-        StartCoroutine(SaveManager.instance.SetScreenshot(saveNum, screenshot));
+        // Включение панельки сейв/лоад
+        saveFileFields._SaveChoiseAnimator.ResetPanel();
+        FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, true);
 
-        DisappearCassette(); 
-        
-        yield return StartCoroutine(FadeManager.FadeObject(UnSavedPanel, false, SaveManager.instance.speed));
-
-        if (!saveFileFields.OnMouseEnter)
+        // Сейв
+        new Thread(() =>
         {
-            StartCoroutine(saveFileFields.OpenOverPanel());
-        }
+            SaveManager.instance.AddSaveData(actualSaveNum, datetime);
+            SaveManager.instance.SaveCurrentData();
+            UserData.instance.SavePlayer(actualSaveNum);
+        }).Start();
 
-        List<IEnumerator> enumerators_next = new List<IEnumerator>()
+
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
-            FadeManager.FadeToTargetAlpha(saveFileFields.NoImage, SaveManager.instance.frameAplhaOff, SaveManager.instance.speed),
-            FadeManager.FadeObject(screenshot, true, SaveManager.instance.speed),
-            FadeManager.FadeObject(SavedPanel, true, SaveManager.instance.speed),
-        };    
+            saveFileFields.Datetime.IShowText(),
+            FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, false, speed),
+            //FadeManager.FadeToTargetAlpha(saveFileFields.NoImage, SaveManager.instance.frameAplhaOff, speed),
+            FadeManager.FadeObject(screenshot, true, speed),
+        }));
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators_next));
+        firstSaveButton.ResetButtonState();
+        SaveManagerStatic.UIsystemDown = false;
+    }
 
-        InstantHideCassette();
+    public IEnumerator IAppearCassette()
+    {
+        if (CassetteFadeOut != null)
+            StopCoroutine(CassetteFadeOut);
 
-        saveFileFields.resetCassettePosition(CassetteImg);
+        CassetteFadeIn = FadeManager.FadeObject(firstSaveButton.CassetteImg, true, speed);
+        yield return StartCoroutine(CassetteFadeIn);
+    }
 
-        ButtonUnsaved.interactable = true;
-        StaticVariables.UIsystemDown = false;
+    public IEnumerator IDisappearCassette()
+    {
+        if (CassetteFadeIn != null)
+            StopCoroutine(CassetteFadeIn);
+
+        CassetteFadeOut = FadeManager.FadeObject(firstSaveButton.CassetteImg, false, speed);
+        yield return StartCoroutine(CassetteFadeOut);
+    }
+
+    public void DisappearCassetteInstant()
+    {
+        FadeManager.FadeObject(firstSaveButton.CassetteImg, false);
     }
 }

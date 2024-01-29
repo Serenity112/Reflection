@@ -14,7 +14,7 @@ public class MainMenuLoadButton : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        if (!StaticVariables.OverlayPanelActive)
+        if (!SaveManagerStatic.OverlayPanelActive)
         {
             DeleteCross.GetComponent<DeleteCrossButton>().AppearCross();
             StartCoroutine(mainMenuLoad.AppearCassette());
@@ -24,7 +24,7 @@ public class MainMenuLoadButton : MonoBehaviour
 
     private void OnMouseExit()
     {
-        if (!StaticVariables.OverlayPanelActive)
+        if (!SaveManagerStatic.OverlayPanelActive)
         {
             DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
             StartCoroutine(mainMenuLoad.DisappearCassette());

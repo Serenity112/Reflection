@@ -88,24 +88,26 @@ namespace Fungus
 
         protected StringSubstituter stringSubstituer;
 
+        public Block ActiveBlock = null;
+
 #if UNITY_EDITOR
         public bool SelectedCommandsStale { get; set; }
 #endif
 
-        #if UNITY_5_4_OR_NEWER
-        #else
+#if UNITY_5_4_OR_NEWER
+#else
         protected virtual void OnLevelWasLoaded(int level) 
         {
             LevelWasLoaded();
         }
-        #endif
+#endif
 
         protected virtual void LevelWasLoaded()
         {
             // Reset the flag for checking for an event system as there may not be one in the newly loaded scene.
             eventSystemPresent = false;
         }
-            
+
         protected virtual void Start()
         {
             CheckEventSystem();
@@ -119,7 +121,7 @@ namespace Fungus
             {
                 return;
             }
-            
+
             EventSystem eventSystem = GameObject.FindObjectOfType<EventSystem>();
             if (eventSystem == null)
             {
@@ -131,7 +133,7 @@ namespace Fungus
                     go.name = "EventSystem";
                 }
             }
-            
+
             eventSystemPresent = true;
         }
 
@@ -146,27 +148,27 @@ namespace Fungus
             {
                 cachedFlowcharts.Add(this);
                 //TODO these pairs could be replaced by something static that manages all active flowcharts
-                #if UNITY_5_4_OR_NEWER
+#if UNITY_5_4_OR_NEWER
                 UnityEngine.SceneManagement.SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
-                #endif
+#endif
             }
 
             CheckItemIds();
             CleanupComponents();
             UpdateVersion();
 
-            StringSubstituter.RegisterHandler(this);   
+            StringSubstituter.RegisterHandler(this);
         }
 
         protected virtual void OnDisable()
         {
             cachedFlowcharts.Remove(this);
 
-            #if UNITY_5_4_OR_NEWER
+#if UNITY_5_4_OR_NEWER
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= SceneManager_activeSceneChanged;
-            #endif
+#endif
 
-            StringSubstituter.UnregisterHandler(this);   
+            StringSubstituter.UnregisterHandler(this);
         }
 
         protected virtual void UpdateVersion()
@@ -207,7 +209,7 @@ namespace Fungus
                 }
                 usedIds.Add(block.ItemId);
             }
-            
+
             var commands = GetComponents<Command>();
             for (int i = 0; i < commands.Length; i++)
             {
@@ -245,7 +247,7 @@ namespace Fungus
                     DestroyImmediate(variable);
                 }
             }
-            
+
             var blocks = GetComponents<Block>();
             var commands = GetComponents<Command>();
             for (int i = 0; i < commands.Length; i++)
@@ -266,7 +268,7 @@ namespace Fungus
                     DestroyImmediate(command);
                 }
             }
-            
+
             var eventHandlers = GetComponents<EventHandler>();
             for (int i = 0; i < eventHandlers.Length; i++)
             {
@@ -349,19 +351,19 @@ namespace Fungus
         /// Current actively selected block in the Flowchart editor.
         /// </summary>
         public virtual Block SelectedBlock
-        { 
+        {
             get
             {
                 if (selectedBlocks == null || selectedBlocks.Count == 0)
                     return null;
 
                 return selectedBlocks[0];
-            } 
+            }
             set
             {
                 ClearSelectedBlocks();
                 AddSelectedBlock(value);
-            } 
+            }
         }
 
         public virtual List<Block> SelectedBlocks { get { return selectedBlocks; } set { selectedBlocks = value; } }
@@ -522,7 +524,7 @@ namespace Fungus
             {
                 return false;
             }
-        }        
+        }
 
         /// <summary>
         /// Execute a child block in the Flowchart.
@@ -533,16 +535,16 @@ namespace Fungus
 
             if (block == null)
             {
-                Debug.LogError("Block " + blockName  + " does not exist");
+                Debug.LogError("Block " + blockName + " does not exist");
                 return;
             }
 
             if (!ExecuteBlock(block))
             {
-                Debug.LogWarning("Block " + blockName  + " failed to execute");
+                Debug.LogWarning("Block " + blockName + " failed to execute");
             }
         }
-            
+
         /// <summary>
         /// Stops an executing Block in the Flowchart.
         /// </summary>
@@ -552,7 +554,7 @@ namespace Fungus
 
             if (block == null)
             {
-                Debug.LogError("Block " + blockName  + " does not exist");
+                Debug.LogError("Block " + blockName + " does not exist");
                 return;
             }
 
@@ -568,9 +570,8 @@ namespace Fungus
         /// This version provides extra options to control how the block is executed.
         /// Returns true if the Block started execution.            
         /// </summary>
-        public virtual bool ExecuteBlock(Block block, int commandIndex = 0, Action onComplete = null)
+        public virtual bool ExecuteBlock(Block block, int commandIndex = 0)
         {
-            
             if (block == null)
             {
                 Debug.LogError("Block must not be null");
@@ -580,7 +581,7 @@ namespace Fungus
             if (((Block)block).gameObject != gameObject)
             {
                 Debug.LogError("Block must belong to the same gameobject as this Flowchart");
-                return false;                
+                return false;
             }
 
             // Can't restart a running block, have to wait until it's idle again
@@ -590,8 +591,10 @@ namespace Fungus
                 return false;
             }
 
+            ActiveBlock = block;
+
             // Start executing the Block as a new coroutine
-            StartCoroutine(block.Execute(commandIndex, onComplete));
+            StartCoroutine(block.Execute(commandIndex));
 
             return true;
         }
@@ -635,11 +638,11 @@ namespace Fungus
             string baseKey = originalKey;
 
             // Only letters and digits allowed
-            char[] arr = baseKey.Where(c => (char.IsLetterOrDigit(c) || c == '_')).ToArray(); 
+            char[] arr = baseKey.Where(c => (char.IsLetterOrDigit(c) || c == '_')).ToArray();
             baseKey = new string(arr);
 
             // No leading digits allowed
-            baseKey = baseKey.TrimStart('0','1','2','3','4','5','6','7','8','9');
+            baseKey = baseKey.TrimStart('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
 
             // No empty keys allowed
             if (baseKey.Length == 0)
@@ -804,10 +807,10 @@ namespace Fungus
         /// <summary>
         /// Returns a list of variables matching the specified type.
         /// </summary>
-        public virtual List<T> GetVariables<T>() where T: Variable
+        public virtual List<T> GetVariables<T>() where T : Variable
         {
             var varsFound = new List<T>();
-            
+
             for (int i = 0; i < Variables.Count; i++)
             {
                 var currentVar = Variables[i];
@@ -900,7 +903,7 @@ namespace Fungus
         public virtual bool GetBooleanVariable(string key)
         {
             var variable = GetVariable<BooleanVariable>(key);
-            if(variable != null)
+            if (variable != null)
             {
                 return GetVariable<BooleanVariable>(key).Value;
             }
@@ -917,7 +920,7 @@ namespace Fungus
         public virtual void SetBooleanVariable(string key, bool value)
         {
             var variable = GetVariable<BooleanVariable>(key);
-            if(variable != null)
+            if (variable != null)
             {
                 variable.Value = value;
             }
@@ -1147,13 +1150,13 @@ namespace Fungus
 #endif
             }
         }
-        
+
         /// <summary>
         /// Clears the list of selected blocks.
         /// </summary>
         public virtual void ClearSelectedBlocks()
         {
-            if(selectedBlocks == null)
+            if (selectedBlocks == null)
             {
                 selectedBlocks = new List<Block>();
             }
@@ -1162,7 +1165,7 @@ namespace Fungus
             {
                 var item = selectedBlocks[i];
 
-                if(item != null)
+                if (item != null)
                 {
                     item.IsSelected = false;
                 }
@@ -1209,7 +1212,7 @@ namespace Fungus
         {
             for (int i = 0; i < selectedBlocks.Count; i++)
             {
-                if(selectedBlocks[i] != null)
+                if (selectedBlocks[i] != null)
                 {
                     selectedBlocks[i].IsSelected = true;
                 }

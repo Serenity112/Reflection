@@ -15,9 +15,9 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
+            
 
-            yield return new WaitForSeconds(2.5f);
+            //yield return new WaitForSeconds(2.5f);
 
             yield return StartCoroutine(PanelsManager.instance.EnableGuiOnStart(false));
 

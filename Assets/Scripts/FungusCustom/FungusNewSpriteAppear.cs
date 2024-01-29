@@ -19,21 +19,16 @@ namespace Fungus
         private int Emotion;
 
         [SerializeField]
-        private Vector3 Position = Vector3.zero;
+        private float PositionX = 0;
 
         [SerializeField]
-        private float AppearSpeed = 3f;
+        private float AppearTime = 0.5f;
 
         [SerializeField]
         private bool WaitForFinished = true;
 
-        [SerializeField]
-        private bool StopPrev = true;
-
         public override void OnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
-
             StartCoroutine(IOnEnter());
         }
 
@@ -41,8 +36,12 @@ namespace Fungus
         {
             var parsed = Enum.TryParse<global::Character>(CharacterName, true, out global::Character character);
             var character_input = parsed ? character : global::Character.None;
+            bool skip = Typewriter.Instance.SkipIsActive;
+            Vector3 position = new Vector3(PositionX, 0, 0);
 
-            yield return StartCoroutine(SpriteApearer.instance.SpriteAppear(character_input, Pose, Emotion, Position, AppearSpeed, Typewriter.Instance.SkipIsActive, WaitForFinished, StopPrev));
+            yield return StartCoroutine(
+                SpriteApearer.instance.SpriteAppear(
+                    character_input, Pose, Emotion, position, AppearTime, skip, WaitForFinished));
 
             Continue();
         }
@@ -51,6 +50,5 @@ namespace Fungus
         {
             return new Color32(100, 200, 220, 255);
         }
-
     }
 }

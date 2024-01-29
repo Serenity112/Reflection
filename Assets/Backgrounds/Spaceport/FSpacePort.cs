@@ -9,7 +9,7 @@ namespace Fungus
     {
         public override void OnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
+            
 
             ((SpacePort)SpecialEventManager.instance.CurrentEventObject).RocketLaunch();
 

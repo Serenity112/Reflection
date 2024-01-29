@@ -70,6 +70,7 @@ public class PauseButton : IExpandableButton
         PauseButtonsManager.instance.PausePanel.GetComponent<CanvasGroup>().alpha = 0f;
         PauseButtonsManager.instance.PausePanel.SetActive(true);
         PauseButtonsManager.instance.ResetManager();
+        PauseButtonsManager.instance.UpdateDisplayMusic();
         PauseButtonsManager.instance.uIBlur.BeginBlur(_speed);
 
         yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()

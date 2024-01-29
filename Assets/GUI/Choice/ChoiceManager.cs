@@ -44,8 +44,20 @@ public class ChoiceManager : MonoBehaviour
             choiceButton.SetOptions(choices[i].Message, choices[i].BlockName, i);
             choiceButton.ResetButtonState();
         }
+        RecoverOldText();
 
         yield return StartCoroutine(OpenChoice());
+    }
+
+    private void RecoverOldText()
+    {
+        Block curr_block = PanelsManager.instance.flowchart.ActiveBlock;
+        var prev_command = curr_block.commandList[curr_block.GetCurrentIndex() - 1];
+        if (prev_command.GetType() == typeof(FungusSayDialog))
+        {
+            FungusSayDialog say = (FungusSayDialog)prev_command;
+            Typewriter.Instance.SetText(say.storyText);
+        }
     }
 
     public IEnumerator LoadChoise(string blockName, int number)
@@ -78,9 +90,6 @@ public class ChoiceManager : MonoBehaviour
 
     public IEnumerator CloseChoice()
     {
-        GameObject gameGui = PanelsManager.instance.GameGuiPanel;
-        GameObject gameButtons = PanelsManager.instance.GameButtons;
-
         yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
         {
             FadeManager.FadeOnly(ChoiceBox, false, _fadeSpeed),
@@ -104,22 +113,13 @@ public class ChoiceManager : MonoBehaviour
         return SavedChoices;
     }
 
-    private void LoadBlock(string blockName)
+    private void LoadBlock(string new_block)
     {
         Flowchart flowchart = PanelsManager.instance.flowchart;
-        string currentBlock = UserData.instance.CurrentBlock;
+        Block curr_block = flowchart.ActiveBlock;
+        curr_block.Stop();
 
-        if (currentBlock != null)
-        {
-            Block activeBlock = flowchart.FindBlock(currentBlock);
-            if (activeBlock != null)
-            {
-                activeBlock.Stop();
-            }
-        }
-
-        Block targetBlock =flowchart.FindBlock(blockName);
-        UserData.instance.CurrentBlock = blockName;
-        flowchart.ExecuteBlock(targetBlock, 0);
+        Block target_block = flowchart.FindBlock(new_block);
+        flowchart.ExecuteBlock(target_block, 0);
     }
 }

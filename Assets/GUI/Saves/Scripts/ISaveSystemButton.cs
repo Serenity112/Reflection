@@ -1,7 +1,7 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-// Кнопка, которая увеличивается при наведении на неё
-public abstract class IExpandableButton : IDraggableButton
+public abstract class ISaveSystemButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     protected float expandTime = 0.05f;
 
@@ -15,9 +15,8 @@ public abstract class IExpandableButton : IDraggableButton
     protected Vector3 parentOrigScale;
     protected Vector3 parentShrinkScale;
 
-    public override void Awake()
+    public virtual void Awake()
     {
-        base.Awake();
         animator = GetComponent<Animator>();
         buttonParent = transform.parent.gameObject;
         origScale = gameObject.GetComponent<RectTransform>().localScale;
@@ -26,11 +25,24 @@ public abstract class IExpandableButton : IDraggableButton
         parentShrinkScale = parentOrigScale * 0.85f;
     }
 
-    public override void ResetButtonState()
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        EnterAction();
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        ExitAction();
+    }
+
+    public abstract void EnterAction();
+
+    public abstract void ExitAction();
+
+    public virtual void ResetButtonState()
     {
         Awake();
         gameObject.GetComponent<RectTransform>().localScale = origScale;
         buttonParent.GetComponent<RectTransform>().localScale = parentOrigScale;
-        ResetFlags();
     }
 }

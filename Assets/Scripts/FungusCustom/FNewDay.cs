@@ -18,7 +18,7 @@ namespace Fungus
 
         IEnumerator IOnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
+            
 
             yield return StartCoroutine(DaysManager.instance.ILoadDay(dayIndex));
 

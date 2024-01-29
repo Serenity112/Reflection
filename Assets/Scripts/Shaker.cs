@@ -9,6 +9,8 @@ public class Shaker : MonoBehaviour
     private float _timer;
     private Vector3 _randomPos;
 
+    public bool ShakeOnEnable = false;
+
     [Header("Settings")]
     [Range(0f, 5f)]
     public float _time = 0.2f;
@@ -32,7 +34,10 @@ public class Shaker : MonoBehaviour
 
     private void OnEnable()
     {
-        //Shake();
+        if (ShakeOnEnable)
+        {
+            Shake();
+        }
     }
 
     public void Shake()

@@ -1,14 +1,21 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static AudioManager;
 
-public class AudioOstNames : MonoBehaviour
+public class AudioOstNames
 {
-    public static Dictionary<string, string> OstNames;
+    public static Dictionary<AudioLine, Dictionary<string, string>> OstNames;
 
-    private void Awake()
+    private static Dictionary<string, string> MusicNames;
+
+    private static Dictionary<string, string> AmbientNames;
+
+    private static Dictionary<string, string> SoundNames;
+
+    static AudioOstNames()
     {
-        OstNames = new()
+        MusicNames = new()
         {
             { "AdventureTendency", "King Of Eternity - Adventure tendency" },
             { "FictionalPlanets", "King Of Eternity - Fictional planets"},
@@ -18,17 +25,27 @@ public class AudioOstNames : MonoBehaviour
             { "NothingOddAboutIt", "No Time For Electric Bananas - Nothing odd about it"},
             { "FarewellToUnknown", "No Time For Electric Bananas - Farewell to unknown"},
         };
+
+        AmbientNames = new();
+        SoundNames = new();
+
+        OstNames = new()
+        {
+            { AudioLine.Music, MusicNames},
+            { AudioLine.Ambient, AmbientNames},
+            { AudioLine.Sound, SoundNames}
+        };
     }
 
     public static string GetDisplayableName(string key)
     {
-        if (OstNames.ContainsKey(key))
+        if (MusicNames.ContainsKey(key))
         {
-            return OstNames[key];
+            return MusicNames[key];
         }
         else
         {
-            return "%0ÿ»· 4%";
+            return "[»Ïˇ ÚÂÍ‡]";
         }
     }
 }

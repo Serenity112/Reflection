@@ -28,7 +28,7 @@ namespace Fungus
 
         IEnumerator IOnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
+            
 
             var parsed = Enum.TryParse<global::Character>(speaker, true, out global::Character character);
             var character_input = parsed ? character : global::Character.None;

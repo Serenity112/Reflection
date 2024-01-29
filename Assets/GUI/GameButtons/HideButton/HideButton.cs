@@ -197,7 +197,8 @@ public class HideButton : IExpandableButton
 
     public override void ResetButtonState()
     {
-        gameObject.transform.localScale = origScale;
+        base.ResetButtonState();
+
         StopInputWait();
         HideOverlayButton.SetActive(false);
     }

@@ -12,14 +12,14 @@ namespace Fungus
         private string AmbientName;
 
         [SerializeField]
-        private float Time = 1.5f;
+        private float Volume = 1f;
 
         [SerializeField]
-        private float Volume = 1f;
+        private float Time = 2f;
 
         public override void OnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
+            
 
             StartCoroutine(IOnEnter());
         }

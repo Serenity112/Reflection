@@ -47,8 +47,6 @@ namespace Fungus
 
         protected Command activeCommand;
 
-        protected Action lastOnCompleteAction;
-
         /// <summary>
         // Index of last command executed before the current one.
         // -1 indicates no previous command.
@@ -220,15 +218,13 @@ namespace Fungus
         /// </summary>
         /// <param name="commandIndex">Index of command to start execution at</param>
         /// <param name="onComplete">Delegate function to call when execution completes</param>
-        public virtual IEnumerator Execute(int commandIndex = 0, Action onComplete = null)
+        public virtual IEnumerator Execute(int commandIndex = 0)
         {
             if (executionState != ExecutionState.Idle)
             {
                 Debug.LogWarning(BlockName + " cannot be executed, it is already running.");
                 yield break;
             }
-
-            lastOnCompleteAction = onComplete;
 
             if (!executionInfoSet)
             {
@@ -353,12 +349,6 @@ namespace Fungus
             executionState = ExecutionState.Idle;
             activeCommand = null;
             BlockSignals.DoBlockEnd(this);
-
-            if (lastOnCompleteAction != null)
-            {
-                lastOnCompleteAction();
-            }
-            lastOnCompleteAction = null;
         }
 
         /// <summary>

@@ -58,7 +58,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = false;
         // Флаг того, что произошёл переход игра => меню. В этом случае нужна доп. анимация
-        if (StaticVariables.ifInMainMenu == false)
+        if (SaveManagerStatic.ifInMainMenu == false)
         {
             StartCoroutine(StartingGuiAnim());
         }
@@ -67,7 +67,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
             StartCoroutine(LoadLogo());
         }
 
-        StaticVariables.ifInMainMenu = true;
+        SaveManagerStatic.ifInMainMenu = true;
     }
     
     // Переход из основной игры в главное меню
@@ -285,7 +285,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
 
-        StaticVariables.StartingLoadSaveFile = actualSaveNum;
+        SaveManagerStatic.StartingLoadSaveFile = actualSaveNum;
 
         AsyncOperation asyncLoadLevel = SceneManager.LoadSceneAsync("Game", LoadSceneMode.Single);
 

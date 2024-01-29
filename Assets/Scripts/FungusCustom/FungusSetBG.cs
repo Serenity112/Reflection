@@ -24,8 +24,6 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
-
             yield return StartCoroutine(BackgroundManager.instance.ISwap(BackgroundName, FadeType, AppearSpeed, Delay));
 
             Continue();

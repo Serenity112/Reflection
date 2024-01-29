@@ -14,19 +14,15 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     public static bool GAME_LOADING { get; set; } = false;
 
     public GameObject PanelsCanvas;
-
     public GameObject GameCanvas;
-
     public GameObject OverlaysCanvas;
 
     public GameObject ActivePanels;
 
     public Camera GameCamera;
-
     public Camera PanelsCamera;
 
     public GameObject BlackPanel;
-
     public GameObject blackPanelPanels;
 
     public GameObject GameGuiPanel;
@@ -49,7 +45,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
         PanelsConfig.CurrentManager = this;
 
-        StaticVariables.ifInMainMenu = false;
+        SaveManagerStatic.ifInMainMenu = false;
 
         DisableGuiOnStart();
     }
@@ -148,7 +144,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         FadeManager.FadeObject(SaveGuiPanel, true);
         GameCamera.enabled = false;
         PanelsCamera.enabled = true;
-        SaveManager.instance.InitialReset();
+        SaveManager.instance.ResetManager();
         // Так как внутри InitialReset идёт чтение из файла, это ломает корутины почему-то...
         yield return new WaitForSeconds(0.1f);
 
@@ -198,7 +194,11 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator IQuitToMainMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, 5f));
+        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        {
+            FadeManager.FadeObject(BlackPanel, true, 3f),
+            AudioManager.instance.FadeOutCurrent(),
+        }));
 
         var asyncLoadLevel = SceneManager.LoadSceneAsync("MainMenu", LoadSceneMode.Single);
 

@@ -99,6 +99,8 @@ public class LogBack : IExpandableButton
 
     public override void ResetButtonState()
     {
+        base.ResetButtonState();
+
         StopExitListener();
         keyExitListener = IExitKey();
         StartCoroutine(keyExitListener);

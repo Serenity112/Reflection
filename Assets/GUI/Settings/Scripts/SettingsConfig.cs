@@ -121,10 +121,10 @@ public class SettingsConfig
         chosenOptions.Add(SettingsList.Resolution, new SettingsOptionsData(SettingsOptions.rAutomatic, 0));
 
         // Миксер - глобальные параметры (0 - 100) Изменяются вручную из настроек игры
-        chosenOptions.Add(SettingsList.masterVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
-        chosenOptions.Add(SettingsList.musicVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
-        chosenOptions.Add(SettingsList.soundVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
-        chosenOptions.Add(SettingsList.ambientVolume, new SettingsOptionsData(SettingsOptions.Volume, 100));
+        chosenOptions.Add(SettingsList.masterVolume, new SettingsOptionsData(SettingsOptions.Volume, 50));
+        chosenOptions.Add(SettingsList.musicVolume, new SettingsOptionsData(SettingsOptions.Volume, 50));
+        chosenOptions.Add(SettingsList.soundVolume, new SettingsOptionsData(SettingsOptions.Volume, 50));
+        chosenOptions.Add(SettingsList.ambientVolume, new SettingsOptionsData(SettingsOptions.Volume, 50));
 
         // Скорость текста
         chosenOptions.Add(SettingsList.TextSpeed, new SettingsOptionsData(SettingsOptions.Speed, 100));

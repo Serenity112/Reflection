@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DeleteCrossButton : MonoBehaviour
+public class DeleteCrossButton : IDraggableButton
 {
     private IEnumerator expandOnEnter;
     private IEnumerator shrinkOnExit;
@@ -15,71 +15,86 @@ public class DeleteCrossButton : MonoBehaviour
     private Vector3 origScale;
     private Vector3 expandedScale;
 
-    void Start()
+    private float _speed = 7f;
+
+    public override void Awake()
     {
+        base.Awake();
+
         buttonParent = transform.parent.gameObject;
 
         origScale = gameObject.GetComponent<RectTransform>().localScale;
         expandedScale = origScale * 1.1f;
 
-        GetComponent<Button>().onClick.AddListener(OnClickAnimation);
+        GetComponent<Button>().onClick.AddListener(OnClick);
     }
 
-    void OnMouseEnter()
+    public override void EnterAction()
     {
         if (shrinkOnExit != null)
             StopCoroutine(shrinkOnExit);
         expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
         StartCoroutine(expandOnEnter);
 
-        if (!StaticVariables.OverlayPanelActive)
+        AppearCross();
+
+        if (!SaveManagerStatic.OverlayPanelActive)
         {
-            AppearCross();
+
         }
     }
 
-    void OnMouseExit()
+    public override void ExitAction()
     {
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
         shrinkOnExit = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
         StartCoroutine(shrinkOnExit);
 
-        if (!StaticVariables.OverlayPanelActive)
+        DisappearCross();
+
+        if (!SaveManagerStatic.OverlayPanelActive)
         {
-            DisappearCross();
+
         }
     }
 
-    public void AppearCross(float speedCoef = 1f)
+    public void AppearCross()
     {
         if (CrossFadeOut != null)
             StopCoroutine(CrossFadeOut);
 
-        CrossFadeIn = FadeManager.FadeOnly(gameObject, true, SaveManager.instance.speed * speedCoef);
+        CrossFadeIn = FadeManager.FadeOnly(gameObject, true, _speed);
         StartCoroutine(CrossFadeIn);
     }
 
-    public void DisappearCross(float speedCoef = 1f)
+    public void DisappearCross()
     {
         if (CrossFadeIn != null)
             StopCoroutine(CrossFadeIn);
 
-        CrossFadeOut = FadeManager.FadeOnly(gameObject, false, SaveManager.instance.speed * speedCoef);
+        CrossFadeOut = FadeManager.FadeOnly(gameObject, false, _speed);
         StartCoroutine(CrossFadeOut);
     }
 
-    private void OnClickAnimation()
+    public override IEnumerator IClick()
     {
-        StartCoroutine(IOnClickAnimation());
+       yield return StartCoroutine(IOnClickAnimation());
     }
 
     private IEnumerator IOnClickAnimation()
     {
         GetComponent<Button>().interactable = false;
         Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, 0.85f, 0.05f));
+        Vector3 ParentShrinkScale = currParentScale * 0.85f;
+        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, ParentShrinkScale, 0.05f));
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
+        GetComponent<Button>().interactable = true;
+    }
+
+    public override void ResetButtonState()
+    {
+        GetComponent<CanvasGroup>().alpha = 0f;
         GetComponent<Button>().interactable = true;
     }
 }

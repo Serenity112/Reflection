@@ -8,7 +8,6 @@ namespace Fungus
                    "FStationScroll")]
     public class FStationScroll : Command
     {
-        [SerializeField]
         private float Speed = 3f;
 
         public override void OnEnter()
@@ -18,7 +17,7 @@ namespace Fungus
 
         private IEnumerator IOnEnter()
         {
-            UserData.instance.CurrentCommandIndex += 1;
+            
 
             yield return StartCoroutine(((StationScroll)SpecialEventManager.instance.CurrentEventObject).IScrollBg(Speed));
 

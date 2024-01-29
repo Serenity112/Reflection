@@ -1,25 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Fungus;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using System;
 
 public class SpriteFade : MonoBehaviour
 {
     public static SpriteFade instance = null;
 
-    void Start()
+    void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
     }
 
     public void StopSpritesFading()
@@ -27,25 +16,35 @@ public class SpriteFade : MonoBehaviour
         StopAllCoroutines();
     }
 
-    public void SetFadingSprite(GameObject obj, bool fadein, float speed, bool skip)
-    {
-        StartCoroutine(ISetFadingSprite(obj, fadein, speed, skip));
-    }
+    private const float SkipStep = 10f;
+    private const float DefaultStep = 1f;
 
-    public IEnumerator ISetFadingSprite(GameObject obj, bool fadein, float speed, bool skip)
+    public IEnumerator IFadeSprite(GameObject sprite, float fadeTime, float target_alpha, bool skip)
     {
         if (skip)
         {
-            FadeManager.ColorAlphaFadeObject(obj, fadein);
-            yield return null;
+            sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, target_alpha);
+            yield break;
         }
-        else
+
+        float currentTime = 0;
+        float cur_a = sprite.GetComponent<SpriteRenderer>().color.a;
+        while (currentTime < fadeTime)
         {
-            yield return StartCoroutine(FadeManager.ColorAlphaFadeObject(obj, fadein, speed));
+            float step = DefaultStep;
+            if (Typewriter.Instance.SkipIsActive)
+            {
+                step = SkipStep;
+            }
+
+            currentTime += Time.deltaTime * step;
+            float new_a = Mathf.Lerp(cur_a, target_alpha, (currentTime / fadeTime));
+            sprite.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, new_a);
+            yield return null;
         }
     }
 
-    public IEnumerator WaitForAll(List<IEnumerator> coroutines)
+    private IEnumerator WaitForAll(List<IEnumerator> coroutines)
     {
         int tally = 0;
 

@@ -1,21 +1,15 @@
 ﻿using System.Collections;
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 public class SpriteMove : MonoBehaviour
 {
     public static SpriteMove instance = null;
 
-    void Start()
+    void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
     }
 
     public void StopSpriteMoving()
@@ -23,48 +17,47 @@ public class SpriteMove : MonoBehaviour
         StopAllCoroutines();
     }
 
-    public void SetSpriteMovement(Character character, Vector3 vector, float smoothTime, bool skip)
+    // Вместо класса SpriteMover
+    public IEnumerator IMoveSprite(Character character, Vector3 newPosition, float smoothTime, bool skip)
     {
-        StartCoroutine(IMoveSprite(character, vector, smoothTime, skip));
-    }
-
-    public IEnumerator IMoveSprite(Character character, Vector3 targetVect, float smoothTime, bool skip)
-    {
-        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteByName(character);
-
+        GameSpriteObject? sprite_obj = SpriteController.instance.GetSpriteByCharacter(character);
         if (sprite_obj == null)
         {
             yield break;
         }
-
         GameSpriteObject sprite = (GameSpriteObject)sprite_obj;
 
-        yield return StartCoroutine(IMoveSprite(sprite, targetVect, smoothTime, skip));
+        sprite.CompletePostAction();
+        SpriteController.instance.CompleteAnimations(sprite.Number);
+        SpriteController.instance.LoadSpriteActualData(character);
+
+        SpriteController.instance.SaveSpritePosition(character, newPosition);
+
+        IEnumerator move = IMoveSprite(sprite, newPosition, smoothTime, skip);
+        SpriteController.instance.AddAnimation(sprite.Number, move);
+        StartCoroutine(move);
+
+        yield return null;
     }
 
+    private const float SkipStep = 10f;
+    private const float DefaultStep = 1f;
     public IEnumerator IMoveSprite(GameSpriteObject sprite, Vector3 targetVect, float smoothTime, bool skip)
     {
-        StopSpriteMoving();
-        SpriteFade.instance.StopSpritesFading();
-        SpriteController.instance.LoadSpritesDataInfo();
-
-        SpriteController.instance.SaveSpriteData(sprite.num, targetVect);
-
         if (skip || sprite.GetPosition() == targetVect)
         {
             sprite.SetPosition(targetVect);
-
-            yield return null;
+            yield break;
         }
         else
         {
             Vector3 velocity = Vector3.zero;
 
-            bool targetGstart = targetVect.x > sprite.GetPosition().x;
-
             while (sprite.GetPosition() != targetVect)
             {
-                float diff = targetGstart ? targetVect.x - sprite.GetPosition().x : sprite.GetPosition().x - targetVect.x;
+                float x1 = sprite.GetPosition().x;
+                float x2 = targetVect.x;
+                float diff = Math.Max(x1, x2) - Math.Min(x1, x2);
 
                 if (Math.Abs(diff) < 1)
                 {
@@ -73,11 +66,30 @@ public class SpriteMove : MonoBehaviour
                 }
 
                 sprite.SetPosition(Vector3.SmoothDamp(sprite.GetPosition(), targetVect, ref velocity, smoothTime));
-
                 yield return null;
             }
         }
+    }
 
-        StaticVariables.SPRITE_MOVING = false;
+    private IEnumerator WaitForAll(List<IEnumerator> coroutines)
+    {
+        int tally = 0;
+
+        foreach (IEnumerator c in coroutines)
+        {
+            StartCoroutine(RunCoroutine(c));
+        }
+
+        while (tally > 0)
+        {
+            yield return null;
+        }
+
+        IEnumerator RunCoroutine(IEnumerator c)
+        {
+            tally++;
+            yield return StartCoroutine(c);
+            tally--;
+        }
     }
 }
