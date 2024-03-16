@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SaveChoiseIconAnimator : MonoBehaviour
@@ -13,8 +11,8 @@ public class SaveChoiseIconAnimator : MonoBehaviour
 
     private float _speed = 4f;
 
-    public bool exitLeft { get; set; } = true;
-    public bool exitRight { get; set; } = true;
+    private bool exitLeft { get; set; } = true;
+    private bool exitRight { get; set; } = true;
 
     private void Awake()
     {
@@ -23,8 +21,6 @@ public class SaveChoiseIconAnimator : MonoBehaviour
 
     public void AppearSide(Side side)
     {
-        Debug.Log("Appear side: " + side);
-
         StartCoroutine(saveFileFields.CloseOverPanel());
 
         switch (side)
@@ -112,8 +108,5 @@ public class SaveChoiseIconAnimator : MonoBehaviour
         GradRight.GetComponent<CanvasGroup>().alpha = 0f;
         IconLeft.GetComponent<CanvasGroup>().alpha = 0f;
         IconRight.GetComponent<CanvasGroup>().alpha = 0f;
-
-        exitLeft = true;
-        exitRight = true;
     }
 }

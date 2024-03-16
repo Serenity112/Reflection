@@ -93,12 +93,8 @@ public class SettingsConfig
         }
     }
 
-    private static string GlobalSettings;
-
     public static void LoadSettingsFromMemory()
     {
-        GlobalSettings = SaveSystemUtils.GlobalSettings;
-
         LoadDefaultSettings();
 
         LoadUserSettings();
@@ -149,31 +145,31 @@ public class SettingsConfig
         {
             foreach (SettingsList setting in (SettingsList[])Enum.GetValues(typeof(SettingsList)))
             {
-                if (ES3.FileExists(GlobalSettings) && ES3.KeyExists(setting.ToString(), GlobalSettings))
+                if (ES3.FileExists(SaveSystemUtils.GlobalSettings) && ES3.KeyExists(setting.ToString(), SaveSystemUtils.GlobalSettings))
                 {
-                    SettingsOptionsData optiondata = ES3.Load<SettingsOptionsData>(setting.ToString(), GlobalSettings);
-
+                    SettingsOptionsData optiondata = ES3.Load<SettingsOptionsData>(setting.ToString(), SaveSystemUtils.GlobalSettings);
                     chosenOptions[setting] = optiondata;
                 }
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            WarningPanel.instance.CreateWarningMessage(WarningPanelMessages.WarningTemplate.SaveSystemCorrupt, $"key: {ex.Message} folder: {SaveSystemUtils.GlobalSettings}");
+            SaveSystemUtils.DumpFile(SaveSystemUtils.GlobalSettings);
         }
     }
 
     // Сохранение настроек в список и файл сохранений
-    public static void SaveOptionToFile(SettingsList setting, SettingsOptions value)
+    public static void SaveOption(SettingsList setting, SettingsOptions value)
     {
-        SaveOptionToFile(setting, value, 0);
+        SaveOption(setting, value, 0);
     }
 
-    public static void SaveOptionToFile(SettingsList setting, SettingsOptions value, float data)
+    public static void SaveOption(SettingsList setting, SettingsOptions value, float data)
     {
         try
         {
-            ES3.Save<SettingsOptionsData>(setting.ToString(), new SettingsOptionsData(value, data), GlobalSettings);
+            ES3.Save<SettingsOptionsData>(setting.ToString(), new SettingsOptionsData(value, data), SaveSystemUtils.GlobalSettings);
 
             if (chosenOptions.ContainsKey(setting))
             {
@@ -182,7 +178,7 @@ public class SettingsConfig
         }
         catch (Exception)
         {
-            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+
         }
     }
 
@@ -190,13 +186,13 @@ public class SettingsConfig
     {
         if (setting == SettingsList.FullScreenMode && value == SettingsOptions.FullScreen)
         {
-            SaveOptionToFile(SettingsList.Resolution, SettingsOptions.rAutomatic);
+            SaveOption(SettingsList.Resolution, SettingsOptions.rAutomatic);
             UpdateGroupVisuals(SettingsList.Resolution);
         }
 
         if (setting == SettingsList.Resolution && value != chosenOptions[SettingsList.Resolution].settingsOption)
         {
-            SaveOptionToFile(SettingsList.FullScreenMode, SettingsOptions.WindowsScreen);
+            SaveOption(SettingsList.FullScreenMode, SettingsOptions.WindowsScreen);
             UpdateGroupVisuals(SettingsList.FullScreenMode);
         }
     }
@@ -326,7 +322,8 @@ public class SettingsConfig
     // Принимает громкость от 0 до 1, ставит громоксть миксера в децибельной шкале
     public static void SetVolume(AudioMixer mixer, string exposedparam, float linearVolume)
     {
-        float dbVolume = 20 * Mathf.Log10(linearVolume);
+        int coef = 5;
+        float dbVolume = coef * Mathf.Log10(linearVolume);
 
         if (linearVolume == 0.0f)
         {

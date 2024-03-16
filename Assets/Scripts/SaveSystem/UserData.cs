@@ -17,6 +17,8 @@ public struct SaveData
 
         CurrentBlock = null;
 
+        SavedTime = DateTime.Now;
+
         AudioData = new();
 
         specialEvent = SpecialEvent.none;
@@ -29,8 +31,8 @@ public struct SaveData
     public string Background;
     public int CurrentCommandIndex;
     public string CurrentBlock;
+    public DateTime SavedTime;
 
-    // Music
     public AudioDataSaveFile AudioData;
 
     public SpecialEvent specialEvent;
@@ -44,24 +46,9 @@ public class UserData : MonoBehaviour
 {
     public static UserData instance = null;
 
-    private static string SaveFileName;
-    private static string SaveFilesFolder;
-    private static string SaveFilesData;
-
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
-
-        SaveFileName = SaveSystemUtils.SaveFileName;
-        SaveFilesFolder = SaveSystemUtils.SaveFilesFolder;
-        SaveFilesData = SaveSystemUtils.SaveFilesData;
+        instance = this;
     }
 
     private void Start()
@@ -92,6 +79,9 @@ public class UserData : MonoBehaviour
         //Спрайты
         newSave.SpriteData = SpriteController.instance.CharacterSpriteData;
 
+        // Время сейва
+        newSave.SavedTime = DateTime.Now;
+
         // Музыка
         newSave.AudioData = AudioManager.instance.GetSaveData();
 
@@ -107,7 +97,8 @@ public class UserData : MonoBehaviour
 
         new Thread(() =>
         {
-            ES3.Save<SaveData>("SaveFile" + actualSaveNum, newSave, $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3");
+            string fileName = $"{SaveSystemUtils.SaveFileSingleName}{actualSaveNum}.es3";
+            ES3.Save<SaveData>("Save", newSave, $"{SaveSystemUtils.SaveFilesFolder}/{fileName}");
         }).Start();
     }
 
@@ -135,10 +126,9 @@ public class UserData : MonoBehaviour
     // Фоновая загрузка игры
     public IEnumerator ILoadGame(int actualSaveNum)
     {
-        string fileName = $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3";
-        SaveData newSave = ES3.Load<SaveData>($"SaveFile{actualSaveNum}", fileName);
+        string fileName = $"{SaveSystemUtils.SaveFileSingleName}{actualSaveNum}.es3";
+        SaveData newSave = ES3.Load<SaveData>("Save", $"{SaveSystemUtils.SaveFilesFolder}/{fileName}");
         Flowchart flowchart = PanelsManager.instance.flowchart;
-
 
         // Block + index
         string currBlockName = flowchart.ActiveBlock?.BlockName;
@@ -158,20 +148,20 @@ public class UserData : MonoBehaviour
         // Backgrounds + special event
         BackgroundManager.instance.CurrentBG = newSave.Background;
 
-        IEnumerator i_bg_unload = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+        IEnumerator i_bg_unload = CoroutineUtils.WaitForSequence(new List<IEnumerator>()
         {
             SpecialEventManager.instance.IReleaseCurrentEvent(),
             BackgroundManager.instance.IReleaseBackground(),
             TextBoxController.instance.ClearThemes(),
         });
 
-        IEnumerator i_bg_load = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+        IEnumerator i_bg_load = CoroutineUtils.WaitForSequence(new List<IEnumerator>()
         {
             BackgroundManager.instance.ILoadBackground(BackgroundManager.instance.CurrentBG),
             SpecialEventManager.instance.ILoadCurrentEventByState(newSave.specialEvent, newSave.specialEventData)
         });
 
-        IEnumerator i_bg = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+        IEnumerator i_bg = CoroutineUtils.WaitForSequence(new List<IEnumerator>()
         {
             i_bg_unload,
             i_bg_load,
@@ -179,18 +169,18 @@ public class UserData : MonoBehaviour
 
 
         // Sprites
-        IEnumerator i_sprite_unload = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        IEnumerator i_sprite_unload = CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             PackageConntector.instance.IDisconnectAllPackages(),
             SpriteController.instance.IUnloadSprites(),
         });
 
-        IEnumerator i_sprite_load = CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        IEnumerator i_sprite_load = CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             SpriteController.instance.IUploadSprites(newSave.SpriteData),
         });
 
-        IEnumerator i_sprite = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+        IEnumerator i_sprite = CoroutineUtils.WaitForSequence(new List<IEnumerator>()
         {
             i_sprite_unload,
             i_sprite_load,
@@ -198,7 +188,7 @@ public class UserData : MonoBehaviour
 
 
         // Музыка
-        IEnumerator i_music = CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+        IEnumerator i_music = CoroutineUtils.WaitForSequence(new List<IEnumerator>()
         {
             AudioManager.instance.FadeOutCurrent(),
             AudioManager.instance.FadeInCurrent(newSave.AudioData),
@@ -223,7 +213,7 @@ public class UserData : MonoBehaviour
         SpriteExpand.instance.ResetManager();
 
         // Весь процесс загрузки
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             i_bg,
             i_sprite,

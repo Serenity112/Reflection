@@ -73,12 +73,12 @@ public class PauseButton : IExpandableButton
         PauseButtonsManager.instance.UpdateDisplayMusic();
         PauseButtonsManager.instance.uIBlur.BeginBlur(_speed);
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, _speed),
             FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, _speed * 0.75f),
             FadeManager.FadeObject(PauseButtonsManager.instance.PausePanel, true, _speed),
-            CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+            CoroutineUtils.WaitForSequence(new List<IEnumerator>()
             {
                 ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
                 ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime)

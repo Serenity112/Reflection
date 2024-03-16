@@ -8,12 +8,8 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     public static SettingsManager instance = null;
 
     private GameObject GameCanvas;
-
     private GameObject PanelsCanvas;
-
     private GameObject OverlaysCanvas;
-
-    private GameObject ActivePanels;
 
     private GameObject blackPanelGame;
 
@@ -26,13 +22,14 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
 
     private float speed = 5f;
 
+    [SerializeField]
     private GameObject SettingsPanel;
 
     private void Awake()
     {
         instance = this;
 
-        
+        SettingsConfig.currentManager = this;
     }
 
     void Start()
@@ -40,11 +37,9 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
         GameCanvas = PanelsManager.instance.GameCanvas;
         PanelsCanvas = PanelsManager.instance.PanelsCanvas;
         OverlaysCanvas = PanelsManager.instance.OverlaysCanvas;
-        ActivePanels = PanelsManager.instance.ActivePanels;
         blackPanelGame = PanelsManager.instance.BlackPanel;
         blackPanelPanels = PanelsManager.instance.blackPanelPanels;
         PanelsCamera = PanelsManager.instance.PanelsCamera;
-        SettingsPanel = ActivePanels.transform.GetChild(0).gameObject;
 
         SettingsConfig.LoadSettingsFromMemory();
 
@@ -62,8 +57,6 @@ public class SettingsManager : MonoBehaviour, ISettingsManager
     }
     private IEnumerator IOpenSettings()
     {
-        SettingsConfig.currentManager = GetComponent<SettingsManager>();
-
         FadeManager.FadeObject(blackPanelPanels, true);
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelGame, true, speed));
 

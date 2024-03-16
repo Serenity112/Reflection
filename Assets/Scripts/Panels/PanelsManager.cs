@@ -75,7 +75,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         }
         else
         {
-            yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+            yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
             {
                 FadeManager.FadeObject(GameButtons, true, fadeInSpeed),
                 FadeManager.FadeObject(GameGuiPanel, true, fadeInSpeed)
@@ -92,7 +92,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     #region SavePanel
 
     // Загрузка из сейв системы внутри игры
-    public IEnumerator ILoadGame(int saveNum)
+    public IEnumerator ILoadGame(int actualSaveNum)
     {
         GAME_LOADING = true;
 
@@ -100,7 +100,6 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, true, speed));
 
         SaveManager.instance.ClearCurrenTextures();
-        SaveManager.instance.OnSaveClose();
         // Так как внутри ClearCurrent идёт чтение из файла, это ломает корутины почему-то...
         yield return new WaitForSeconds(0.1f);
         //PauseButtonsManager.instance.ResetManager();
@@ -113,7 +112,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         FadeManager.FadeOnly(PauseButtonsManager.instance.PausePanel, false);
         FadeManager.FadeObject(PauseButtonsManager.instance.PausePanel, false);
 
-        yield return StartCoroutine(UserData.instance.ILoadGame(saveNum));
+        yield return StartCoroutine(UserData.instance.ILoadGame(actualSaveNum));
         yield return new WaitForSeconds(0.1f);
 
         FadeManager.FadeObject(blackPanelPanels, false);
@@ -135,17 +134,17 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, speed));
         yield return new WaitForEndOfFrame();
 
-        // Для корректных скринщотов -----
+        // Для корректных скриншотов -----
         FadeManager.FadeOnly(PauseButtonsManager.instance.PausePanel, false);
-        GameGuiPanel.GetComponent<CanvasGroup>().alpha = 1f;
-        GameButtons.GetComponent<CanvasGroup>().alpha = 1f;
+        FadeManager.FadeOnly(GameGuiPanel, true);
+        FadeManager.FadeOnly(GameButtons, true);
         // -----
 
         FadeManager.FadeObject(SaveGuiPanel, true);
         GameCamera.enabled = false;
         PanelsCamera.enabled = true;
         SaveManager.instance.ResetManager();
-        // Так как внутри InitialReset идёт чтение из файла, это ломает корутины почему-то...
+        // Так как внутри ResetManager идёт чтение из файла, это ломает корутины почему-то... поэтому задержка
         yield return new WaitForSeconds(0.1f);
 
         yield return StartCoroutine(FadeManager.FadeObject(blackPanelPanels, false, speed));
@@ -165,11 +164,10 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         FadeManager.FadeObject(SaveGuiPanel, false);
         PauseButtonsManager.instance.ResetManager();
         SaveManager.instance.ClearCurrenTextures();
-        SaveManager.instance.OnSaveClose();
 
-        FadeManager.FadeOnly(PauseButtonsManager.instance.PausePanel, true);
-        GameGuiPanel.GetComponent<CanvasGroup>().alpha = 0f;
-        GameButtons.GetComponent<CanvasGroup>().alpha = 0f;
+        FadeManager.FadeOnly(PauseButtonsManager.instance.PausePanel, true); 
+        FadeManager.FadeOnly(GameGuiPanel, false);
+        FadeManager.FadeOnly(GameButtons, false);
 
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, speed));
         FadeManager.FadeObject(blackPanelPanels, false);
@@ -177,11 +175,6 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
         StaticVariables.IN_SAVE_MENU = false;
 
         Resources.UnloadUnusedAssets();
-    }
-
-    public void ReleaseSaveMenu()
-    {
-
     }
 
     #endregion
@@ -194,7 +187,7 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator IQuitToMainMenu()
     {
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             FadeManager.FadeObject(BlackPanel, true, 3f),
             AudioManager.instance.FadeOutCurrent(),
@@ -209,8 +202,6 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     }
 
     public GameObject GetBlackPanel() => BlackPanel;
-
-    public GameObject GetActivePanelsParent() => ActivePanels;
 
     public Camera GetGameCamera() => GameCamera;
 }

@@ -10,45 +10,38 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
     public static MMSettingsManager instance = null;
 
     [SerializeField]
-    private GameObject MainCanvas;
+    private GameObject Canvas1;
+    [SerializeField]
+    private GameObject Canvas2;
+    [SerializeField]
+    private GameObject Canvas3;
+
+    [SerializeField]
+    private GameObject SettingsGuiPanel;
 
     [SerializeField]
     private AudioMixer audioMixer;
-
-    private GameObject ActivePanels;
 
     private GameObject BlackPanel;
 
     [SerializeField]
     private float FadingSpeed = 5f;
 
-    private AsyncOperationHandle<GameObject> handler;
-
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
 
         SettingsConfig.currentManager = this;
     }
 
     void Start()
     {
-        ActivePanels = PanelsConfig.CurrentManager.GetActivePanelsParent();
-
         BlackPanel = PanelsConfig.CurrentManager.GetBlackPanel();
 
         SettingsConfig.LoadSettingsFromMemory();
 
         ApplySettingsOnStart();
-
-        StaticVariables.GameIsStarting = false;
+        StaticVariables.GameLaunchedFirstTime = false;
     }
 
     public void OpenSettings() => StartCoroutine(IOpenSettings());
@@ -58,29 +51,17 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
     private IEnumerator IOpenSettings()
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
-
-        handler = Addressables.InstantiateAsync("SettingsGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
-        yield return handler;
-
-        if (handler.Status == AsyncOperationStatus.Succeeded)
-        {
-            handler.Result.name = "SettingsGuiPanel";
-            yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
-        }
-        else
-        {
-            Debug.Log("Error loading");
-        }
+        FadeManager.FadeObject(SettingsGuiPanel, true);
+        SettingsGuiPanel.GetComponent<SettingsController>().InitialReset();
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
+        StaticVariables.IN_SETTINGS_MENU = true;
     }
     private IEnumerator ICloseSettings()
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
-
-        Addressables.ReleaseInstance(handler);
-
+        FadeManager.FadeObject(SettingsGuiPanel, false);
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
-
-        Resources.UnloadUnusedAssets();
+        StaticVariables.IN_SETTINGS_MENU = false;
     }
 
     public void InstantApplySpecificSetting(SettingsList setting, SettingsOptions value, float data)
@@ -91,7 +72,9 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
                 SettingsConfig.ChangeFullscreeenMode(value);
                 break;
             case SettingsList.BlackFramesMode:
-                SettingsConfig.ChangeBlackFramesMode(MainCanvas, value);
+                SettingsConfig.ChangeBlackFramesMode(Canvas1, value);
+                SettingsConfig.ChangeBlackFramesMode(Canvas2, value);
+                SettingsConfig.ChangeBlackFramesMode(Canvas3, value);
                 break;
             case SettingsList.Resolution:
                 SettingsConfig.ChangeResoulution(value);
@@ -112,10 +95,6 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
 
     private void ApplySettingsOnStart()
     {
-        audioMixer.SetFloat("MasterVol", 0);
-        audioMixer.SetFloat("MusicVol", 0);
-        audioMixer.SetFloat("SoundVol", 0);
-
         foreach (SettingsList setting in (SettingsList[])Enum.GetValues(typeof(SettingsList)))
         {
             SettingsOptions value = SettingsConfig.chosenOptions[setting].settingsOption;
@@ -124,24 +103,24 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
             switch (setting)
             {
                 case SettingsList.masterVolume:
-                    SmoothMusicOnStart("MasterVol", data);
+                    SmoothMusicOnStart("MasterVol", data / 100);
                     break;
                 case SettingsList.musicVolume:
-                    SmoothMusicOnStart("MusicVol", data);
+                    SmoothMusicOnStart("MusicVol", data / 100);
                     break;
                 case SettingsList.soundVolume:
-                    SmoothMusicOnStart("SoundVol", data);
+                    SmoothMusicOnStart("SoundVol", data / 100);
                     break;
                 case SettingsList.FullScreenMode:
-                    if (StaticVariables.GameIsStarting)
+                    if (StaticVariables.GameLaunchedFirstTime)
                     {
-                        InstantApplySpecificSetting(setting, value, data);
+                        goto default;
                     }
                     break;
                 case SettingsList.Resolution:
-                    if (StaticVariables.GameIsStarting)
+                    if (StaticVariables.GameLaunchedFirstTime)
                     {
-                        InstantApplySpecificSetting(setting, value, data);
+                        goto default;
                     }
                     break;
                 default:
@@ -153,8 +132,8 @@ public class MMSettingsManager : MonoBehaviour, ISettingsManager
 
     private void SmoothMusicOnStart(string exposedParam, float data)
     {
-        audioMixer.SetFloat(exposedParam, 0);
-        float targetVolume_db = Mathf.Log10(data / 100) * 20;
+        audioMixer.SetFloat(exposedParam, -80);
+        float targetVolume_db = Mathf.Log10(data) * 20;
         StartCoroutine(FadeVolume(audioMixer, exposedParam, 3f, targetVolume_db));
     }
 

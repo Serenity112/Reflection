@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
+public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandler, IPointerUpHandler
 {
     [SerializeField]
     private SettingsList setting;
@@ -25,6 +25,8 @@ public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandl
     private bool pointer_down = false;
     private bool enter = false;
 
+    private float speed = 5f;
+
     void Awake()
     {
         spacing = transform.GetChild(0).gameObject;
@@ -36,29 +38,9 @@ public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandl
     public void OnClick()
     {
         SettingsConfig.CheckLinkedOptions(setting, option);
-        SettingsConfig.SaveOptionToFile(setting, option);
+        SettingsConfig.SaveOption(setting, option);
         SettingsConfig.UpdateGroupVisuals(setting);
         SettingsConfig.ApplySetting(setting, option);
-    }
-
-    private void OnMouseEnter()
-    {
-        if (!SettingsConfig.isOptionEnabled(setting, option))
-        {
-            StartCoroutine(ToWhite());
-        }
-    }
-
-    private void OnMouseExit()
-    {
-        if (!SettingsConfig.isOptionEnabled(setting, option))
-        {
-            StartCoroutine(SpacingOff());
-            if (!pointer_down)
-            {
-                StartCoroutine(ToGray());
-            }
-        }
     }
 
     // Подчёркивание 
@@ -66,7 +48,7 @@ public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandl
     {
         if (spacingOff != null)
             StopCoroutine(spacingOff);
-        spacingOn = FadeManager.FadeObject(spacing, true, SettingsConfig.spacingSpeed);
+        spacingOn = FadeManager.FadeObject(spacing, true, speed);
         yield return StartCoroutine(spacingOn);
     }
 
@@ -74,7 +56,7 @@ public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandl
     {
         if (spacingOn != null)
             StopCoroutine(spacingOn);
-        spacingOff = FadeManager.FadeObject(spacing, false, SettingsConfig.spacingSpeed);
+        spacingOff = FadeManager.FadeObject(spacing, false, speed);
         yield return StartCoroutine(spacingOff);
     }
 
@@ -83,7 +65,7 @@ public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandl
     {
         if (colorsOff != null)
             StopCoroutine(colorsOff);
-        colorsOn = FadeManager.FadeTextToColor(text, new Color(1f, 1f, 1f, 1.05f), SettingsConfig.spacingSpeed);
+        colorsOn = FadeManager.FadeTextToColor(text, new Color(1f, 1f, 1f, 1.05f), speed);
         yield return StartCoroutine(colorsOn);
     }
 
@@ -91,7 +73,7 @@ public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandl
     {
         if (colorsOn != null)
             StopCoroutine(colorsOn);
-        colorsOff = FadeManager.FadeTextToColor(text, new Color(0.6f, 0.6f, 0.6f, 1.05f), SettingsConfig.spacingSpeed);
+        colorsOff = FadeManager.FadeTextToColor(text, new Color(0.6f, 0.6f, 0.6f, 1.05f), speed);
         yield return StartCoroutine(colorsOff);
     }
 
@@ -113,11 +95,14 @@ public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandl
             list.Add(ToGray());
         }
 
-        StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
+        StartCoroutine(CoroutineUtils.WaitForAll(list));
     }
 
     public void InitialUpdateVisuals()
     {
+        enter = false;
+        pointer_down = false;
+
         UpdateVisuals();
     }
 
@@ -135,13 +120,27 @@ public class SettingsOption : MonoBehaviour, ISettingsOptions, IPointerDownHandl
         }
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
+    public void OnMouseEnter()
     {
+        if (!SettingsConfig.isOptionEnabled(setting, option))
+        {
+            StartCoroutine(ToWhite());
+        }
+
         enter = true;
     }
 
-    public void OnPointerExit(PointerEventData eventData)
+    public void OnMouseExit()
     {
+        if (!SettingsConfig.isOptionEnabled(setting, option))
+        {
+            StartCoroutine(SpacingOff());
+            if (!pointer_down)
+            {
+                StartCoroutine(ToGray());
+            }
+        }
+
         enter = false;
     }
 }

@@ -1,8 +1,7 @@
+using Fungus;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 using static WarningPanelMessages;
 
@@ -13,7 +12,8 @@ public static class WarningPanelMessages
         PatchRelease,
         MemoryLeak,
         SaveSystemCorrupt,
-        AssetLoading
+        AssetLoading,
+        VersionMissing
     }
 
     public static Dictionary<WarningTemplate, string> Warnings;
@@ -26,6 +26,7 @@ public static class WarningPanelMessages
             { WarningTemplate.MemoryLeak, MemoryLeak },
             { WarningTemplate.SaveSystemCorrupt, SaveSystemCorrupt },
             { WarningTemplate.AssetLoading, AssetLoading },
+            { WarningTemplate.VersionMissing, VersionMissing },
         };
     }
 
@@ -36,95 +37,80 @@ public static class WarningPanelMessages
 
     public static string MemoryLeak =
       "Произошла утечка памяти!\n" +
-      "Игра может работать нестабильно. Стабильное решение - перезагрузка игры.\n" +
+      "Игра может работать нестабильно. Попробуйте перезагрузить игру.\n" +
       "Приносим извинения.";
 
     public static string SaveSystemCorrupt =
       "В системе сохранений возникла ошибка!\n" +
       "Некоторые элементы игры могут быть сброшены и/или работать нестабильно.\n" +
       "Если вы не взаимодействовали с файлами игры, просим вас сообщить об ошибке разработчикам.\n" +
-      "Приносим извинения за доставленные неудобства! (нам похуй если честно)";
+      "Приносим извинения за доставленные неудобства! (нам похуй)";
 
     public static string AssetLoading =
      "Ошибка загрузки внутриигрового ассета.\n" +
      "Проверьте целостность файлов игры";
+
+    public static string VersionMissing =
+     "Не найден файл версии (или он повреждён)\n" +
+     "Если вы его удалили/редактировали - верните. Если нет - сообщие о баге в поддержку.";
 }
 
 public class WarningPanel : MonoBehaviour
 {
     public static WarningPanel instance = null;
+
     public static bool WARNING_PANEL_ACTIVE { get; set; } = false;
 
-    private AsyncOperationHandle<GameObject> handler;
-
-    private Queue<(WarningTemplate, string)> WarningMessagesQueue = new();
-
-    private GameObject Panel;
-
-    private WarningPanelButton Button;
+    private GameObject _panel;
+    [SerializeField] private Text text;
+    [SerializeField] private WarningPanelButton button;
 
     private void Awake()
     {
         instance = this;
 
-        Panel = transform.GetChild(0).gameObject;
-        Button = Panel.transform.GetChild(0).GetChild(0).GetComponent<WarningPanelButton>();
-    }
-
-    public void ResetPanelState()
-    {
-        SetText("");
-        Button.ResetButtonState();
+        _panel = transform.GetChild(0).gameObject;
     }
 
     private void SetText(string text)
     {
-        Panel.transform.GetChild(1).GetComponent<Text>().text = text;
+        this.text.text = text;
+    }
+
+    private void AddText(string text)
+    {
+        if (!string.IsNullOrEmpty(this.text.text))
+        {
+            this.text.text += "\n\n";
+        }
+        this.text.text += text;
     }
 
     public void CreateWarningMessage(WarningTemplate template, string errorCode)
     {
-        FadeManager.FadeObject(Panel, true);
-
-        WarningMessagesQueue.Enqueue((template, errorCode));
+        FadeManager.FadeObject(_panel, true);
 
         if (!WARNING_PANEL_ACTIVE)
         {
-            ProcessQueue();
+            ResetPanelState();
         }
 
-        WARNING_PANEL_ACTIVE = true;
-    }
+        WARNING_PANEL_ACTIVE = true;  
 
-    private void ProcessQueue()
-    {
-        if (WarningMessagesQueue.Count > 0)
-        {
-            var warning = WarningMessagesQueue.Dequeue();
-            SetText($"{Warnings[warning.Item1]}\n\nКоды ошибки: {warning.Item2}");
-        }
+        AddText($"{Warnings[template]}\n\nКод ошибки: {errorCode}");
     }
 
     public void CloseWarningPanel()
     {
         SetText("");
-
-        if (WarningMessagesQueue.Count > 0)
-        {
-            ProcessQueue();
-        }
-        else
-        {
-            ResetPanelState();
-            WARNING_PANEL_ACTIVE = false;
-            FadeManager.FadeObject(Panel, false);
-        }
+        WARNING_PANEL_ACTIVE = false; 
+        ResetPanelState();
+        FadeManager.FadeObject(_panel, false);    
     }
 
-    public void ReleasePanel()
+    private void ResetPanelState()
     {
-        Addressables.ReleaseInstance(handler);
-
-        Resources.UnloadUnusedAssets();
+        SetText("");
+        button.ResetButtonState();
     }
 }

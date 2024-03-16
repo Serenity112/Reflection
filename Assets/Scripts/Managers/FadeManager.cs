@@ -58,6 +58,7 @@ public class FadeManager : MonoBehaviour
 
     public static void FadeOnly(GameObject obj, bool fadein)
     {
+        obj.SetActive(true);
         if (fadein)
         {
             obj.GetComponent<CanvasGroup>().alpha = 1f;
@@ -66,6 +67,12 @@ public class FadeManager : MonoBehaviour
         {
             obj.GetComponent<CanvasGroup>().alpha = 0f;
         }
+    }
+
+    public static void FadeInLite(GameObject obj)
+    {
+        obj.SetActive(true);
+        obj.GetComponent<CanvasGroup>().alpha = 0f;
     }
 
     public static IEnumerator FadeToTargetAlpha(GameObject obj, float targetAlpha, float speed)

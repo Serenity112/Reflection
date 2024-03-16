@@ -6,13 +6,9 @@ public interface IPanelsManager
 {
     GameObject GetBlackPanel();
 
-    GameObject GetActivePanelsParent();
-
     void OpenSaveMenu();
 
     void CloseSaveMenu();
-
-    public void ReleaseSaveMenu();
 
     Camera GetGameCamera();
 }

@@ -1,27 +1,29 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class WarningPanelButton : IDraggableButton
 {
-    [HideInInspector]
-    public GameObject spacing;
+    private GameObject spacing;
+    private float _speed = 5f;
 
     public override void Awake()
     {
         base.Awake();
         spacing = transform.GetChild(0).gameObject;
+        GetComponent<Button>().onClick.AddListener(OnClick);
     }
 
     public override void EnterAction()
     {
         StopAllCoroutines();
-        StartCoroutine(FadeManager.FadeObject(spacing, true, 5f));
+        StartCoroutine(FadeManager.FadeObject(spacing, true, _speed));
     }
 
     public override void ExitAction()
     {
         StopAllCoroutines();
-        StartCoroutine(FadeManager.FadeObject(spacing, false, 5f));
+        StartCoroutine(FadeManager.FadeObject(spacing, false, _speed));
     }
 
     public override IEnumerator IClick()

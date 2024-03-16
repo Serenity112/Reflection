@@ -32,6 +32,7 @@ public class ConfirmationPanel : MonoBehaviour
             yield break;
         }
 
+        ANIMATION_ENDED = false;
         CONFIRM_PANEL_ACTIVE = true;
 
         Panel.GetComponent<CanvasGroup>().alpha = 0f;
@@ -57,12 +58,7 @@ public class ConfirmationPanel : MonoBehaviour
 
     public void ChooseYes()
     {
-        if (!ANIMATION_ENDED)
-        {
-            return;
-        }
-
-        if (IYes != null)
+        if (IYes != null && ANIMATION_ENDED)
         {
             StartCoroutine(IYes);
         }
@@ -70,12 +66,7 @@ public class ConfirmationPanel : MonoBehaviour
 
     public void ChooseNo()
     {
-        if (!ANIMATION_ENDED)
-        {
-            return;
-        }
-
-        if (INo != null)
+        if (INo != null && ANIMATION_ENDED)
         {
             StartCoroutine(INo);
         }

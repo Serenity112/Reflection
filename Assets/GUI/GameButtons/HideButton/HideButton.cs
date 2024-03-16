@@ -119,9 +119,9 @@ public class HideButton : IExpandableButton
         gui1out = FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed / 2f);
         gui2out = FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed / 2f);
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
-            CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+            CoroutineUtils.WaitForSequence(new List<IEnumerator>()
             {
                 ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
                 ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime)
@@ -185,7 +185,7 @@ public class HideButton : IExpandableButton
         gui1in = FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed / 2f);
         gui2in = FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed / 2f);
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             gui1in,
             gui2in

@@ -104,7 +104,7 @@ public class BackgroundManager : MonoBehaviour
             yield return Addressables.ReleaseInstance(bg_handler);
         }
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             SpecialEventManager.instance.IReleaseCurrentEvent(),
             SetTextBoxTheme(bg_adress, true),
@@ -173,7 +173,7 @@ public class BackgroundManager : MonoBehaviour
         newBg.GetComponent<CanvasGroup>().alpha = 0f;
         newBg.transform.SetSiblingIndex(newBg.transform.childCount - 1);
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             SetTextBoxTheme(bg_adress, false),
             FadeManager.FadeObject(newBg, true, speed)

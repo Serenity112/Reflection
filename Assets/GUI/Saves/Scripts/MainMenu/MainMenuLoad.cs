@@ -29,7 +29,7 @@ public class MainMenuLoad : MonoBehaviour
         screenshot = saveFileFields.Screenshot;
         //MainMenuPanel = saveFileFields._MainMenuLoad;
 
-        ButtonLoad.interactable = true;
+        //ButtonLoad.interactable = true;
     }
 
     public void ResetPanel()
@@ -72,7 +72,7 @@ public class MainMenuLoad : MonoBehaviour
 
     public void Click()
     {
-        if (!SaveManagerStatic.UIsystemDown)
+        if (!SaveManagerStatic.ClickBlocker)
         {
             StartCoroutine(IClick());
         }
@@ -92,7 +92,7 @@ public class MainMenuLoad : MonoBehaviour
 
     IEnumerator LoadFile()
     {
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        yield return CoroutineUtils.WaitForAll(new List<IEnumerator>
         {
             FadeManager.FadeObject(Cassette, false, SaveManager.instance.speed),
             ConfirmationPanel.instance.ClosePanel(),
@@ -121,7 +121,7 @@ public class MainMenuLoad : MonoBehaviour
     // Удаление сейва, активируется крестиком
     public void DeleteAction()
     {
-        if (!SaveManagerStatic.UIsystemDown && !SaveManagerStatic.OverlayPanelActive)
+        if (!SaveManagerStatic.ClickBlocker && !SaveManagerStatic.OverlayPanelActive)
         {
             StartCoroutine(IDeleteDialog());
         }
@@ -151,7 +151,7 @@ public class MainMenuLoad : MonoBehaviour
         //StartCoroutine(FadeManager.FadeObject(saveFileFields.Datetime, false, SaveManager.instance.speed));
         SaveManager.instance.RemoveDateTime(actualSaveNum);
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(enumerators));
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(enumerators));
 
         SaveManager.instance.DeleteSave(actualSaveNum);
     }

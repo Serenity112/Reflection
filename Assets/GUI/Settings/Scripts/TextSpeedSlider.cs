@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System;
 
-public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler, ISettingsOptions
+public class TextSpeedSlider : MonoBehaviour,  ISettingsOptions, IPointerDownHandler, IPointerUpHandler
 {
     [SerializeField]
     private SettingsList setting;
@@ -22,7 +22,7 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
 
     private Slider slider;
 
-    private bool dragging = false;
+    private bool pointer_down = false;
     private bool enter = false;
 
     private IEnumerator speedIn;
@@ -54,19 +54,18 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
             HideInfinity();
         }
 
-        SettingsConfig.SaveOptionToFile(setting, option, slider.value);
-
+        SettingsConfig.SaveOption(setting, option, slider.value);
         SettingsConfig.ApplySetting(setting, option, slider.value);
     }
 
-    public void OnBeginDrag(PointerEventData eventData)
+    public void OnPointerDown(PointerEventData eventData)
     {
-        dragging = true;
+        pointer_down = true;
     }
 
-    public void OnEndDrag(PointerEventData eventData)
+    public void OnPointerUp(PointerEventData eventData)
     {
-        dragging = false;
+        pointer_down = false;
 
         if (!enter)
         {
@@ -79,7 +78,7 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
     {
         enter = true;
 
-        if (!dragging)
+        if (!pointer_down)
         {
             if (SettingsConfig.chosenOptions[setting].data == slider.maxValue)
             {
@@ -96,7 +95,7 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
     {
         enter = false;
 
-        if (!dragging)
+        if (!pointer_down)
         {
             HideInfinity();
             HideSpeed();
@@ -153,6 +152,9 @@ public class TextSpeedSlider : MonoBehaviour, IEndDragHandler, IBeginDragHandler
 
     public void InitialUpdateVisuals()
     {
+        enter = false;
+        pointer_down = false;
+
         UpdateVisuals();
     }
 }

@@ -74,7 +74,7 @@ public class TextBoxController : MonoBehaviour
             }
             else
             {
-                yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+                yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
                 {
                     FadeManager.FadeToTargetAlpha(oldGui, 0f, _speed),
                     FadeManager.FadeToTargetAlpha(newGui, targetAlpha, _speed),

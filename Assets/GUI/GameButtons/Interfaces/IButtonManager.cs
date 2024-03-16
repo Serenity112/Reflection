@@ -15,7 +15,13 @@ public abstract class IButtonManager : MonoBehaviour
     /// <summary>
     /// —бросить состо€ни€ всех кнопок
     /// </summary>
-    public abstract void ResetAllButtonsState();
+    public virtual void ResetAllButtonsState()
+    {
+        foreach (var button in GameButtons)
+        {
+            button.ResetButtonState();
+        }
+    }
 
     /// <summary>
     /// —бросить всЄ по умолчанию

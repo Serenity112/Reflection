@@ -34,7 +34,7 @@ public class CheckBox : MonoBehaviour, ISettingsOptions, IPointerDownHandler, IP
         float newData = (SettingsConfig.chosenOptions[setting].data + 1) % 2;
 
         SettingsConfig.CheckLinkedOptions(setting, option);
-        SettingsConfig.SaveOptionToFile(setting, option, newData);
+        SettingsConfig.SaveOption(setting, option, newData);
         SettingsConfig.ApplySetting(setting, option, newData);
 
         Vector3 origScale = CircleIn.transform.localScale;
@@ -55,29 +55,6 @@ public class CheckBox : MonoBehaviour, ISettingsOptions, IPointerDownHandler, IP
         }
 
         GetComponent<Button>().interactable = true;
-    }
-
-    private void OnMouseEnter()
-    {
-        enter = true;
-
-        float data = SettingsConfig.chosenOptions[setting].data;
-
-        if (data == 0)
-        {
-            CircleOn();
-        }
-    }
-    private void OnMouseExit()
-    {
-        enter = false;
-
-        float data = SettingsConfig.chosenOptions[setting].data;
-
-        if (data == 0 && !pointer_down)
-        {
-            CircleOff();
-        }
     }
 
     private void CircleOn()
@@ -114,16 +91,34 @@ public class CheckBox : MonoBehaviour, ISettingsOptions, IPointerDownHandler, IP
 
     public void InitialUpdateVisuals()
     {
+        enter = false;
+        pointer_down = false;
+
         GetComponent<Button>().interactable = true;
+        UpdateVisuals();
+    }
+
+    public void OnMouseEnter()
+    {
+        enter = true;
+
         float data = SettingsConfig.chosenOptions[setting].data;
 
-        if (data == 1)
+        if (data == 0)
         {
-            FadeManager.FadeObject(CircleIn, true);
+            CircleOn();
         }
-        else
+    }
+
+    public void OnMouseExit()
+    {
+        enter = false;
+
+        float data = SettingsConfig.chosenOptions[setting].data;
+
+        if (data == 0 && !pointer_down)
         {
-            FadeManager.FadeObject(CircleIn, false);
+            CircleOff();
         }
     }
 

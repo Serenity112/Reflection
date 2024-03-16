@@ -41,12 +41,12 @@ public class LogBack : IExpandableButton
         GetComponent<Button>().interactable = false;
         LogManager.instance.logOpenButton.ResetButtonState();
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             FadeManager.FadeOnly(LogManager.instance.LogPanel, false, _speed),
             FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, _speed),
             FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, _speed),
-            CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+            CoroutineUtils.WaitForSequence(new List<IEnumerator>()
             {
                 ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
                 ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime)

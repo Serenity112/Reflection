@@ -53,7 +53,7 @@ public class PackageConntector : MonoBehaviour
             list.Add(IConnectSinglePackage($"{characterGroupName}{i}_connector"));
         }
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(list));
     }
 
     private IEnumerator IConnectSinglePackage(string address)

@@ -6,22 +6,57 @@ public class SettingsBackButton : IExpandableButton
 {
     private IEnumerator expandOnEnter;
     private IEnumerator shrinkOnEnter;
+    private IEnumerator iupdate;
+
+    private bool AllowClick()
+    {
+        return (GetComponent<Button>().interactable && StaticVariables.IN_SETTINGS_MENU);
+    }
 
     private void Start()
     {
         animator.Play("Idle");
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        if (Input.GetKey(KeyCode.Escape) && GetComponent<Button>().interactable && StaticVariables.IN_SETTINGS_MENU)
+        if (iupdate != null)
         {
-            OnClick();
+            StopCoroutine(iupdate);
+        }
+
+        iupdate = IUpdate();
+        StartCoroutine(iupdate);
+    }
+
+    private void OnDisable()
+    {
+        if (iupdate != null)
+        {
+            StopCoroutine(iupdate);
+        }
+    }
+
+    private IEnumerator IUpdate()
+    {
+        while (true)
+        {
+            if (Input.GetKey(KeyCode.Escape))
+            {
+                OnClick();
+            }
+
+            yield return null;
         }
     }
 
     public override IEnumerator IClick()
     {
+        if (!AllowClick())
+        {
+            yield break;
+        }
+
         GetComponent<Button>().interactable = false;
 
         animator.Play("Back");
@@ -37,7 +72,7 @@ public class SettingsBackButton : IExpandableButton
     {
         if (shrinkOnEnter != null)
             StopCoroutine(shrinkOnEnter);
-        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
+        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, expandTime);
         StartCoroutine(expandOnEnter);
     }
 
@@ -45,12 +80,13 @@ public class SettingsBackButton : IExpandableButton
     {
         if (expandOnEnter != null)
             StopCoroutine(expandOnEnter);
-        shrinkOnEnter = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
+        shrinkOnEnter = ExpandManager.ExpandObject(gameObject, origScale, expandTime);
         StartCoroutine(shrinkOnEnter);
     }
 
     public override void ResetButtonState()
     {
+        base.ResetButtonState();
         animator.Play("Idle");
         GetComponent<Button>().interactable = true;
     }

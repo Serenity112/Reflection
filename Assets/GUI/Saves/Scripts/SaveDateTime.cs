@@ -1,3 +1,4 @@
+using Fungus;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -39,6 +40,12 @@ public class SaveDateTime : MonoBehaviour
 
     public IEnumerator IShowText()
     {
+        yield return StartCoroutine(FadeManager.FadeOnly(gameObject, true, _speed));
+    }
+
+    public IEnumerator IShowText(string text)
+    {
+        SetText(text);
         yield return StartCoroutine(FadeManager.FadeOnly(gameObject, true, _speed));
     }
 }

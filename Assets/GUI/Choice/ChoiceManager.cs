@@ -82,7 +82,7 @@ public class ChoiceManager : MonoBehaviour
 
     private IEnumerator OpenChoice()
     {
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             FadeManager.FadeObject(ChoiceBox, true, _fadeSpeed),
         });
@@ -90,7 +90,7 @@ public class ChoiceManager : MonoBehaviour
 
     public IEnumerator CloseChoice()
     {
-        yield return CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             FadeManager.FadeOnly(ChoiceBox, false, _fadeSpeed),
         });

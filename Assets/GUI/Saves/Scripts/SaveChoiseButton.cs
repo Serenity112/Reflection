@@ -3,59 +3,60 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SaveChoiseButton : IExpandableButton
+public class SaveChoiseButton : ISaveSystemButton
 {
     [SerializeField] private Side side;
     [SerializeField] private GameObject File;
     [SerializeField] private SaveOption option;
 
     private DeleteCrossButton DeleteCross;
-    //private FirstSaveAnimator firstSaveAnimator;
     private SaveChoiseIconAnimator saveChoiseIconAnimator;
     private SaveChoiseAnimator saveChoiseAnimator;
-
 
     public override void Awake()
     {
         base.Awake();
 
-        //firstSaveAnimator = File.GetComponent<FirstSaveAnimator>();
         saveChoiseIconAnimator = File.GetComponent<SaveChoiseIconAnimator>();
         saveChoiseAnimator = File.GetComponent<SaveChoiseAnimator>();
         DeleteCross = saveChoiseAnimator.DeleteCross;
 
-        GetComponent<Button>().onClick.AddListener(OnClick);
+        GetComponent<Button>().onClick.RemoveAllListeners();
+        GetComponent<Button>().onClick.AddListener(delegate
+        {
+            StartCoroutine(IClick());
+        });
     }
 
     public override void EnterAction()
     {
-        DeleteCross.AppearCross();
-        saveChoiseIconAnimator.AppearSide(side);
-
-        if (!SaveManagerStatic.OverlayPanelActive)
+        if (!SaveManagerStatic.UiBloker)
         {
-
+            DeleteCross.AppearCross();
+            saveChoiseIconAnimator.AppearSide(side);
         }
     }
 
     public override void ExitAction()
     {
-        saveChoiseIconAnimator.RemoveSide(side);
-        DeleteCross.DisappearCross();
-
-        if (!SaveManagerStatic.OverlayPanelActive)
+        if (!SaveManagerStatic.UiBloker)
         {
-
+            saveChoiseIconAnimator.RemoveSide(side);
+            DeleteCross.DisappearCross();
         }
     }
 
-    public override IEnumerator IClick()
+    private IEnumerator IClick()
     {
-        if (!SaveManagerStatic.UIsystemDown)
+        if (!SaveManagerStatic.ClickBlocker)
         {
-            SaveManagerStatic.UIsystemDown = true;
+            SaveManagerStatic.ClickBlocker = true;
+            SaveManagerStatic.UiBloker = true;
 
-            saveChoiseAnimator.SaveAction(option);
+            yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
+            yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
+
+            saveChoiseAnimator.SaveLoadAction(option);
             StartRotation();
         }
 

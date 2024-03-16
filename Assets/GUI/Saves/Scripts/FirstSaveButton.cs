@@ -15,6 +15,8 @@ public class FirstSaveButton : ISaveSystemButton
 
         CassetteImg = transform.GetChild(0).gameObject;
         firstSaveAnimator = File.GetComponent<FirstSaveAnimator>();
+
+        GetComponent<Button>().onClick.RemoveAllListeners();
         GetComponent<Button>().onClick.AddListener(delegate
         {
             StartCoroutine(IClick());
@@ -28,34 +30,33 @@ public class FirstSaveButton : ISaveSystemButton
 
     public override void ExitAction()
     {
-        if (!SaveManagerStatic.UIsystemDown)
+        StartCoroutine(firstSaveAnimator.IDisappearCassette());
+    }
+
+    public IEnumerator IClick()
+    {
+        if (!SaveManagerStatic.ClickBlocker)
         {
-            StartCoroutine(firstSaveAnimator.IDisappearCassette());
+            SaveManagerStatic.ClickBlocker = true;
+            firstSaveAnimator.Animating = true;
+
+            yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
+            yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
+
+            animator.Play("FC_Anim_Rotate");
+
+            StartCoroutine(firstSaveAnimator.IFirstSaveIconClick());
         }
+
+        yield return null;
     }
 
     public override void ResetButtonState()
     {
         base.ResetButtonState();
 
-        GetComponent<Button>().interactable = true;
+        UnlockButton();
         animator.Play("FC_Anim_Idle");
         animator.Play("FC_Fade_Idle");
-    }
-
-    public IEnumerator IClick()
-    {
-        if (!SaveManagerStatic.UIsystemDown)
-        {
-            SaveManagerStatic.UIsystemDown = true;
-            yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
-            yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
-
-            animator.Play("FC_Anim_Rotate");
-            GetComponent<Button>().interactable = false;
-            firstSaveAnimator.FirstSaveIconClick();
-        }
-
-        yield return null;
     }
 }

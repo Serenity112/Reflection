@@ -38,7 +38,7 @@ public class StationScroll : MonoBehaviour, ISpecialEvent
         yield return new WaitForSeconds(2.1f);
         Typewriter.Instance.SetText("");
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, speed),
             FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, speed)

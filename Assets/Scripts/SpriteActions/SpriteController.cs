@@ -462,7 +462,7 @@ public class SpriteController : MonoBehaviour
             }
         }
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(list));
     }
 
     // Отгрузка спрайтов для сейв системы
@@ -485,7 +485,7 @@ public class SpriteController : MonoBehaviour
             }
         }
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(list));
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(list));
 
         CharacterSpriteData.Clear();
         CharacterSpriteObject.Clear();
@@ -499,7 +499,7 @@ public class SpriteController : MonoBehaviour
 
     public IEnumerator LoadSpriteByParts(GameSpriteObject sprite, Character character, int pose, int emotion)
     {
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>
         {
             ILoadSpriteOfSpecificObject(sprite, SpritePart.Body, character, pose, 0),
             ILoadSpriteOfSpecificObject(sprite, SpritePart.Face1, character, pose, emotion)

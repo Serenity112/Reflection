@@ -95,7 +95,7 @@ public class PauseButtonsManager : IButtonManager
     {
         uIBlur.EndBlur(_speed);
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>
         {
             FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, true, _speed),
             FadeManager.FadeOnly(PanelsManager.instance.GameButtons, true, _speed * 0.5f),

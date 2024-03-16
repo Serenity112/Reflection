@@ -120,7 +120,7 @@ public class SpritesSwapper : MonoBehaviour
 
             IEnumerator ISwap()
             {
-                yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+                yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
                 {
                     WaitForAll(fade_enumerators),
                     WaitForAll(move_enumerators)

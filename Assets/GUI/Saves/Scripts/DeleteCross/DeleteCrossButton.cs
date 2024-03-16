@@ -1,8 +1,9 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DeleteCrossButton : IDraggableButton
+public class DeleteCrossButton : ISaveSystemButton
 {
     private IEnumerator expandOnEnter;
     private IEnumerator shrinkOnExit;
@@ -10,52 +11,34 @@ public class DeleteCrossButton : IDraggableButton
     private IEnumerator CrossFadeIn;
     private IEnumerator CrossFadeOut;
 
-    private GameObject buttonParent;
-
-    private Vector3 origScale;
-    private Vector3 expandedScale;
-
     private float _speed = 7f;
+
+    [SerializeField] private SaveChoiseAnimator saveChoiceAnimator;
 
     public override void Awake()
     {
         base.Awake();
 
-        buttonParent = transform.parent.gameObject;
-
-        origScale = gameObject.GetComponent<RectTransform>().localScale;
-        expandedScale = origScale * 1.1f;
-
-        GetComponent<Button>().onClick.AddListener(OnClick);
+        GetComponent<Button>().onClick.RemoveAllListeners();
+        GetComponent<Button>().onClick.AddListener(delegate
+        {
+            StartCoroutine(IClick());
+        });
     }
 
     public override void EnterAction()
     {
-        if (shrinkOnExit != null)
-            StopCoroutine(shrinkOnExit);
-        expandOnEnter = ExpandManager.ExpandObject(gameObject, expandedScale, 0.05f);
-        StartCoroutine(expandOnEnter);
-
-        AppearCross();
-
-        if (!SaveManagerStatic.OverlayPanelActive)
+        if (!SaveManagerStatic.UiBloker)
         {
-
+            AppearCross();
         }
     }
 
     public override void ExitAction()
     {
-        if (expandOnEnter != null)
-            StopCoroutine(expandOnEnter);
-        shrinkOnExit = ExpandManager.ExpandObject(gameObject, origScale, 0.05f);
-        StartCoroutine(shrinkOnExit);
-
-        DisappearCross();
-
-        if (!SaveManagerStatic.OverlayPanelActive)
+        if (!SaveManagerStatic.UiBloker)
         {
-
+            DisappearCross();
         }
     }
 
@@ -77,24 +60,29 @@ public class DeleteCrossButton : IDraggableButton
         StartCoroutine(CrossFadeOut);
     }
 
-    public override IEnumerator IClick()
+    private IEnumerator IClick()
     {
-       yield return StartCoroutine(IOnClickAnimation());
-    }
+        if (!SaveManagerStatic.ClickBlocker)
+        {
+            SaveManagerStatic.ClickBlocker = true;
+            SaveManagerStatic.UiBloker = true;
 
-    private IEnumerator IOnClickAnimation()
-    {
-        GetComponent<Button>().interactable = false;
-        Vector3 currParentScale = buttonParent.GetComponent<RectTransform>().localScale;
-        Vector3 ParentShrinkScale = currParentScale * 0.85f;
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, ParentShrinkScale, 0.05f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, currParentScale, 0.05f));
-        GetComponent<Button>().interactable = true;
+            yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
+            {
+                CoroutineUtils.WaitForSequence(new List<IEnumerator>()
+                {
+                    ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
+                    ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime)
+                }),
+                saveChoiceAnimator.DeleteAction()
+            }));
+        }
     }
 
     public override void ResetButtonState()
     {
-        GetComponent<CanvasGroup>().alpha = 0f;
-        GetComponent<Button>().interactable = true;
+        base.ResetButtonState();
+
+        UnlockButton();
     }
 }

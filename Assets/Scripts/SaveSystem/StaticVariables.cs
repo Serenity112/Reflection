@@ -34,17 +34,6 @@ public static class StaticVariables
 
     
 
-    // ...
-    public static bool GameIsStarting { get; set; } = true;
-
-    // Анимации кнопки "Продолжить"
-    public enum MMContinueButtonState
-    {
-        ButtonDeleted,
-        HideAnimation,
-        AppearAnimation,
-        ButtonAdded,
-    }
-
-    public static MMContinueButtonState MainMenuContinueButtonAnimationTrigger { get; set; } = MMContinueButtonState.ButtonDeleted;
+    // Игра запущена в 1й раз в рамках текущей сессии
+    public static bool GameLaunchedFirstTime { get; set; } = true;
 }

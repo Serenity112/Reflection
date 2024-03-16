@@ -28,7 +28,6 @@ public abstract class IExpandableButton : IDraggableButton
 
     public override void ResetButtonState()
     {
-        Awake();
         gameObject.GetComponent<RectTransform>().localScale = origScale;
         buttonParent.GetComponent<RectTransform>().localScale = parentOrigScale;
         ResetFlags();

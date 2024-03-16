@@ -1,63 +1,43 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static StaticVariables;
 
 public class MMPanelsManager : MonoBehaviour, IPanelsManager
 {
     public static MMPanelsManager instance = null;
 
-    public GameObject BlackPanelMenu;
+    public GameObject BlackPanel;
 
-    public GameObject GrayPanelLogo;
-
-    public GameObject ActivePanels;
+    public GameObject SaveGuiPanel;
 
     public GameObject MainMenuButtons;
 
     public GameObject AboutUs;
 
+    public GameObject GameLogo;
+
     [SerializeField] Camera GameCamera;
 
-    private AsyncOperationHandle<GameObject> savesPanelHandler;
-
-    private AsyncOperationHandle<GameObject> aboutUsHandler;
-
-    private string SaveFilesData;
-
-    // Скорости
     private float FadingSpeed = 5f;
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-        else if (instance == this)
-        {
-            Destroy(gameObject);
-        }
+        instance = this;
 
         PanelsConfig.CurrentManager = this;
-
-        // Иначе нет гарантии, что ActivePanels внутри WarningPanel проиницализируется раньше, чем скрипт обратится к ней
-        SaveFilesData = SaveSystemUtils.SaveFilesData;
     }
 
     private void Start()
     {
-        //ConfirmationPanel.instance.ActivePanels = ActivePanels;
-        //WarningPanel.instance.ActivePanels = ActivePanels;
+        MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = false;
+
         UpdateContinueButtonState();
 
-        MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = false;
-        // Флаг того, что произошёл переход игра => меню. В этом случае нужна доп. анимация
+        // Флаг того, что произошёл переход игра => меню. Будет другая анимация, а не лого
         if (SaveManagerStatic.ifInMainMenu == false)
         {
             StartCoroutine(StartingGuiAnim());
@@ -69,118 +49,72 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
         SaveManagerStatic.ifInMainMenu = true;
     }
-    
+
     // Переход из основной игры в главное меню
     private IEnumerator StartingGuiAnim()
     {
-        FadeManager.FadeObject(BlackPanelMenu, true);
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
+        MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = false;
+        FadeManager.FadeObject(BlackPanel, true);
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
         MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = true;
     }
 
-    // Лого игры, для первого запуcrf
+    // Лого игры, для первого запуcка
     private IEnumerator LoadLogo()
     {
-        float logoSpeed = 1.0f;
+        FadeManager.FadeObject(GameLogo, true);
 
-        FadeManager.FadeObject(GrayPanelLogo, true);
+        GameLogoAnimator animator = GameLogo.GetComponent<GameLogoAnimator>();
 
-        var handler = Addressables.InstantiateAsync("GameLogo", ActivePanels.GetComponent<RectTransform>(), false, true);
-        yield return handler;
+        yield return StartCoroutine(animator.IAnimate());
+        yield return StartCoroutine(FadeManager.FadeObject(GameLogo, false, 3f));
 
-        FadeManager.FadeObject(GrayPanelLogo, false);
-
-        GameObject result = handler.Result;
-        GameObject UnityBG = result.transform.GetChild(0).gameObject;
-        GameObject LogoNew = result.transform.GetChild(1).gameObject;
-        GameObject LogoOld = result.transform.GetChild(2).gameObject;
-        GameObject WRLogo = result.transform.GetChild(3).gameObject;
-
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>() {
-            FadeManager.FadeObject(WRLogo, true, logoSpeed),
-            FadeManager.FadeObject(UnityBG, false, logoSpeed)
-        }));
-
-        yield return new WaitForSeconds(0.75f);
-        yield return StartCoroutine(FadeManager.FadeObject(WRLogo, false, logoSpeed));
-
-        yield return StartCoroutine(FadeManager.FadeObject(LogoNew, true, logoSpeed));
-        yield return new WaitForSeconds(0.5f);
-        yield return StartCoroutine(FadeManager.FadeObject(LogoOld, true, logoSpeed));
-        yield return new WaitForSeconds(0.5f);
-
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, logoSpeed));
-        yield return Addressables.ReleaseInstance(handler);
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, logoSpeed));
-
-        yield return new WaitForSeconds(0.5f);
         MMButtonsManager.instance.gameObject.GetComponent<GraphicRaycaster>().enabled = true;
     }
 
-    public GameObject GetBlackPanel() => BlackPanelMenu;
-
-    public GameObject GetActivePanelsParent() => ActivePanels;
+    public GameObject GetBlackPanel() => BlackPanel;
 
     public Camera GetGameCamera() => GameCamera;
+
+    private void ContinueButtonEnable()
+    {
+        MMButtonsManager.instance.transform.GetChild(0).gameObject.SetActive(true);
+    }
+
+    private void ContinueButtonDisable()
+    {
+        MMButtonsManager.instance.transform.GetChild(0).gameObject.SetActive(false);
+    }
 
     // Состояние кнопки "Продолжить"
     private void UpdateContinueButtonState()
     {
         try
         {
-            if (ES3.FileExists(SaveFilesData) && ES3.KeyExists("ContinueTrigger", SaveFilesData))
+            if (ES3.FileExists(SaveSystemUtils.GameData) && ES3.KeyExists("SavesTaken", SaveSystemUtils.GameData))
             {
-                StaticVariables.MainMenuContinueButtonAnimationTrigger = ES3.Load<MMContinueButtonState>("ContinueTrigger", SaveFilesData);
+                Dictionary<string, string> SavesTaken = ES3.Load<Dictionary<string, string>>("SavesTaken", SaveSystemUtils.GameData);
+
+                if (SavesTaken != null && SavesTaken.Count > 0)
+                {
+                    ContinueButtonEnable();
+                }
+                else
+                {
+                    ContinueButtonDisable();
+                }
+            }
+            else
+            {
+                ContinueButtonDisable();
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            //WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            WarningPanel.instance.CreateWarningMessage(WarningPanelMessages.WarningTemplate.SaveSystemCorrupt, $" key: SavesTaken folder: {SaveSystemUtils.GameData}");
+            SaveSystemUtils.DumpFile(SaveSystemUtils.GameData);
+            ContinueButtonDisable();
         }
-
-        switch (StaticVariables.MainMenuContinueButtonAnimationTrigger)
-        {
-            case MMContinueButtonState.ButtonDeleted:
-                DeleteContinueButton();
-                break;
-            case MMContinueButtonState.HideAnimation:
-                AddContinueButton(); // Так как в сцене изначально кнопки нет, для анимации исчезания
-                StartCoroutine(IHideContinueButton());
-                StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.ButtonDeleted;
-                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.ButtonDeleted, SaveFilesData);
-                break;
-            case MMContinueButtonState.AppearAnimation:
-                StartCoroutine(IAppearContinueButton());
-                StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.ButtonAdded;
-                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.ButtonAdded, SaveFilesData);
-                break;
-            case MMContinueButtonState.ButtonAdded:
-                AddContinueButton();
-                break;
-        }
-    }
-
-    // Анимации кнопки "Продолжить"
-    private void AddContinueButton()
-    {
-        MainMenuButtons.GetComponent<Animator>().Play("ConstantAppear");
-    }
-
-    private void DeleteContinueButton()
-    {
-        MainMenuButtons.GetComponent<Animator>().Play("ConstantRemove");
-    }
-
-    private IEnumerator IAppearContinueButton()
-    {
-        yield return new WaitForSeconds(0.33f);
-        MainMenuButtons.GetComponent<Animator>().Play("ContinueButtonAppear");
-    }
-
-    private IEnumerator IHideContinueButton()
-    {
-        yield return new WaitForSeconds(0.33f);
-        MainMenuButtons.GetComponent<Animator>().Play("ContinueButtonRemove");
     }
 
     // Нажатие кнопки "Продолжиь игру"
@@ -188,50 +122,24 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
     {
         try
         {
-            if (ES3.FileExists(SaveFilesData) && ES3.KeyExists("saveDataTimes", SaveFilesData))
+            if (ES3.FileExists(SaveSystemUtils.GameData) && ES3.KeyExists("SavesTaken", SaveSystemUtils.GameData))
             {
-                string[] dates = ES3.Load<string[]>("saveDataTimes", SaveFilesData);
-
-                int last_index = -1;
-                DateTime last_dt = new DateTime();
-
-                // Определение первого last_dt, чтобы далее с ним сравнивать
-                for (int i = 0; i < dates.Length; i++)
-                {
-                    if (dates[i] != null && dates[i] != string.Empty)
-                    {
-                        last_index = i;
-                        last_dt = DateTime.Parse(dates[i]);
-                        break;
-                    }
-                }
-
-                // Поиск минимальной даты начиная со следующей после найденной в предыдущем цикле
-                for (int i = last_index + 1; i < dates.Length; i++)
-                {
-                    if (dates[i] != null && dates[i] != string.Empty)
-                    {
-                        DateTime dateTime = DateTime.Parse(dates[i]);
-
-                        if (dateTime > last_dt)
-                        {
-                            last_dt = dateTime;
-                            last_index = i;
-                        }
-                    }
-                }
-
-                StartCoroutine(ILoadGameFromMainMenu(last_index));
+                string format = "HH:mm:ss dd/MM/yy";
+                Dictionary<int, string> data = ES3.Load<SaveManagerData>("SavesTaken", SaveSystemUtils.GameData).SavesTaken;
+                DateTime lateDateTime = data.Max(pair => DateTime.ParseExact(pair.Value, format, null));
+                int lateIndex = data.Where(pair => (DateTime.ParseExact(pair.Value, format, null) == lateDateTime)).First().Key;
+                StartCoroutine(ILoadGameFromMainMenu(lateIndex));
             }
             else
             {
-                // Кнопка "Продлжить" не может существовать в этом случае. Но на случай коррапта она дополнительно скрывается.
-                DeleteContinueButton();
+                MMButtonsManager.instance.transform.GetChild(0).gameObject.SetActive(false);
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-           // WarningPanel.instance.CreateWarningPanel(WarningPanel.SavingErrorMessage);
+            ContinueButtonDisable();
+            WarningPanel.instance.CreateWarningMessage(WarningPanelMessages.WarningTemplate.SaveSystemCorrupt, $" key: SavesTaken folder: {SaveSystemUtils.GameData}");
+            SaveSystemUtils.DumpFile(SaveSystemUtils.GameData);
         }
     }
 
@@ -245,45 +153,32 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator IOpenSaveMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
-        MMButtonsManager.instance.ResetAllButtonsState();
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
+        FadeManager.FadeObject(SaveGuiPanel, true);
 
-        savesPanelHandler = Addressables.InstantiateAsync("SaveGuiPanel", ActivePanels.GetComponent<RectTransform>(), false, true);
-        yield return savesPanelHandler;
+        SaveManager.instance.ResetManager();
+        yield return new WaitForSeconds(0.1f);
 
-        if (savesPanelHandler.Status == AsyncOperationStatus.Succeeded)
-        {
-            savesPanelHandler.Result.name = "SaveGuiPanel";
-
-            yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
-        }
-        else
-        {
-            Debug.Log("Error loading");
-        }
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
+        StaticVariables.IN_SAVE_MENU = true;
     }
 
     private IEnumerator ICloseSaveMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
-        Addressables.ReleaseInstance(savesPanelHandler);
+        FadeManager.FadeObject(SaveGuiPanel, false);
+        SaveManager.instance.ClearCurrenTextures();
 
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
-
-        Resources.UnloadUnusedAssets();
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
 
         UpdateContinueButtonState();
-    }
-
-    public void ReleaseSaveMenu()
-    {
-        Addressables.ReleaseInstance(savesPanelHandler);
+        StaticVariables.IN_SAVE_MENU = false;
     }
 
     public IEnumerator ILoadGameFromMainMenu(int actualSaveNum)
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
         SaveManagerStatic.StartingLoadSaveFile = actualSaveNum;
 
@@ -300,34 +195,25 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     private IEnumerator IOpenInfoMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
+        FadeManager.FadeObject(AboutUs, true);
 
-        aboutUsHandler = Addressables.InstantiateAsync("AboutUs", ActivePanels.GetComponent<RectTransform>(), false, true);
-        yield return aboutUsHandler;
+        AboutUsButtonManager.instance.ResetManager();
 
-        if (aboutUsHandler.Status == AsyncOperationStatus.Succeeded)
-        {
-            aboutUsHandler.Result.name = "AboutUs";
-
-            yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
-        }
-        else
-        {
-            Debug.Log("Error loading");
-        }
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
+        AboutUsButtonManager.IN_ABOUTUS_MENU = true;
     }
 
     public void CloseInfoMenu() => StartCoroutine(ICloseInfoMenu());
 
     private IEnumerator ICloseInfoMenu()
     {
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, true, FadingSpeed));
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 
-        Addressables.ReleaseInstance(aboutUsHandler);
+        FadeManager.FadeObject(AboutUs, false);
 
-        yield return StartCoroutine(FadeManager.FadeObject(BlackPanelMenu, false, FadingSpeed));
-
-        Resources.UnloadUnusedAssets();
+        yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, false, FadingSpeed));
+        AboutUsButtonManager.IN_ABOUTUS_MENU = false;
     }
 
     // Выход из игры

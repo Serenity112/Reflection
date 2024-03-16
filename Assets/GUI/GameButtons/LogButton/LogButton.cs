@@ -122,12 +122,12 @@ public class LogButton : IExpandableButton
         LogManager.instance.LogPanel.SetActive(true);
         LogManager.instance.ResetManager();
 
-        yield return StartCoroutine(CoroutineWaitForAll.instance.WaitForAll(new List<IEnumerator>()
+        yield return StartCoroutine(CoroutineUtils.WaitForAll(new List<IEnumerator>()
         {
             FadeManager.FadeObject(LogManager.instance.LogPanel, true, speed),
             FadeManager.FadeOnly(PanelsManager.instance.GameButtons, false, speed),
             FadeManager.FadeOnly(PanelsManager.instance.GameGuiPanel, false, speed),
-            CoroutineWaitForAll.instance.WaitForSequence(new List<IEnumerator>()
+            CoroutineUtils.WaitForSequence(new List<IEnumerator>()
             {
                 ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
                 ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime)

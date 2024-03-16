@@ -19,11 +19,15 @@ public class SaveFileFields : MonoBehaviour
     public GameObject OverPanel;
     public GameObject NoImage;
     public SaveDateTime Datetime;
+    private GameObject VisualFile;
+
 
     private IEnumerator overPanelIn;
     private IEnumerator overPanelOut;
 
-    private float op_alpha = 0.4f;
+    private IEnumerator vfIn;
+    private IEnumerator vfOut;
+
     private float speed = 4f;
 
     void Awake()
@@ -31,29 +35,50 @@ public class SaveFileFields : MonoBehaviour
         _SaveChoiseAnimator = GetComponent<SaveChoiseAnimator>();
         _FirstSaveAnimator = GetComponent<FirstSaveAnimator>();
         _MainMenuLoad = GetComponent<MainMenuLoad>();
+        VisualFile = transform.GetChild(1).gameObject;
     }
 
-    public IEnumerator OpenOverPanel(float coef = 1)
+    public IEnumerator OpenOverPanel()
     {
-        if (!SaveManagerStatic.OverlayPanelActive)
-        {
-           
-        }
-
         if (overPanelOut != null)
             StopCoroutine(overPanelOut);
 
-        overPanelIn = FadeManager.FadeOnly(OverPanel, true, speed * coef);
+        overPanelIn = FadeManager.FadeOnly(OverPanel, true, speed);
         yield return StartCoroutine(overPanelIn);
+
     }
 
-    public IEnumerator CloseOverPanel(float coef = 1)
+    public IEnumerator CloseOverPanel()
     {
         if (overPanelIn != null)
             StopCoroutine(overPanelIn);
 
-        overPanelOut = FadeManager.FadeOnly(OverPanel, false, speed * coef);
+        overPanelOut = FadeManager.FadeOnly(OverPanel, false, speed);
         yield return StartCoroutine(overPanelOut);
+    }
+
+    public void CloseOverPanelInstant()
+    {
+        FadeManager.FadeOnly(OverPanel, false);
+    }
+
+    public IEnumerator VF_Show()
+    {
+        if (vfOut != null)
+            StopCoroutine(vfOut);
+
+        vfIn = FadeManager.FadeOnly(VisualFile, true, speed);
+        yield return StartCoroutine(vfIn);
+
+    }
+
+    public IEnumerator VF_Hide()
+    {
+        if (vfIn != null)
+            StopCoroutine(vfIn);
+
+        vfOut = FadeManager.FadeOnly(VisualFile, false, speed);
+        yield return StartCoroutine(vfOut);
     }
 
     public void resetCassettePosition(GameObject cassette)
@@ -63,21 +88,5 @@ public class SaveFileFields : MonoBehaviour
         GameObject circle2 = cassette.transform.Find("Circle2").gameObject;
         circle1.GetComponent<RectTransform>().rotation = new Quaternion(0, 0, 0, 0);
         circle2.GetComponent<RectTransform>().rotation = new Quaternion(0, 0, 0, 0);*/
-    }
-
-    public void ResetAll()
-    {
-        _SaveChoiseAnimator.ResetPanel();
-        _FirstSaveAnimator.ResetPanel();
-        _MainMenuLoad.ResetPanel();
-
-
-        /*_SaveChoiseAnimator.GetComponent<CanvasGroup>().alpha = 0f;
-        _FirstSaveAnimator.GetComponent<CanvasGroup>().alpha = 0f;
-        _MainMenuLoad.GetComponent<CanvasGroup>().alpha = 0f;*/
-        /* GradLeft.GetComponent<CanvasGroup>().alpha = 0f;
-         GradRight.GetComponent<CanvasGroup>().alpha = 0f;
-         IconLeft.GetComponent<CanvasGroup>().alpha = 0f;
-         IconRight.GetComponent<CanvasGroup>().alpha = 0f;*/
     }
 }

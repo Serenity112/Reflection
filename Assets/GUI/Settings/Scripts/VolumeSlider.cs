@@ -57,7 +57,7 @@ public class VolumeSlider : MonoBehaviour, ISettingsOptions, IPointerDownHandler
                 break;
         }
 
-        SettingsConfig.SaveOptionToFile(setting, option, slider.value);
+        SettingsConfig.SaveOption(setting, option, slider.value);
         SettingsConfig.ApplySetting(setting, option, slider.value);
     }
 
@@ -186,6 +186,9 @@ public class VolumeSlider : MonoBehaviour, ISettingsOptions, IPointerDownHandler
 
     public void InitialUpdateVisuals()
     {
+        enter = false;
+        pointer_down = false;
+
         UpdateVisuals();
     }
 }

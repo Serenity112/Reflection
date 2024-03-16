@@ -3,17 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using static MMButtonsManager;
 
-public class MMOptionButton : IDraggableButtonGroup
+public class MMOptionButton : IDraggableButton
 {
-    [SerializeField] private MainMenuOption option;
+    [SerializeField] private MMButtonsManager.MainMenuOption option;
 
-    [HideInInspector]
-    public GameObject spacing;
-
-    [SerializeField] private AudioSource ScrollSource;
-    [SerializeField] private AudioSource ClickSource;
+    private GameObject spacing;
 
     private IEnumerator _appear = null;
     private IEnumerator _disappear = null;
@@ -25,6 +20,11 @@ public class MMOptionButton : IDraggableButtonGroup
         base.Awake();
         spacing = transform.GetChild(0).gameObject;
         GetComponent<Button>().onClick.AddListener(OnClick);
+    }
+
+    private void Start()
+    {
+        MMButtonsManager.instance.SubscribeButton(this);
     }
 
     public override void EnterAction()
@@ -57,6 +57,6 @@ public class MMOptionButton : IDraggableButtonGroup
 
     public override void ResetButtonState()
     {
-        throw new NotImplementedException();
+        FadeManager.FadeOnly(spacing, false);
     }
 }

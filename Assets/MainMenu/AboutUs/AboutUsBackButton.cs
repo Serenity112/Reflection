@@ -2,56 +2,35 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SaveBackButton : IExpandableButton
+public class AboutUsBackButton : IExpandableButton
 {
     private IEnumerator expandOnEnter;
     private IEnumerator shrinkOnEnter;
-    private IEnumerator _update;
+    private IEnumerator iupdate;
+
+    private bool AllowClick()
+    {
+        return GetComponent<Button>().interactable && AboutUsButtonManager.IN_ABOUTUS_MENU;
+    }
+
+    public override void Awake()
+    {
+        base.Awake();
+    }
 
     private void Start()
     {
-        animator.Play("Idle");
+        AboutUsButtonManager.instance.SubscribeButton(this);
     }
 
     private void OnEnable()
     {
-        if (_update != null)
-        {
-            StopCoroutine(_update);
-        }
-
-        _update = IUpdate();
-        StartCoroutine(_update);
+        StartUpdate();
     }
 
     private void OnDisable()
     {
-        if (_update != null)
-        {
-            StopCoroutine(_update);
-        }
-    }
-
-    private bool AllowClick()
-    {
-        return GetComponent<Button>().interactable &&
-                StaticVariables.IN_SAVE_MENU &&
-                !StaticVariables.GAME_IS_LOADING &&
-                !StaticVariables.OVERLAY_ACTIVE &&
-                !SaveManagerStatic.ClickBlocker;
-    }
-
-    private IEnumerator IUpdate()
-    {
-        while (true)
-        {
-            if (Input.GetKey(KeyCode.Escape))
-            {
-                OnClick();
-            }
-
-            yield return null;
-        }
+        EndUpdate();
     }
 
     public override void EnterAction()
@@ -79,8 +58,9 @@ public class SaveBackButton : IExpandableButton
 
         GetComponent<Button>().interactable = false;
 
-        animator.Play("Back");
-        SaveManager.instance.CloseSave();
+        animator.Play("AO_Back");
+
+        MMPanelsManager.instance.CloseInfoMenu();
 
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
         yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
@@ -88,12 +68,43 @@ public class SaveBackButton : IExpandableButton
         GetComponent<Button>().interactable = true;
     }
 
-
     public override void ResetButtonState()
     {
         base.ResetButtonState();
 
-        animator.Play("Idle");
+        animator.Play("AO_Idle");
         GetComponent<Button>().interactable = true;
+    }
+
+    private IEnumerator IUpdate()
+    {
+        while (true)
+        {
+            if (Input.GetKey(KeyCode.Escape))
+            {
+                OnClick();
+            }
+
+            yield return null;
+        }
+    }
+
+    public void StartUpdate()
+    {
+        if (iupdate != null)
+        {
+            StopCoroutine(iupdate);
+        }
+
+        iupdate = IUpdate();
+        StartCoroutine(iupdate);
+    }
+
+    public void EndUpdate()
+    {
+        if (iupdate != null)
+        {
+            StopCoroutine(iupdate);
+        }
     }
 }

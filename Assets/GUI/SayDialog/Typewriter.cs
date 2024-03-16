@@ -373,16 +373,16 @@ public class Typewriter : MonoBehaviour
     {
         ES3.Save<TypewriterSaveData>("ReadDialogs",
             new TypewriterSaveData(0) { SavedDialogs = DialogReadSaves },
-            $"{SaveSystemUtils.SaveFilesData}");
+            $"{SaveSystemUtils.GameData}");
     }
 
     public void LoadDialogReadSaves()
     {
         try
         {
-            if (ES3.KeyExists("ReadDialogs", $"{SaveSystemUtils.SaveFilesData}"))
+            if (ES3.KeyExists("ReadDialogs", $"{SaveSystemUtils.GameData}"))
             {
-                TypewriterSaveData loaded = ES3.Load<TypewriterSaveData>("ReadDialogs", $"{SaveSystemUtils.SaveFilesData}");
+                TypewriterSaveData loaded = ES3.Load<TypewriterSaveData>("ReadDialogs", $"{SaveSystemUtils.GameData}");
                 if (loaded.SavedDialogs != null)
                 {
                     DialogReadSaves = loaded.SavedDialogs;

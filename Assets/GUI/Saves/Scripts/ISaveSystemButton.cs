@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public abstract class ISaveSystemButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
@@ -38,6 +39,16 @@ public abstract class ISaveSystemButton : MonoBehaviour, IPointerEnterHandler, I
     public abstract void EnterAction();
 
     public abstract void ExitAction();
+
+    public void BlockButton()
+    {
+        GetComponent<Button>().interactable = false;
+    }
+
+    public void UnlockButton()
+    {
+        GetComponent<Button>().interactable = true;
+    }
 
     public virtual void ResetButtonState()
     {

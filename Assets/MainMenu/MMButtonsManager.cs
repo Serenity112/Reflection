@@ -32,10 +32,7 @@ public class MMButtonsManager : IButtonManager
     {
         foreach (var button in GameButtons)
         {
-            MMOptionButton underlineButton = button.GetComponent<MMOptionButton>();
-            //underlineButton.ResetFlags();
-            //GameObject spacing = underlineButton.spacing;
-           // spacing.GetComponent<CanvasGroup>().alpha = 0f;
+            button.ResetButtonState();
         }
     }
 
@@ -66,6 +63,6 @@ public class MMButtonsManager : IButtonManager
 
     public override void ResetManager()
     {
-        throw new System.NotImplementedException();
+        ResetAllButtonsState();
     }
 }
