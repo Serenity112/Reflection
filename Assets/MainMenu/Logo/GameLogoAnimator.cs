@@ -62,7 +62,7 @@ public class GameLogoAnimator : MonoBehaviour
     {
         while (true)
         {
-            if (Input.anyKey)
+            if (Input.GetKey(KeyCode.Mouse0) || Input.GetKey(KeyCode.Mouse1) || Input.GetKey(KeyCode.Space))
             {
                 yield break;
             }

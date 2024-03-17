@@ -5,15 +5,10 @@ using UnityEngine.UI;
 
 public class DeleteCrossButton : ISaveSystemButton
 {
-    private IEnumerator expandOnEnter;
-    private IEnumerator shrinkOnExit;
-
+    [SerializeField] private MonoBehaviour deleteExecutor;
     private IEnumerator CrossFadeIn;
     private IEnumerator CrossFadeOut;
-
     private float _speed = 7f;
-
-    [SerializeField] private SaveChoiseAnimator saveChoiceAnimator;
 
     public override void Awake()
     {
@@ -74,7 +69,7 @@ public class DeleteCrossButton : ISaveSystemButton
                     ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime),
                     ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime)
                 }),
-                saveChoiceAnimator.DeleteAction()
+                ((IDeleteActionExecutor)deleteExecutor).DeleteAction()
             }));
         }
     }

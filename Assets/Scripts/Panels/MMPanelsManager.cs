@@ -27,7 +27,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
     private void Awake()
     {
         instance = this;
-
+        StaticVariables.ResetStatic();
         PanelsConfig.CurrentManager = this;
     }
 
@@ -78,12 +78,12 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
 
     private void ContinueButtonEnable()
     {
-        MMButtonsManager.instance.transform.GetChild(0).gameObject.SetActive(true);
+        StartCoroutine(FadeManager.FadeObject(MMButtonsManager.instance.transform.GetChild(0).gameObject, true, FadingSpeed));
     }
 
     private void ContinueButtonDisable()
     {
-        MMButtonsManager.instance.transform.GetChild(0).gameObject.SetActive(false);
+        StartCoroutine(FadeManager.FadeObject(MMButtonsManager.instance.transform.GetChild(0).gameObject, false, FadingSpeed));
     }
 
     // Состояние кнопки "Продолжить"
@@ -93,7 +93,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         {
             if (ES3.FileExists(SaveSystemUtils.GameData) && ES3.KeyExists("SavesTaken", SaveSystemUtils.GameData))
             {
-                Dictionary<string, string> SavesTaken = ES3.Load<Dictionary<string, string>>("SavesTaken", SaveSystemUtils.GameData);
+                Dictionary<int, string> SavesTaken = ES3.Load<SaveManagerData>("SavesTaken", SaveSystemUtils.GameData).SavesTaken;
 
                 if (SavesTaken != null && SavesTaken.Count > 0)
                 {
@@ -111,8 +111,8 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         }
         catch (Exception ex)
         {
-            WarningPanel.instance.CreateWarningMessage(WarningPanelMessages.WarningTemplate.SaveSystemCorrupt, $" key: SavesTaken folder: {SaveSystemUtils.GameData}");
-            SaveSystemUtils.DumpFile(SaveSystemUtils.GameData);
+            WarningPanel.instance.CreateWarningMessage(WarningPanelMessages.WarningTemplate.SaveSystemCorrupt, $" key: SavesTaken folder: {SaveSystemUtils.GameData} details: {ex.Message}");
+            //SaveSystemUtils.DumpFile(SaveSystemUtils.GameData);
             ContinueButtonDisable();
         }
     }
@@ -124,27 +124,29 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         {
             if (ES3.FileExists(SaveSystemUtils.GameData) && ES3.KeyExists("SavesTaken", SaveSystemUtils.GameData))
             {
-                string format = "HH:mm:ss dd/MM/yy";
                 Dictionary<int, string> data = ES3.Load<SaveManagerData>("SavesTaken", SaveSystemUtils.GameData).SavesTaken;
-                DateTime lateDateTime = data.Max(pair => DateTime.ParseExact(pair.Value, format, null));
-                int lateIndex = data.Where(pair => (DateTime.ParseExact(pair.Value, format, null) == lateDateTime)).First().Key;
-                StartCoroutine(ILoadGameFromMainMenu(lateIndex));
+                if (data != null && data.Count > 0)
+                {
+                    DateTime lateDateTime = data.Max(pair => DateTime.ParseExact(pair.Value, SaveManager.DateTimeFormat, null));
+                    int lateIndex = data.Where(pair => (DateTime.ParseExact(pair.Value, SaveManager.DateTimeFormat, null) == lateDateTime)).First().Key;
+                    StartCoroutine(ILoadGame(lateIndex));
+                }
             }
             else
             {
-                MMButtonsManager.instance.transform.GetChild(0).gameObject.SetActive(false);
+                ContinueButtonDisable();
             }
         }
         catch (Exception ex)
         {
             ContinueButtonDisable();
             WarningPanel.instance.CreateWarningMessage(WarningPanelMessages.WarningTemplate.SaveSystemCorrupt, $" key: SavesTaken folder: {SaveSystemUtils.GameData}");
-            SaveSystemUtils.DumpFile(SaveSystemUtils.GameData);
+            //SaveSystemUtils.DumpFile(SaveSystemUtils.GameData);
         }
     }
 
     // Новая игра
-    public void StartNewGame() => StartCoroutine(ILoadGameFromMainMenu(-1));
+    public void StartNewGame() => StartCoroutine(ILoadGame(-1));
 
     // Сейвы
     public void OpenSaveMenu() => StartCoroutine(IOpenSaveMenu());
@@ -176,7 +178,7 @@ public class MMPanelsManager : MonoBehaviour, IPanelsManager
         StaticVariables.IN_SAVE_MENU = false;
     }
 
-    public IEnumerator ILoadGameFromMainMenu(int actualSaveNum)
+    public IEnumerator ILoadGame(int actualSaveNum)
     {
         yield return StartCoroutine(FadeManager.FadeObject(BlackPanel, true, FadingSpeed));
 

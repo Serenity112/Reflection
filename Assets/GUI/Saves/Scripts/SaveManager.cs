@@ -30,7 +30,7 @@ public class SaveManager : MonoBehaviour
     private (int width, int height) CaptureRes = (1280, 720);
 
     [HideInInspector]
-    public const int savesPerPage = 2;
+    public const int savesPerPage = 3;
 
     [HideInInspector]
     public const int maxPages = 12;
@@ -49,13 +49,7 @@ public class SaveManager : MonoBehaviour
 
     public int currentPage = 0;
 
-    private static string SaveFileName;
-
-    private static string ScreenshotsFolder;
-    private static string SaveFilesFolder;
-
-    public float frameAplhaOff { get; private set; } = 1f;
-    public float frameAplhaOn { get; private set; } = 0.4f;
+    public static string DateTimeFormat = "HH:mm:ss dd/MM/yy";
 
     [SerializeField]
     private SaveBackButton backButton;
@@ -66,11 +60,14 @@ public class SaveManager : MonoBehaviour
     {
         instance = this;
 
-        ScreenshotsFolder = SaveSystemUtils.ScreenshotsFolder;
+        InitFiles();
 
         bottomPages = gameObject.transform.GetChild(2).GetComponent<BottomPages>();
+    }
 
-        InitFiles();
+    private void Start()
+    {
+        ScreenshotCamera = PanelsConfig.CurrentManager.GetGameCamera();
     }
 
     private void OnEnable()
@@ -95,18 +92,21 @@ public class SaveManager : MonoBehaviour
         {
             GameObject file = Files.transform.GetChild(i).gameObject;
             allFiles[i] = file;
-            allScreenshots[i] = file.GetComponent<SaveFileFields>().Screenshot;
+            allScreenshots[i] = GetSaveFileFields(file).Screenshot;
         }
 
-        if (ES3.FileExists(SaveSystemUtils.GameData) && ES3.KeyExists("SavesTaken", SaveSystemUtils.GameData))
+        try
         {
-            SavesTaken = ES3.Load<SaveManagerData>("SavesTaken", SaveSystemUtils.GameData).SavesTaken;
+            if (ES3.FileExists(SaveSystemUtils.GameData) && ES3.KeyExists("SavesTaken", SaveSystemUtils.GameData))
+            {
+                SavesTaken = ES3.Load<SaveManagerData>("SavesTaken", SaveSystemUtils.GameData).SavesTaken;
+            }
         }
-    }
-
-    private void Start()
-    {
-        ScreenshotCamera = PanelsConfig.CurrentManager.GetGameCamera();
+        catch
+        {
+            //WarningPanel.instance.CreateWarningMessage(WarningPanelMessages.WarningTemplate.SaveSystemCorrupt, $"key: SavesTaken folder: {SaveSystemUtils.GameData}");
+            //SaveSystemUtils.DumpFile(SaveSystemUtils.GameData);
+        }
     }
 
     private IEnumerator IUpdate()
@@ -116,7 +116,8 @@ public class SaveManager : MonoBehaviour
             if (StaticVariables.IN_SAVE_MENU &&
                 !StaticVariables.GAME_IS_LOADING &&
                 !StaticVariables.OVERLAY_ACTIVE &&
-                !SaveManagerStatic.ClickBlocker)
+                !SaveManagerStatic.ClickBlocker &&
+                !SaveManagerStatic.UiBloker)
             {
 
                 if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
@@ -168,10 +169,6 @@ public class SaveManager : MonoBehaviour
                     break;
             }
         }
-        else
-        {
-            Debug.Log("SaveManagerStatic.ClickBlocker: " + SaveManagerStatic.ClickBlocker);
-        }
     }
 
     public void LoadPage(int pageToLoad)
@@ -193,11 +190,16 @@ public class SaveManager : MonoBehaviour
         }
     }
 
+    private SaveFileFields GetSaveFileFields(GameObject file)
+    {
+        return file.transform.GetChild(0).GetComponent<SaveFileFields>();
+    }
+
     public void LoadFirstPage()
     {
         for (int i = 0; i < savesPerPage; i++)
         {
-            SaveFileFields saveFileFields = allFiles[i].GetComponent<SaveFileFields>();
+            SaveFileFields saveFileFields = GetSaveFileFields(allFiles[i]);
 
             GameObject screenshot = allScreenshots[i];
             GameObject noImage = saveFileFields.NoImage;
@@ -208,35 +210,32 @@ public class SaveManager : MonoBehaviour
                 saveFileFields.Datetime.ShowText();
                 saveFileFields.Datetime.SetText(SavesTaken[i]);
 
-                var texture = ES3.LoadImage($"{ScreenshotsFolder}/screenshot{i}.png");
+                var texture = ES3.LoadImage($"{SaveSystemUtils.ScreenshotsFolder}/screenshot{i}.png");
                 texture.name = "screenshot" + i;
                 currentTextures[i] = texture;
 
                 screenshot.GetComponent<RawImage>().texture = texture;
                 screenshot.GetComponent<CanvasGroup>().alpha = 1f;
-
                 FadeManager.FadeObject(overPanel, true);
-                noImage.GetComponent<CanvasGroup>().alpha = frameAplhaOff;
 
                 FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, false);
 
-                if (!SaveManagerStatic.ifInMainMenu)
+                if (SaveManagerStatic.ifInMainMenu)
+                {
+                    FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, false);
+                    FadeManager.FadeObject(saveFileFields._MainMenuLoadObject, true);
+                    saveFileFields._MainMenuLoad.ResetPanelSync();
+                }
+                else
                 {
                     FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, true);
                     FadeManager.FadeObject(saveFileFields._MainMenuLoadObject, false);
                     saveFileFields._SaveChoiseAnimator.ResetPanelSync();
                 }
-                else
-                {
-                    FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, false);
-                    FadeManager.FadeObject(saveFileFields._MainMenuLoadObject, true);
-                    saveFileFields._MainMenuLoad.ResetPanel();
-                }
             }
             else
             {
                 FadeManager.FadeObject(overPanel, false);
-                FadeManager.FadeObject(noImage, true);
                 screenshot.GetComponent<CanvasGroup>().alpha = 0f;
                 screenshot.GetComponent<RawImage>().texture = null;
                 currentTextures[i] = null;
@@ -245,19 +244,17 @@ public class SaveManager : MonoBehaviour
                 FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, false);
                 FadeManager.FadeObject(saveFileFields._MainMenuLoadObject, false);
 
-                if (!SaveManagerStatic.ifInMainMenu)
+                if (SaveManagerStatic.ifInMainMenu)
+                {
+                    FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, false);
+                }
+                else
                 {
                     FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, true);
                     saveFileFields._FirstSaveAnimator.ResetPanelSync();
                 }
-                else
-                {
-                    FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, false);
-                }
             }
         }
-
-        bottomPages.StartingLoad();
     }
 
     private IEnumerator LoadPictures(int currentPage, int pageToLoad)
@@ -273,9 +270,7 @@ public class SaveManager : MonoBehaviour
             int a_prev = currentPage * savesPerPage + i;
             int a_next = pageToLoad * savesPerPage + i;
 
-            SaveFileFields saveFileFields = allFiles[i].GetComponent<SaveFileFields>();
-            GameObject noImage = saveFileFields.NoImage;
-            GameObject overPanel = saveFileFields.OverPanel;
+            SaveFileFields saveFileFields = GetSaveFileFields(allFiles[i]);
 
             // Переход [Занятый] => [Занятый]
             if (SavesTaken.ContainsKey(a_prev) && SavesTaken.ContainsKey(a_next))
@@ -283,27 +278,30 @@ public class SaveManager : MonoBehaviour
                 enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, speed));
                 enumerators_prev.Add(saveFileFields.VF_Hide());
                 enumerators_prev.Add(saveFileFields.Datetime.IHideText());
-                enumerators_prev.Add(FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, false, speed));
 
                 enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, speed));
                 enumerators_next.Add(saveFileFields.VF_Show());
                 enumerators_next.Add(saveFileFields.Datetime.IShowText(SavesTaken[a_next]));
-                enumerators_next.Add(FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, true, speed));
 
                 if (SaveManagerStatic.ifInMainMenu)
                 {
+                    enumerators_prev.Add(FadeManager.FadeObject(saveFileFields._MainMenuLoadObject, false, speed));
                     middle_actions.Add(delegate
                     {
-                        saveFileFields._MainMenuLoad.ResetPanel();
+                        StartCoroutine(saveFileFields.OpenOverPanel());
+                        saveFileFields._MainMenuLoad.ResetPanelSync();
                     });
+                    enumerators_next.Add(FadeManager.FadeObject(saveFileFields._MainMenuLoadObject, true, speed));
                 }
                 else
                 {
+                    enumerators_prev.Add(FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, false, speed));
                     middle_actions.Add(delegate
                     {
-                        FadeManager.FadeInLite(saveFileFields._SaveChoiseAnimatorObject);
+                        StartCoroutine(saveFileFields.OpenOverPanel());
                         saveFileFields._SaveChoiseAnimator.ResetPanelSync();
                     });
+                    enumerators_next.Add(FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, true, speed));
                 }
             }
 
@@ -312,40 +310,42 @@ public class SaveManager : MonoBehaviour
             {
                 enumerators_prev.Add(saveFileFields.Datetime.IHideText());
                 enumerators_prev.Add(FadeManager.FadeOnly(allScreenshots[i], false, speed));
-                enumerators_prev.Add(FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, false, speed));
                 enumerators_prev.Add(saveFileFields.VF_Hide());
 
-                enumerators_next.Add(FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, true, speed));
                 enumerators_next.Add(saveFileFields.VF_Show());
                 enumerators_next.Add(saveFileFields.CloseOverPanel());
 
                 if (SaveManagerStatic.ifInMainMenu)
                 {
+                    enumerators_prev.Add(FadeManager.FadeObject(saveFileFields._MainMenuLoadObject, false, speed));
+
                     middle_actions.Add(delegate
                     {
-                        FadeManager.FadeObject(saveFileFields._MainMenuLoadObject, false);
+                        saveFileFields.CloseOverPanelInstant();
                     });
                 }
                 else
                 {
+                    enumerators_prev.Add(FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, false, speed));
+
                     middle_actions.Add(delegate
                     {
                         saveFileFields.CloseOverPanelInstant();
-                        FadeManager.FadeInLite(saveFileFields._FirstSaveAnimatorObject);
+                       // FadeManager.FadeInLite(saveFileFields._FirstSaveAnimatorObject);
                         saveFileFields._FirstSaveAnimator.ResetPanelSync();
                     });
+
+                    enumerators_next.Add(FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, true, speed));
                 }
             }
 
             // Переход [Пустой] => [Занятый]
             if (!SavesTaken.ContainsKey(a_prev) && SavesTaken.ContainsKey(a_next))
             {
-                enumerators_prev.Add(FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, false, speed));
                 enumerators_prev.Add(saveFileFields.VF_Hide());
 
                 enumerators_next.Add(saveFileFields.Datetime.IShowText(SavesTaken[a_next]));
                 enumerators_next.Add(FadeManager.FadeOnly(allScreenshots[i], true, speed));
-                enumerators_next.Add(FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, true, speed));
                 enumerators_next.Add(saveFileFields.VF_Show());
 
                 if (SaveManagerStatic.ifInMainMenu)
@@ -353,38 +353,45 @@ public class SaveManager : MonoBehaviour
                     middle_actions.Add(delegate
                     {
                         FadeManager.FadeObject(saveFileFields._MainMenuLoadObject, true);
-                        saveFileFields._MainMenuLoad.ResetPanel();
+                        saveFileFields._MainMenuLoad.ResetPanelSync();
+                        StartCoroutine(saveFileFields.OpenOverPanel());
                     });
+
+                    enumerators_next.Add(FadeManager.FadeObject(saveFileFields._MainMenuLoadObject, true, speed));
                 }
                 else
                 {
-                    middle_actions.Add((Action)delegate
+                    enumerators_prev.Add(FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, false, speed));
+
+                    middle_actions.Add(delegate
                     {
                         FadeManager.FadeInLite(saveFileFields._SaveChoiseAnimatorObject);
                         saveFileFields._SaveChoiseAnimator.ResetPanelSync();
                         StartCoroutine(saveFileFields.OpenOverPanel());
                     });
+
+                    enumerators_next.Add(FadeManager.FadeObject(saveFileFields._SaveChoiseAnimatorObject, true, speed));
                 }
             }
 
             // Переход [Пустой] => [Пустой]
             if (!SavesTaken.ContainsKey(a_prev) && !SavesTaken.ContainsKey(a_next))
             {
-                enumerators_prev.Add(FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, false, speed));
-
-                enumerators_next.Add(FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, true, speed));
-
                 if (SaveManagerStatic.ifInMainMenu)
                 {
 
                 }
                 else
                 {
+                    enumerators_prev.Add(FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, false, speed * 3));
+
                     middle_actions.Add(delegate
                     {
-                        FadeManager.FadeInLite(saveFileFields._FirstSaveAnimatorObject);
+                        //FadeManager.FadeInLite(saveFileFields._FirstSaveAnimatorObject);
                         saveFileFields._FirstSaveAnimator.ResetPanelSync();
                     });
+
+                    enumerators_next.Add(FadeManager.FadeObject(saveFileFields._FirstSaveAnimatorObject, true, speed * 3));
                 }
             }
         }
@@ -394,7 +401,7 @@ public class SaveManager : MonoBehaviour
 
         // Очистка текущих скринов
         ClearCurrenTextures();
-        yield return new WaitForSeconds(0.1f);
+        //yield return new WaitForSeconds(0.1f);
 
 
         // Загрузка текстур новых скринов
@@ -404,7 +411,7 @@ public class SaveManager : MonoBehaviour
 
             if (SavesTaken.ContainsKey(actualSaveNum))
             {
-                var texture = ES3.LoadImage($"{ScreenshotsFolder}/screenshot{actualSaveNum}.png");
+                var texture = ES3.LoadImage($"{SaveSystemUtils.ScreenshotsFolder}/screenshot{actualSaveNum}.png");
                 texture.name = "screenshot" + actualSaveNum;
                 currentTextures[i] = texture;
                 allScreenshots[i].GetComponent<RawImage>().texture = texture;
@@ -428,6 +435,7 @@ public class SaveManager : MonoBehaviour
 
     public IEnumerator OverrideScreenshot(int saveNum, GameObject screenshot, GameObject overscreenshot, float speed)
     {
+        SaveManagerStatic.DelayedSaveAction = true;
         int actualSaveNum = GetActualSaveNum(saveNum);
         yield return new WaitForEndOfFrame();
 
@@ -458,7 +466,7 @@ public class SaveManager : MonoBehaviour
         if (bufferTexture != null)
             Destroy(bufferTexture);
 
-        string fileName = $"{ScreenshotsFolder}/screenshot{actualSaveNum}.png";
+        string fileName = $"{SaveSystemUtils.ScreenshotsFolder}/screenshot{actualSaveNum}.png";
         if (ES3.FileExists(fileName))
         {
             ES3.DeleteFile(fileName);
@@ -471,11 +479,14 @@ public class SaveManager : MonoBehaviour
         screenshot.GetComponent<RawImage>().texture = texture;
         FadeManager.FadeObject(overscreenshot, false);
         overscreenshot.GetComponent<RawImage>().texture = null;
+        SaveManagerStatic.DelayedSaveAction = false;
     }
 
     public IEnumerator SetScreenshot(int localSaveNum, GameObject screenshot)
     {
-        int actualSaveNum = currentPage * savesPerPage + localSaveNum;
+        SaveManagerStatic.DelayedSaveAction = true;
+
+        int actualSaveNum = GetActualSaveNum(localSaveNum);
         yield return new WaitForEndOfFrame();
 
         var currentTexture = RenderTexture.active;
@@ -502,34 +513,34 @@ public class SaveManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         currentTextures[localSaveNum] = texture;
-        string fileName = $"{ScreenshotsFolder}/screenshot{actualSaveNum}.png";
+        string fileName = $"{SaveSystemUtils.ScreenshotsFolder}/screenshot{actualSaveNum}.png";
         ES3.SaveImage(texture, fileName);
+        SaveManagerStatic.DelayedSaveAction = false;
     }
 
     public void DeleteSave(int localSaveNum)
     {
         int actualSaveNum = GetActualSaveNum(localSaveNum);
 
-        string screenshotFileName = $"{ScreenshotsFolder}/screenshot{actualSaveNum}.png";
-        string fileName = $"{SaveFilesFolder}/{SaveFileName}{actualSaveNum}.es3";
+        string screenshotFileName = $"{SaveSystemUtils.ScreenshotsFolder}/screenshot{actualSaveNum}.png";
+        string fileName = $"{SaveSystemUtils.SaveFilesFolder}/{SaveSystemUtils.SaveFileSingleName}{actualSaveNum}.es3";
 
-        if (ES3.FileExists(fileName) && ES3.FileExists(screenshotFileName))
+        try
         {
-            ES3.DeleteFile(screenshotFileName);
-            if (SavesTaken.ContainsKey(actualSaveNum))
+            if (ES3.FileExists(fileName) && ES3.FileExists(screenshotFileName))
             {
-                SavesTaken.Remove(actualSaveNum);
+                ES3.DeleteFile(fileName);
+                ES3.DeleteFile(screenshotFileName);
+                if (SavesTaken.ContainsKey(actualSaveNum))
+                {
+                    SavesTaken.Remove(actualSaveNum);
+                }
+                SaveCurrentData();
             }
-            SaveCurrentData();
+        }
+        catch (Exception ex)
+        {
 
-            // Если после УДАЛЕНИЯ не осталось true сейвов, значит удалён последний => триггер 0
-            /*if (!savesTaken.Contains(true))
-            {
-                ES3.Save<MMContinueButtonState>("ContinueTrigger", MMContinueButtonState.HideAnimation, SaveFilesData);
-                StaticVariables.MainMenuContinueButtonAnimationTrigger = MMContinueButtonState.HideAnimation;
-            }*/
-
-            ES3.DeleteFile(fileName);
         }
     }
 
@@ -575,10 +586,10 @@ public class SaveManager : MonoBehaviour
 
         backButton.ResetButtonState();
         bottomPages.InitialReset();
+        bottomPages.StartingLoad();
         LoadFirstPage();
 
         SaveManagerStatic.ClickBlocker = false;
         SaveManagerStatic.UiBloker = false;
     }
-
 }

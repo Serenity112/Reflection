@@ -31,6 +31,7 @@ public class LogButton : IExpandableButton
         ShadeLine1 = transform.GetChild(1).transform.GetChild(0).gameObject;
         ShadeLine2 = transform.GetChild(2).transform.GetChild(0).gameObject;
 
+        GetComponent<Button>().onClick.RemoveAllListeners();
         GetComponent<Button>().onClick.AddListener(OnClick);
     }
 

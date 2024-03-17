@@ -16,11 +16,11 @@ public class FirstSaveAnimator : MonoBehaviour
     private IEnumerator CassetteFadeIn;
     private IEnumerator CassetteFadeOut;
 
-    public bool Animating = false;
+    public bool Animating { get; set; } = false;
 
     private void Awake()
     {
-        saveFileFields = GetComponent<SaveFileFields>();
+        saveFileFields = transform.parent.GetComponent<SaveFileFields>();
 
         localSaveNum = saveFileFields.saveNum;
         screenshot = saveFileFields.Screenshot;
@@ -43,7 +43,7 @@ public class FirstSaveAnimator : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
 
         // Установка текущего времени
-        string datetime = DateTime.Now.ToString("HH:mm:ss dd/MM/yy");
+        string datetime = DateTime.Now.ToString(SaveManager.DateTimeFormat);
         saveFileFields.Datetime.HideText();
         saveFileFields.Datetime.SetText(datetime);
 

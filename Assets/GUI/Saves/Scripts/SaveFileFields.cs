@@ -10,17 +10,17 @@ public class SaveFileFields : MonoBehaviour
     public GameObject _FirstSaveAnimatorObject;
     public GameObject _MainMenuLoadObject;
 
-    [HideInInspector] public SaveChoiseAnimator _SaveChoiseAnimator;
-    [HideInInspector] public FirstSaveAnimator _FirstSaveAnimator;
-    [HideInInspector] public MainMenuLoad _MainMenuLoad;
+    public SaveChoiseAnimator _SaveChoiseAnimator;
+    public SaveChoiseIconAnimator _SaveChoiseIconAnimator;
+    public FirstSaveAnimator _FirstSaveAnimator;
+    public MainMenuLoad _MainMenuLoad;
 
     public GameObject Screenshot;
     public GameObject OverSreenshot;
     public GameObject OverPanel;
     public GameObject NoImage;
     public SaveDateTime Datetime;
-    private GameObject VisualFile;
-
+    public GameObject VisualFile;
 
     private IEnumerator overPanelIn;
     private IEnumerator overPanelOut;
@@ -32,10 +32,6 @@ public class SaveFileFields : MonoBehaviour
 
     void Awake()
     {
-        _SaveChoiseAnimator = GetComponent<SaveChoiseAnimator>();
-        _FirstSaveAnimator = GetComponent<FirstSaveAnimator>();
-        _MainMenuLoad = GetComponent<MainMenuLoad>();
-        VisualFile = transform.GetChild(1).gameObject;
     }
 
     public IEnumerator OpenOverPanel()
@@ -45,7 +41,6 @@ public class SaveFileFields : MonoBehaviour
 
         overPanelIn = FadeManager.FadeOnly(OverPanel, true, speed);
         yield return StartCoroutine(overPanelIn);
-
     }
 
     public IEnumerator CloseOverPanel()
@@ -62,6 +57,11 @@ public class SaveFileFields : MonoBehaviour
         FadeManager.FadeOnly(OverPanel, false);
     }
 
+    public void OpenOverPanelInstant()
+    {
+        FadeManager.FadeOnly(OverPanel, true);
+    }
+
     public IEnumerator VF_Show()
     {
         if (vfOut != null)
@@ -69,7 +69,6 @@ public class SaveFileFields : MonoBehaviour
 
         vfIn = FadeManager.FadeOnly(VisualFile, true, speed);
         yield return StartCoroutine(vfIn);
-
     }
 
     public IEnumerator VF_Hide()
@@ -79,14 +78,5 @@ public class SaveFileFields : MonoBehaviour
 
         vfOut = FadeManager.FadeOnly(VisualFile, false, speed);
         yield return StartCoroutine(vfOut);
-    }
-
-    public void resetCassettePosition(GameObject cassette)
-    {
-        //cassette.GetComponent<CanvasGroup>().alpha = 0f;
-        /*GameObject circle1 = cassette.transform.Find("Circle1").gameObject;
-        GameObject circle2 = cassette.transform.Find("Circle2").gameObject;
-        circle1.GetComponent<RectTransform>().rotation = new Quaternion(0, 0, 0, 0);
-        circle2.GetComponent<RectTransform>().rotation = new Quaternion(0, 0, 0, 0);*/
-    }
+    }   
 }

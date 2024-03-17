@@ -4,17 +4,14 @@ using UnityEngine.UI;
 
 public class FirstSaveButton : ISaveSystemButton
 {
-    [SerializeField] private GameObject File;
-
+    [SerializeField] FirstSaveAnimator firstSaveAnimator;
     public GameObject CassetteImg;
-    private FirstSaveAnimator firstSaveAnimator;
 
     public override void Awake()
     {
         base.Awake();
 
         CassetteImg = transform.GetChild(0).gameObject;
-        firstSaveAnimator = File.GetComponent<FirstSaveAnimator>();
 
         GetComponent<Button>().onClick.RemoveAllListeners();
         GetComponent<Button>().onClick.AddListener(delegate

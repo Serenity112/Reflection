@@ -21,7 +21,7 @@ public class ConfirmationPanel : MonoBehaviour
     {
         instance = this;
 
-        Panel = transform.GetChild(1).gameObject;
+        Panel = transform.GetChild(0).gameObject;
         confirmation = Panel.GetComponent<Confirmation>();
     }
 

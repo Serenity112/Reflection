@@ -35,6 +35,8 @@ public class BottomPageButton : IExpandableButton
     {
         _buttonNum = buttonNum;
         _bottomPages = bottomPages;
+
+        GetComponent<Button>().onClick.RemoveAllListeners();
         GetComponent<Button>().onClick.AddListener(delegate { OnClick(); });
     }
 
@@ -157,6 +159,7 @@ public class BottomPageButton : IExpandableButton
 
     public override void ResetButtonState()
     {
+        base.ResetButtonState();
         _image.color = new Color(0.6f, 0.6f, 0.6f, 1f);
         _text.color = new Color(0.6f, 0.6f, 0.6f, 0f);
     }

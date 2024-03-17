@@ -71,7 +71,7 @@ namespace Krivodeling.UI.Effects
         public void EndBlur(float speed)
         {
             StopAllCoroutines();
-            StartCoroutine(EndBlurCoroutine(speed));
+            //StartCoroutine(EndBlurCoroutine(speed));
         }
 
         private void Start()

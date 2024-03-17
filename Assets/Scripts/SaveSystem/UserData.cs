@@ -116,7 +116,7 @@ public class UserData : MonoBehaviour
         FadeManager.FadeObject(PanelsManager.instance.BlackPanel, true);
 
         yield return StartCoroutine(ILoadGame(actualSaveNum));
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.2f);
 
         StartCoroutine(PanelsManager.instance.EnableGuiOnStart(true));
 

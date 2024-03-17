@@ -1,5 +1,14 @@
 public static class StaticVariables
 {
+    public static void ResetStatic()
+    {
+        PauseButtonsManager.GAME_IS_PAUSED = false;
+        PauseButtonsManager.GAME_IS_PAUSED_POST = false;
+        IN_SETTINGS_MENU = false;
+        IN_SAVE_MENU = false;
+        SPRITE_MOVING = false;
+    }
+
     // Навигационные статусы
     public static bool PAUSED =>
         PauseButtonsManager.GAME_IS_PAUSED;
@@ -32,7 +41,7 @@ public static class StaticVariables
     //___________________________________________________________________________________________
 
 
-    
+
 
     // Игра запущена в 1й раз в рамках текущей сессии
     public static bool GameLaunchedFirstTime { get; set; } = true;

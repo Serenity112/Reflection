@@ -22,6 +22,7 @@ public class PauseOptionButton : IDraggableButton
         _spacing = transform.GetChild(0).gameObject;
         _spacing.GetComponent<CanvasGroup>().alpha = 0f;
 
+        GetComponent<Button>().onClick.RemoveAllListeners();
         GetComponent<Button>().onClick.AddListener(OnClick);
     }
 

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class SaveChoiseButton : ISaveSystemButton
 {
     [SerializeField] private Side side;
-    [SerializeField] private GameObject File;
+    [SerializeField] private SaveFileFields Fields;
     [SerializeField] private SaveOption option;
 
     private DeleteCrossButton DeleteCross;
@@ -17,8 +17,8 @@ public class SaveChoiseButton : ISaveSystemButton
     {
         base.Awake();
 
-        saveChoiseIconAnimator = File.GetComponent<SaveChoiseIconAnimator>();
-        saveChoiseAnimator = File.GetComponent<SaveChoiseAnimator>();
+        saveChoiseIconAnimator = Fields._SaveChoiseIconAnimator;
+        saveChoiseAnimator = Fields._SaveChoiseAnimator;
         DeleteCross = saveChoiseAnimator.DeleteCross;
 
         GetComponent<Button>().onClick.RemoveAllListeners();
@@ -56,7 +56,7 @@ public class SaveChoiseButton : ISaveSystemButton
             yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentShrinkScale, expandTime));
             yield return StartCoroutine(ExpandManager.ExpandObject(buttonParent, parentOrigScale, expandTime));
 
-            saveChoiseAnimator.SaveLoadAction(option);
+            saveChoiseAnimator.SaveLoadDeleteAction(option);
             StartRotation();
         }
 
@@ -78,6 +78,6 @@ public class SaveChoiseButton : ISaveSystemButton
         base.ResetButtonState();
 
         EndRotation();
-        GetComponent<Button>().interactable = true;
+        UnlockButton();
     }
 }

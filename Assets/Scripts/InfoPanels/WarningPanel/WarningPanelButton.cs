@@ -11,6 +11,8 @@ public class WarningPanelButton : IDraggableButton
     {
         base.Awake();
         spacing = transform.GetChild(0).gameObject;
+
+        GetComponent<Button>().onClick.RemoveAllListeners();
         GetComponent<Button>().onClick.AddListener(OnClick);
     }
 

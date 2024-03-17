@@ -38,7 +38,8 @@ public class SaveBackButton : IExpandableButton
                 StaticVariables.IN_SAVE_MENU &&
                 !StaticVariables.GAME_IS_LOADING &&
                 !StaticVariables.OVERLAY_ACTIVE &&
-                !SaveManagerStatic.ClickBlocker;
+                !SaveManagerStatic.ClickBlocker &&
+                !SaveManagerStatic.DelayedSaveAction;
     }
 
     private IEnumerator IUpdate()

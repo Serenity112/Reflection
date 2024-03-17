@@ -3,167 +3,55 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MainMenuLoad : MonoBehaviour
+public class MainMenuLoad : MonoBehaviour, IDeleteActionExecutor, ILoadActionExecutor
 {
-    [SerializeField] private GameObject Cassette;
-    [SerializeField] private Button ButtonLoad;
+    public SaveFileFields saveFileFields;
+    [SerializeField] private MainMenuLoadButton LoadButton;
     [SerializeField] private Animator cassetteAnimator;
-    public GameObject DeleteCross;
+    public DeleteCrossButton DeleteCross;
 
     private int saveNum;
     private GameObject screenshot;
-    private GameObject MainMenuPanel;
 
-    private IEnumerator CassetteFadeIn;
-    private IEnumerator CassetteFadeOut;
-
-    private IEnumerator FrameFadeIn;
-    private IEnumerator FrameFadeOut;
-
-    public SaveFileFields saveFileFields;
-
-    void Start()
+    void Awake()
     {
-        saveFileFields = GetComponent<SaveFileFields>();
+        saveFileFields = transform.parent.GetComponent<SaveFileFields>();
         saveNum = saveFileFields.saveNum;
         screenshot = saveFileFields.Screenshot;
-        //MainMenuPanel = saveFileFields._MainMenuLoad;
-
-        //ButtonLoad.interactable = true;
     }
 
-    public void ResetPanel()
+    public void SaveLoadDeleteAction(SaveOption option)
     {
-
+        StartCoroutine(IAction(option));
     }
 
-    public void InstantHideCassette()
+    private IEnumerator IAction(SaveOption option)
     {
-        Cassette.GetComponent<CanvasGroup>().alpha = 0f;
-    }
-
-    public IEnumerator AppearCassette()
-    {
-        if (ButtonLoad.interactable)
+        switch (option)
         {
-            if (CassetteFadeOut != null)
-                StopCoroutine(CassetteFadeOut);
-
-            CassetteFadeIn = FadeManager.FadeObject(Cassette, true, SaveManager.instance.speed);
-            yield return StartCoroutine(CassetteFadeIn);
-        }
-
-        yield return null;
-    }
-
-    public IEnumerator DisappearCassette()
-    {
-        if (ButtonLoad.interactable)
-        {
-            if (CassetteFadeIn != null)
-                StopCoroutine(CassetteFadeIn);
-
-            CassetteFadeOut = FadeManager.FadeObject(Cassette, false, SaveManager.instance.speed);
-            yield return StartCoroutine(CassetteFadeOut);
-        }
-
-        yield return null;
-    }
-
-    public void Click()
-    {
-        if (!SaveManagerStatic.ClickBlocker)
-        {
-            StartCoroutine(IClick());
+            case SaveOption.Load:
+                yield return StartCoroutine(LoadAction());
+                break;
+            case SaveOption.Delete:
+                yield return StartCoroutine(DeleteAction());
+                break;
         }
     }
 
-    IEnumerator IClick()
+    public IEnumerator LoadAction()
     {
-        SaveManagerStatic.OverlayPanelActive = true;
-        cassetteAnimator.SetTrigger("DoLoad");
-
-        Vector3 currScale = Cassette.transform.localScale;
-        yield return StartCoroutine(ExpandManager.ExpandObject(Cassette, 0.9f, 0.05f));
-        yield return StartCoroutine(ExpandManager.ExpandObject(Cassette, currScale, 0.05f));
-
-        yield return StartCoroutine(ConfirmationPanel.instance.CreateConfirmationPanel("Загрузить сохранение?", LoadFile(), CancelLoad()));
+        yield return StartCoroutine(SaveManagerActions.LoadAction(saveFileFields, LoadButton, MMPanelsManager.instance, saveNum));
     }
 
-    IEnumerator LoadFile()
+    public IEnumerator DeleteAction()
     {
-        yield return CoroutineUtils.WaitForAll(new List<IEnumerator>
-        {
-            FadeManager.FadeObject(Cassette, false, SaveManager.instance.speed),
-            ConfirmationPanel.instance.ClosePanel(),
-            MMPanelsManager.instance.ILoadGameFromMainMenu(saveNum)
-        });
-
-        cassetteAnimator.SetTrigger("StopLoad");
+        yield return StartCoroutine(SaveManagerActions.DeleteAction(saveFileFields, DeleteCross, screenshot, saveNum, true));
     }
 
-    IEnumerator CancelLoad()
+    public void ResetPanelSync()
     {
-        SaveManagerStatic.OverlayPanelActive = false;
-
-        StartCoroutine(DisappearCassette());
-        StartCoroutine(saveFileFields.OpenOverPanel());
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-
-        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
-
-        cassetteAnimator.SetTrigger("StopLoad");
-
-        saveFileFields.resetCassettePosition(Cassette);
-    }
-
-
-    // Удаление сейва, активируется крестиком
-    public void DeleteAction()
-    {
-        if (!SaveManagerStatic.ClickBlocker && !SaveManagerStatic.OverlayPanelActive)
-        {
-            StartCoroutine(IDeleteDialog());
-        }
-    }
-
-    IEnumerator IDeleteDialog()
-    {
-        SaveManagerStatic.OverlayPanelActive = true;
-        yield return StartCoroutine(ConfirmationPanel.instance.CreateConfirmationPanel("Удалить сохранение?", IDeleteSave(), ICancelDelete()));
-    }
-
-    IEnumerator IDeleteSave()
-    {
-        List<IEnumerator> enumerators = new List<IEnumerator>()
-        {
-            FadeManager.FadeOnly(screenshot, false, SaveManager.instance.speed),
-            FadeManager.FadeOnly(saveFileFields.NoImage, true, SaveManager.instance.speed),
-            saveFileFields.CloseOverPanel(),
-            ConfirmationPanel.instance.ClosePanel(),
-        };
-
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-        FadeManager.FadeObject(MainMenuPanel, false);
-
-        int actualSaveNum = SaveManager.instance.currentPage * SaveManager.savesPerPage + saveNum;
-
-        //StartCoroutine(FadeManager.FadeObject(saveFileFields.Datetime, false, SaveManager.instance.speed));
-        SaveManager.instance.RemoveDateTime(actualSaveNum);
-
-        yield return StartCoroutine(CoroutineUtils.WaitForAll(enumerators));
-
-        SaveManager.instance.DeleteSave(actualSaveNum);
-    }
-
-    IEnumerator ICancelDelete()
-    {
-        SaveManagerStatic.OverlayPanelActive = false;
-
-        StartCoroutine(DisappearCassette());
-        StartCoroutine(saveFileFields.OpenOverPanel());
-        DeleteCross.GetComponent<DeleteCrossButton>().DisappearCross();
-
-        yield return StartCoroutine(ConfirmationPanel.instance.ClosePanel());
+        LoadButton.ResetButtonState();
+        DeleteCross.ResetButtonState();
+        FadeManager.FadeOnly(DeleteCross.gameObject, false);
     }
 }

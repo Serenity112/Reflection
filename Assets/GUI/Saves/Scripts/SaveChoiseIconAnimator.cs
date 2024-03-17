@@ -16,7 +16,7 @@ public class SaveChoiseIconAnimator : MonoBehaviour
 
     private void Awake()
     {
-        saveFileFields = GetComponent<SaveFileFields>();
+        saveFileFields = transform.parent.GetComponent<SaveFileFields>();
     }
 
     public void AppearSide(Side side)
@@ -56,7 +56,6 @@ public class SaveChoiseIconAnimator : MonoBehaviour
         StartCoroutine(FadeManager.FadeOnly(GradRight, false, _speed));
         StartCoroutine(FadeManager.FadeOnly(IconLeft, false, _speed));
     }
-
 
     public void RemoveSide(Side side)
     {

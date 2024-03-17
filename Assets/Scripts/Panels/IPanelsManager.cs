@@ -6,6 +6,8 @@ public interface IPanelsManager
 {
     GameObject GetBlackPanel();
 
+    public IEnumerator ILoadGame(int actualSaveNum);
+
     void OpenSaveMenu();
 
     void CloseSaveMenu();

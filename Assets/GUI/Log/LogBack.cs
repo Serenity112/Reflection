@@ -14,6 +14,8 @@ public class LogBack : IExpandableButton
     public override void Awake()
     {
         base.Awake();
+
+        GetComponent<Button>().onClick.RemoveAllListeners();
         GetComponent<Button>().onClick.AddListener(OnClick);
     }
 

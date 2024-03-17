@@ -155,7 +155,7 @@ public class SettingsConfig
         catch (Exception ex)
         {
             WarningPanel.instance.CreateWarningMessage(WarningPanelMessages.WarningTemplate.SaveSystemCorrupt, $"key: {ex.Message} folder: {SaveSystemUtils.GlobalSettings}");
-            SaveSystemUtils.DumpFile(SaveSystemUtils.GlobalSettings);
+            //SaveSystemUtils.DumpFile(SaveSystemUtils.GlobalSettings);
         }
     }
 

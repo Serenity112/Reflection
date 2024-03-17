@@ -41,6 +41,8 @@ public class PanelsManager : MonoBehaviour, IPanelsManager
     {
         instance = this;
 
+        StaticVariables.ResetStatic();
+
         SaveGuiPanel = ActivePanels.transform.GetChild(1).gameObject;
 
         PanelsConfig.CurrentManager = this;

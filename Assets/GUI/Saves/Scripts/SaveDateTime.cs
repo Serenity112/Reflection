@@ -1,4 +1,5 @@
 using Fungus;
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,6 +9,8 @@ public class SaveDateTime : MonoBehaviour
     private Text _text;
     private float _speed = 4f;
 
+    private static string DateTimeShortFormat = "HH:mm dd/MM/yy";
+
     private void Awake()
     {
         _text = GetComponent<Text>();
@@ -15,7 +18,8 @@ public class SaveDateTime : MonoBehaviour
 
     public void SetText(string text)
     {
-        _text.text = text;
+        DateTime dateTime = DateTime.ParseExact(text, SaveManager.DateTimeFormat, null);
+        _text.text = dateTime.ToString(DateTimeShortFormat);
     }
 
     public void ClearText()
